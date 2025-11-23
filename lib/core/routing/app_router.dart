@@ -53,3 +53,4 @@ class AppRouter {
   GoRouter get instance => router;
 }
 
+
