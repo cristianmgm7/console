@@ -2,6 +2,10 @@
 
 Welcome to the Carbon Voice Console documentation!
 
+## 🚨 START HERE if coordinating with a partner
+
+**[YOUR_ACTION_STEPS.md](YOUR_ACTION_STEPS.md)** - Simple 3-step process for YOU to get credentials and set up OAuth
+
 ## 📁 Documentation Structure
 
 ### Phase 1 - Project Setup
@@ -26,6 +30,13 @@ All documentation related to the initial project setup and architecture.
 - **[ARCHITECTURE.md](phase1/ARCHITECTURE.md)** - Architecture diagrams and design patterns
 - **[GIT_COMMIT_GUIDE.md](phase1/GIT_COMMIT_GUIDE.md)** - Git workflow and commit conventions
 
+### Partner Integration
+- **[PARTNER_COORDINATION_CHECKLIST.md](PARTNER_COORDINATION_CHECKLIST.md)** - 📋 Coordination checklist for you
+- **[PARTNER_ONBOARDING.md](PARTNER_ONBOARDING.md)** - 🎯 Quick start guide for partners
+- **[API_INTEGRATION_GUIDE.md](API_INTEGRATION_GUIDE.md)** - Complete API integration reference
+- **[API_ENDPOINTS_REFERENCE.md](API_ENDPOINTS_REFERENCE.md)** - API endpoints documentation
+- **[EMAIL_TO_PARTNER.md](EMAIL_TO_PARTNER.md)** - Email template for partner communication
+
 ## 🎯 Quick Links
 
 ### For First Time Setup
@@ -42,6 +53,13 @@ All documentation related to the initial project setup and architecture.
 1. Follow [GIT_COMMIT_GUIDE.md](phase1/GIT_COMMIT_GUIDE.md) for commits
 2. Check [STATUS.md](phase1/STATUS.md) for current state
 3. Reference [ARCHITECTURE.md](phase1/ARCHITECTURE.md) for patterns
+
+### For Partners/External Developers
+1. **You (coordinating)**: Start with [PARTNER_COORDINATION_CHECKLIST.md](PARTNER_COORDINATION_CHECKLIST.md)
+2. **Partner**: Start with [PARTNER_ONBOARDING.md](PARTNER_ONBOARDING.md) for quick start
+3. **Partner**: Review [API_INTEGRATION_GUIDE.md](API_INTEGRATION_GUIDE.md) for technical details
+4. **Partner**: Reference [API_ENDPOINTS_REFERENCE.md](API_ENDPOINTS_REFERENCE.md) for endpoints
+5. **You**: Use [EMAIL_TO_PARTNER.md](EMAIL_TO_PARTNER.md) as communication template
 
 ## 📖 Documentation By Topic
 
@@ -61,6 +79,13 @@ All documentation related to the initial project setup and architecture.
 ### Project Status
 - [STATUS.md](phase1/STATUS.md) - Current status
 - [COMPLETION_CHECKLIST.md](phase1/COMPLETION_CHECKLIST.md) - What's done
+
+### API & Partner Integration
+- [PARTNER_COORDINATION_CHECKLIST.md](PARTNER_COORDINATION_CHECKLIST.md) - Coordination checklist (for you)
+- [PARTNER_ONBOARDING.md](PARTNER_ONBOARDING.md) - Partner quick start (for them)
+- [API_INTEGRATION_GUIDE.md](API_INTEGRATION_GUIDE.md) - OAuth & API integration (for them)
+- [API_ENDPOINTS_REFERENCE.md](API_ENDPOINTS_REFERENCE.md) - Endpoint documentation (for them)
+- [EMAIL_TO_PARTNER.md](EMAIL_TO_PARTNER.md) - Communication templates (for you)
 
 ## 🔄 Future Documentation
 
