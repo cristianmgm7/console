@@ -13,7 +13,6 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   String _selectedWorkspace = 'Personal';
   final TextEditingController _searchController = TextEditingController();
-  bool _dailyUpdateEnabled = false;
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
 
@@ -176,16 +175,6 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             child: Row(
               children: [
-                // Menu Button
-                IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () {
-                    // TODO: Open drawer
-                  },
-                ),
-                
-                const SizedBox(width: 8),
-                
                 // Title
                 Text(
                   'Audio Messages',
@@ -262,36 +251,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 
                 const Spacer(),
-                
-                // Daily Update Toggle
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _dailyUpdateEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          _dailyUpdateEnabled = value ?? false;
-                        });
-                      },
-                    ),
-                    Text(
-                      'Daily Update',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(width: 16),
-                
-                // Filter Button
-                IconButton(
-                  icon: const Icon(Icons.filter_list),
-                  onPressed: () {
-                    // TODO: Open filter dialog
-                  },
-                  tooltip: 'Filter',
-                ),
-                
+                                
                 // Add New Button
                 ElevatedButton.icon(
                   onPressed: () {
@@ -465,41 +425,41 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           
-          // Pagination
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () {
-                    // TODO: Previous page
-                  },
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  'Page 1 of 12',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () {
-                    // TODO: Next page
-                  },
-                ),
-              ],
-            ),
-          ),
+          // // Pagination
+          // Container(
+          //   padding: const EdgeInsets.symmetric(vertical: 16.0),
+          //   decoration: BoxDecoration(
+          //     color: Theme.of(context).colorScheme.surface,
+          //     border: Border(
+          //       top: BorderSide(
+          //         color: Theme.of(context).dividerColor,
+          //       ),
+          //     ),
+          //   ),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: [
+          //       IconButton(
+          //         icon: const Icon(Icons.chevron_left),
+          //         onPressed: () {
+          //           // TODO: Previous page
+          //         },
+          //       ),
+          //       const SizedBox(width: 16),
+          //       Text(
+          //         'Page 1 of 12',
+          //         style: Theme.of(context).textTheme.bodyMedium,
+          //       ),
+          //       const SizedBox(width: 16),
+          //       IconButton(
+          //         icon: const Icon(Icons.chevron_right),
+          //         onPressed: () {
+          //           // TODO: Next page
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
       
