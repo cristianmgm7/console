@@ -4,12 +4,12 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
-class OAuthCallbackPage extends StatefulWidget {
+class OAuthCallbackScreen extends StatefulWidget {
   final String? code;
   final String? state;
   final String? error;
 
-  const OAuthCallbackPage({
+  const OAuthCallbackScreen({
     super.key,
     this.code,
     this.state,
@@ -17,10 +17,10 @@ class OAuthCallbackPage extends StatefulWidget {
   });
 
   @override
-  State<OAuthCallbackPage> createState() => _OAuthCallbackPageState();
+  State<OAuthCallbackScreen> createState() => _OAuthCallbackScreenState();
 }
 
-class _OAuthCallbackPageState extends State<OAuthCallbackPage> {
+class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
   @override
   void initState() {
     super.initState();

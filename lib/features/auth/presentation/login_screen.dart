@@ -2,20 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/routing/app_routes.dart';
 
-class UsersPage extends StatelessWidget {
-  const UsersPage({super.key});
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Users'),
+        title: const Text('Carbon Voice Console'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go(AppRoutes.dashboard),
-          tooltip: 'Back to Dashboard',
-        ),
       ),
       body: Center(
         child: Padding(
@@ -24,25 +19,26 @@ class UsersPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.people,
+                Icons.login,
                 size: 100,
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 32),
               Text(
-                'Users Management',
+                'Login',
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 16),
               Text(
-                'Manage system users',
+                'Welcome to Carbon Voice Console',
                 style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
               ElevatedButton.icon(
                 onPressed: () => context.go(AppRoutes.dashboard),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Dashboard'),
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('Go to Dashboard'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,

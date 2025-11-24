@@ -3,14 +3,14 @@ import '../../dashboard/models/audio_message.dart';
 import '../../dashboard/presentation/components/message_card.dart';
 import '../../dashboard/presentation/components/messages_action_panel.dart';
 
-class VoiceMemosPage extends StatefulWidget {
-  const VoiceMemosPage({super.key});
+class VoiceMemosScreen extends StatefulWidget {
+  const VoiceMemosScreen({super.key});
 
   @override
-  State<VoiceMemosPage> createState() => _VoiceMemosPageState();
+  State<VoiceMemosScreen> createState() => _VoiceMemosScreenState();
 }
 
-class _VoiceMemosPageState extends State<VoiceMemosPage> {
+class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
 

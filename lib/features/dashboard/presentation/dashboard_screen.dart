@@ -3,14 +3,14 @@ import '../models/audio_message.dart';
 import 'components/message_card.dart';
 import 'components/messages_action_panel.dart';
 
-class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardScreenState extends State<DashboardScreen> {
   String _selectedWorkspace = 'Personal';
   final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedMessages = {};
