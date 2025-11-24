@@ -201,7 +201,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -243,13 +243,13 @@ class _DashboardPageState extends State<DashboardPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -352,7 +352,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               border: Border(
                 bottom: BorderSide(
                   color: Theme.of(context).dividerColor,
@@ -414,7 +414,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 
                 const SizedBox(width: 16),
                 
-                const SizedBox(width: 70), // AI Action space
+                const SizedBox(width: 60), // AI Action space
                 
                 const SizedBox(width: 16),
                 
@@ -435,10 +435,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 
                 const SizedBox(width: 16),
                 
-                Text(
-                  'Status',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                SizedBox(
+                  width: 90,
+                  child: Text(
+                    'Status',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 
