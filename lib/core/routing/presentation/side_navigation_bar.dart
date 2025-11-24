@@ -20,7 +20,7 @@ class SideNavigationBar extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Icon(
               Icons.mic,
-              size: 32,
+              size: 24,
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
@@ -31,8 +31,8 @@ class SideNavigationBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               children: [
                 _NavigationItem(
-                  icon: Icons.dashboard,
-                  label: 'Dashboard',
+                  icon: Icons.message,
+                  label: 'Messages',
                   route: AppRoutes.dashboard,
                   isSelected: currentPath == AppRoutes.dashboard,
                   onTap: () => context.go(AppRoutes.dashboard),
@@ -44,13 +44,7 @@ class SideNavigationBar extends StatelessWidget {
                   isSelected: currentPath == AppRoutes.voiceMemos,
                   onTap: () => context.go(AppRoutes.voiceMemos),
                 ),
-                _NavigationItem(
-                  icon: Icons.people,
-                  label: 'Users',
-                  route: AppRoutes.users,
-                  isSelected: currentPath == AppRoutes.users,
-                  onTap: () => context.go(AppRoutes.users),
-                ),
+                
               ],
             ),
           ),
