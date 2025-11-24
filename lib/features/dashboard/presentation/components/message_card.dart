@@ -20,12 +20,6 @@ class MessageCard extends StatelessWidget {
         color: isSelected 
             ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : Colors.transparent,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-            width: 0.5,
-          ),
-        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),

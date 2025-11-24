@@ -273,55 +273,20 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
-          
-          // Filters Row
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.search, size: 20),
-                const SizedBox(width: 8),
-                const Text('Search by name, project...'),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.filter_alt_outlined),
-                  label: const Text('Status'),
-                ),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.folder_outlined),
-                  label: const Text('Project'),
-                ),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.calendar_today),
-                  label: const Text('Date Range'),
-                ),
-              ],
-            ),
-          ),
-          
           // Table Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 1,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 64.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: 1,
+                  ),
                 ),
               ),
-            ),
             child: Row(
               children: [
                 // Select All Checkbox
@@ -410,20 +375,24 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(width: 56), // Menu space
               ],
             ),
+            ),
           ),
           
           // Messages List
           Expanded(
-            child: ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return MessageCard(
-                  message: message,
-                  isSelected: _selectedMessages.contains(message.id),
-                  onSelected: (value) => _toggleMessageSelection(message.id, value),
-                );
-              },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 64.0),
+              child: ListView.builder(
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  return MessageCard(
+                    message: message,
+                    isSelected: _selectedMessages.contains(message.id),
+                    onSelected: (value) => _toggleMessageSelection(message.id, value),
+                  );
+                },
+              ),
             ),
           ),
           
