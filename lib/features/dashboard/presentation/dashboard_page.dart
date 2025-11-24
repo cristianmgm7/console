@@ -285,23 +285,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 
                 const Spacer(),
-                                
-                // Add New Button
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Add new message
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add New'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
+                          
               ],
             ),
           ),
