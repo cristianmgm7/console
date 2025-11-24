@@ -4,6 +4,7 @@ class AppRoutes {
 
   // Route paths
   static const String login = '/login';
+  static const String oauthCallback = '/auth/callback';
   static const String dashboard = '/dashboard';
   static const String users = '/dashboard/users';
   static const String voiceMemos = '/dashboard/voice-memos';

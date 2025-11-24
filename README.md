@@ -11,16 +11,25 @@ flutter pub get
 # Generate code
 flutter pub run build_runner build --delete-conflicting-outputs
 
-# Run the app
-flutter run -d macos  # or chrome, ios, android
+# Run the app with OAuth configured
+./run_dev.sh
+
+# Or run manually
+flutter run -d chrome
 ```
+
+**OAuth 2.0 is fully configured!** See [Quick Start Guide](docs/QUICK_START.md) for details.
 
 ## 📚 Documentation
 
 **Comprehensive documentation is available in the [`docs/`](docs/) folder.**
 
-### Quick Links
-- **[Quick Start Guide](docs/phase1/QUICKSTART.md)** - Get up and running in 3 commands
+### OAuth 2.0 Authentication
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get running in 5 minutes ⚡
+- **[OAuth Setup Guide](docs/OAUTH_SETUP.md)** - Complete OAuth documentation
+- **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** - What's implemented
+
+### Phase 1 Documentation
 - **[Architecture Overview](docs/phase1/ARCHITECTURE.md)** - System design and patterns
 - **[Setup Instructions](docs/phase1/SETUP_INSTRUCTIONS.md)** - Detailed setup guide
 - **[Project Summary](docs/phase1/PROJECT_SUMMARY.md)** - Complete feature list
@@ -36,28 +45,47 @@ See [`docs/README.md`](docs/README.md) for the full documentation index.
 - ✅ State management ready with flutter_bloc
 - ✅ Multi-platform support (macOS, iOS, Android, Web)
 
+### OAuth 2.0 Authentication (Complete ✅)
+- ✅ **OAuth 2.0 Authorization Code Flow with PKCE**
+- ✅ **Automatic Token Refresh** - Proactive refresh 60s before expiry
+- ✅ **Centralized HTTP Interceptor** - Automatic 401 handling
+- ✅ **Secure Token Storage** - Using flutter_secure_storage
+- ✅ **Type-Safe Error Handling** - Sealed Result<T> type
+- ✅ **User-Friendly Error Messages** - Domain-agnostic mapping
+- ✅ **Clean Architecture** - Domain, Data, Infrastructure layers
+
 ### Current Pages
-- **Login Page** - Authentication entry point (placeholder)
-- **Dashboard Page** - Main application view
-- **Users Page** - User management interface
+- **Login Screen** - OAuth 2.0 authentication with Carbon Voice
+- **OAuth Callback Screen** - Handles authorization redirect
+- **Dashboard Screen** - Main application view (authenticated)
+- **Users Screen** - User management interface (authenticated)
+- **Voice Memos Screen** - Voice memo management (authenticated)
+- **Settings Screen** - App settings (authenticated)
 
 ## 🏗️ Project Structure
 
 ```
 lib/
-  ├── main.dart           # App entry point
+  ├── main.dart           # App entry point with BLoC provider
   ├── core/
+  │   ├── config/        # OAuth configuration
   │   ├── di/            # Dependency injection (GetIt + Injectable)
-  │   └── routing/       # Navigation (go_router)
+  │   ├── routing/       # Navigation (go_router)
+  │   ├── errors/        # Failures & exceptions
+  │   ├── utils/         # Result type, FailureMapper
+  │   └── network/       # AuthInterceptor
   ├── common/            # Shared widgets and utilities
   ├── services/          # Service layer (API, storage, etc.)
   └── features/          # Feature modules
-      ├── auth/          # Authentication
-      │   ├── bloc/      # State management
-      │   ├── models/    # Data models
-      │   └── view/      # UI pages
+      ├── auth/          # OAuth 2.0 Authentication (Clean Architecture)
+      │   ├── domain/    # Entities, repositories, use cases
+      │   ├── data/      # Repository impl, data sources, models
+      │   ├── infrastructure/  # PKCE, storage, token refresh
+      │   └── presentation/    # BLoC, screens
       ├── dashboard/     # Dashboard
-      └── users/         # User management
+      ├── users/         # User management
+      ├── voice_memos/   # Voice memo management
+      └── settings/      # Settings
 ```
 
 ## 🛠️ Tech Stack
@@ -129,6 +157,6 @@ For detailed documentation, troubleshooting, and guides, visit the [`docs/`](doc
 
 ---
 
-**Status**: Phase 1 Complete ✅ | **Version**: 1.0.0+1
+**Status**: Phase 1 Complete ✅ | OAuth 2.0 Complete ✅ | **Version**: 1.0.0+1
 
 

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
 import 'app_shell.dart';
-import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/pages/login_screen.dart';
+import '../../features/auth/presentation/pages/oauth_callback_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/users/presentation/users_screen.dart';
 import '../../features/voice_memos/presentation/voice_memos_screen.dart';
@@ -26,6 +27,25 @@ class AppRouter {
             key: state.pageKey,
             child: const LoginScreen(),
           ),
+        ),
+        // OAuth callback route (no shell)
+        GoRoute(
+          path: AppRoutes.oauthCallback,
+          name: 'oauthCallback',
+          pageBuilder: (context, state) {
+            final code = state.uri.queryParameters['code'];
+            final stateParam = state.uri.queryParameters['state'];
+            final error = state.uri.queryParameters['error'];
+
+            return MaterialPage(
+              key: state.pageKey,
+              child: OAuthCallbackScreen(
+                code: code,
+                state: stateParam,
+                error: error,
+              ),
+            );
+          },
         ),
         // Authenticated routes wrapped in AppShell
         ShellRoute(
