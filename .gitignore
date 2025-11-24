@@ -51,5 +51,11 @@ app.*.map.json
 *.config.dart
 *.gr.dart
 
+# Environment variables (SECRETS - DO NOT COMMIT)
+.env
+.env.*
+!.env.example
+lib/core/config/oauth_config.dart
+
 
 

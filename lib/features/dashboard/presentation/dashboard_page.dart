@@ -158,9 +158,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Column(
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      child: Stack(
+        children: [
+          Column(
         children: [
           // App Bar
           Container(
@@ -459,39 +461,48 @@ class _DashboardPageState extends State<DashboardPage> {
           //       ),
           //     ],
           //   ),
-          // ),
+          //           ),
+        ],
+          ),
+          
+          // Floating Action Panel
+          if (_selectedMessages.isNotEmpty)
+            Positioned(
+              bottom: 24,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: MessagesActionPanel(
+                  selectedCount: _selectedMessages.length,
+                  onDownload: () {
+                    // TODO: Implement download
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                      ),
+                    );
+                  },
+                  onSummarize: () {
+                    // TODO: Implement summarize
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
+                      ),
+                    );
+                  },
+                  onAIChat: () {
+                    // TODO: Implement AI chat
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
         ],
       ),
-      
-      // Floating Action Panel
-      floatingActionButton: MessagesActionPanel(
-        selectedCount: _selectedMessages.length,
-        onDownload: () {
-          // TODO: Implement download
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Downloading ${_selectedMessages.length} messages...'),
-            ),
-          );
-        },
-        onSummarize: () {
-          // TODO: Implement summarize
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Summarizing ${_selectedMessages.length} messages...'),
-            ),
-          );
-        },
-        onAIChat: () {
-          // TODO: Implement AI chat
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
-            ),
-          );
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
