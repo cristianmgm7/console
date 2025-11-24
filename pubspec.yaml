@@ -29,6 +29,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.3.2
   crypto: ^3.0.7
+  logger: ^2.6.2
 
 dev_dependencies:
   flutter_test:

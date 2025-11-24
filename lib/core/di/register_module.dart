@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import '../config/oauth_config.dart';
 import '../network/auth_interceptor.dart';
 
@@ -10,8 +11,8 @@ abstract class RegisterModule {
     final dio = Dio(
       BaseOptions(
         baseUrl: OAuthConfig.apiBaseUrl,
-        connectTimeout: Duration(seconds: OAuthConfig.apiTimeoutSeconds),
-        receiveTimeout: Duration(seconds: OAuthConfig.apiTimeoutSeconds),
+        connectTimeout: const Duration(seconds: OAuthConfig.apiTimeoutSeconds),
+        receiveTimeout: const Duration(seconds: OAuthConfig.apiTimeoutSeconds),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -30,4 +31,16 @@ abstract class RegisterModule {
 
     return dio;
   }
+
+  @lazySingleton
+  Logger get logger => Logger(
+        printer: PrettyPrinter(
+          methodCount: 2, // Number of method calls to be displayed
+          errorMethodCount: 8, // Number of method calls if stacktrace is provided
+          lineLength: 120, // Width of the output
+          colors: true, // Colorful log messages
+          printEmojis: true, // Print an emoji for each log message
+          printTime: true, // Should each log print contain a timestamp
+        ),
+      );
 }
