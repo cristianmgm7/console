@@ -1,11 +1,12 @@
 import 'dart:convert';
 
+import 'package:carbon_voice_console/core/web/web_stub.dart'
+    if (dart.library.html) 'package:web/web.dart' as web;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
-import 'package:web/web.dart' as web;
 
 abstract class OAuthLocalDataSource {
   Future<void> saveCredentials(oauth2.Credentials credentials);

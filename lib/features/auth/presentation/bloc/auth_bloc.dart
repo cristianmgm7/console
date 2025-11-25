@@ -2,6 +2,7 @@ import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
 import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -49,22 +50,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(const AuthLoading());
 
-    final result = await _oauthRepository.getAuthorizationUrl();
+    if (kIsWeb) {
+      // Web flow: Get URL and redirect
+      final result = await _oauthRepository.getAuthorizationUrl();
 
-    result.fold(
-      onSuccess: (url) {
+      result.fold(
+        onSuccess: (url) {
+          emit(RedirectToOAuth(url));
+        },
+        onFailure: (failure) {
+          emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
+          emit(const Unauthenticated());
+        },
+      );
+    } else {
+      // Desktop flow: Handle everything automatically
+      final result = await _oauthRepository.loginWithDesktop();
 
-
-        emit(RedirectToOAuth(url));
-      },
-      onFailure: (failure) {
-
-
-        emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
-        emit(const Unauthenticated());
-      },
-    );
+      result.fold(
+        onSuccess: (_) {
+          emit(const Authenticated(message: 'Login successful'));
+        },
+        onFailure: (error) {
+          emit(AuthError(FailureMapper.mapToMessage(error.failure)));
+          emit(const Unauthenticated());
+        },
+      );
+    }
   }
 
   Future<void> _onAuthorizationResponseReceived(

@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
+import 'package:carbon_voice_console/core/utils/oauth_desktop_server.dart';
 import 'package:carbon_voice_console/core/utils/pkce_generator.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/auth/data/datasources/oauth_local_datasource.dart';
 import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -17,12 +21,16 @@ class OAuthRepositoryImpl implements OAuthRepository {
   OAuthRepositoryImpl(
     this._localDataSource,
     this._logger,
-  );
+  ) : _desktopServer = kIsWeb ? null : OAuthDesktopServer();
 
   final OAuthLocalDataSource _localDataSource;
   final Logger _logger;
+  final OAuthDesktopServer? _desktopServer;
 
   oauth2.Client? _client;
+  
+  // Store code verifiers for desktop OAuth (since we can't use sessionStorage)
+  final Map<String, String> _desktopOAuthStates = {};
 
   @override
   Future<Result<String>> getAuthorizationUrl() async {
@@ -50,15 +58,26 @@ class OAuthRepositoryImpl implements OAuthRepository {
       final codeChallenge = PKCEGenerator.generateCodeChallenge(codeVerifier);
       final state = PKCEGenerator.generateState();
 
-      // Guardar el codeVerifier y state en sessionStorage para web
-      await _localDataSource.saveOAuthState(state, codeVerifier);
+      // Guardar el codeVerifier y state
+      if (kIsWeb) {
+        // En web, usar sessionStorage
+        await _localDataSource.saveOAuthState(state, codeVerifier);
+      } else {
+        // En desktop, usar Map en memoria
+        _desktopOAuthStates[state] = codeVerifier;
+        _logger.d('Saved desktop OAuth state for: $state');
+      }
+
+      // Determinar redirect URI según plataforma
+      const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
+      _logger.i('Using redirect URI: $redirectUri (kIsWeb: $kIsWeb)');
 
       // Construir la URL de autorización manualmente con PKCE
       final authUrl = Uri.parse(OAuthConfig.authorizationEndpoint).replace(
         queryParameters: {
           'response_type': 'code',
           'client_id': OAuthConfig.clientId,
-          'redirect_uri': OAuthConfig.redirectUrl,
+          'redirect_uri': redirectUri,
           'code_challenge': codeChallenge,
           'code_challenge_method': 'S256',
           'scope': OAuthConfig.scopes.join(' '),
@@ -76,6 +95,48 @@ class OAuthRepositoryImpl implements OAuthRepository {
     } on StackTrace catch (e) {
       _logger.e('Error creating authorization URL', error: e);
       return failure(UnknownFailure(details: e.toString()));
+    }
+  }
+
+  /// Desktop OAuth flow - handles everything including opening browser and capturing callback
+  @override
+  Future<Result<oauth2.Client>> loginWithDesktop() async {
+    if (_desktopServer == null || kIsWeb) {
+      _logger.e('Desktop server not available (kIsWeb: $kIsWeb)');
+      return failure(const ConfigurationFailure(
+        details: 'Desktop OAuth is only available on desktop platforms',
+      ),);
+    }
+
+    try {
+      _logger.i('🖥️  Starting desktop OAuth flow...');
+
+      // Get authorization URL (will use desktop redirect URI)
+      final urlResult = await getAuthorizationUrl();
+      
+      return urlResult.fold(
+        onSuccess: (authUrl) async {
+          _logger.i('🌐 Opening browser with: $authUrl');
+
+          // Use desktop server to handle the flow
+          // This will: open browser, wait for callback, return callback URL
+          final callbackUrl = await _desktopServer.authenticate(authUrl);
+          _logger.i('✅ Received callback: $callbackUrl');
+
+          // Now handle the authorization response
+          return handleAuthorizationResponse(callbackUrl);
+        },
+        onFailure: (error) {
+          return failure(error.failure);
+        },
+      );
+    } on Exception catch (e, stack) {
+      _logger.e('❌ Desktop OAuth failed', error: e, stackTrace: stack);
+      _desktopServer.close(); // Cleanup
+      return failure(AuthFailure(
+        code: 'DESKTOP_OAUTH_FAILED',
+        details: 'Desktop OAuth flow failed: $e',
+      ),);
     }
   }
 
@@ -116,7 +177,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ),);
       }
 
-      // Recuperar el codeVerifier del sessionStorage usando el state
+      // Recuperar el codeVerifier usando el state
       if (state == null) {
         return failure(const AuthFailure(
           code: 'NO_STATE',
@@ -124,39 +185,105 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ),);
       }
 
-      final oauthState = await _localDataSource.loadOAuthState(state);
-      if (oauthState == null ||
-          oauthState['codeVerifier'] == null ||
-          oauthState['codeVerifier']!.isEmpty) {
-        _logger.e('No codeVerifier found for state: $state');
-        return failure(const AuthFailure(
-          code: 'NO_CODE_VERIFIER',
-          details: 'No authorization grant found. Please try logging in again.',
-        ),);
+      String? codeVerifier;
+      
+      if (kIsWeb) {
+        // En web, cargar de sessionStorage
+        final oauthState = await _localDataSource.loadOAuthState(state);
+        if (oauthState == null ||
+            oauthState['codeVerifier'] == null ||
+            oauthState['codeVerifier']!.isEmpty) {
+          _logger.e('No codeVerifier found in sessionStorage for state: $state');
+          return failure(const AuthFailure(
+            code: 'NO_CODE_VERIFIER',
+            details: 'No authorization grant found. Please try logging in again.',
+          ),);
+        }
+        codeVerifier = oauthState['codeVerifier'];
+      } else {
+        // En desktop, cargar del Map en memoria
+        codeVerifier = _desktopOAuthStates[state];
+        if (codeVerifier == null || codeVerifier.isEmpty) {
+          _logger.e('No codeVerifier found in memory for state: $state');
+          _logger.w('Available states: ${_desktopOAuthStates.keys}');
+          return failure(const AuthFailure(
+            code: 'NO_CODE_VERIFIER',
+            details: 'No authorization grant found. Please try logging in again.',
+          ),);
+        }
+        _logger.d('Retrieved codeVerifier from memory for state: $state');
+        // Limpiar el state usado
+        _desktopOAuthStates.remove(state);
       }
 
-      final codeVerifier = oauthState['codeVerifier']!;
+      _logger.d('Code verifier found: ${codeVerifier!.substring(0, 10)}...');
 
       // Hacer token exchange manualmente con HTTP
-
       _logger.d('Attempting manual token exchange...');
+      _logger.i('Token endpoint: ${OAuthConfig.tokenEndpointUri}');
+
+      // Usar el redirect URI correcto según la plataforma
+      const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
+      _logger.i('Using redirect URI for token exchange: $redirectUri');
+      _logger.d('Code: $code (length: ${code.length})');
+      _logger.d('State: $state');
 
       final tokenBody = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': OAuthConfig.redirectUrl,
+        'redirect_uri': redirectUri,
         'client_id': OAuthConfig.clientId,
         'client_secret': OAuthConfig.clientSecret,
         'code_verifier': codeVerifier,
       };
 
-      final tokenResponse = await http.post(
-        OAuthConfig.tokenEndpointUri,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: tokenBody,
-      );
+      http.Response tokenResponse;
+      try {
+        tokenResponse = await http
+            .post(
+              OAuthConfig.tokenEndpointUri,
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: tokenBody,
+            )
+            .timeout(
+              Duration(seconds: OAuthConfig.apiTimeoutSeconds),
+              onTimeout: () {
+                _logger.e('Token exchange timeout after ${OAuthConfig.apiTimeoutSeconds}s');
+                throw TimeoutException(
+                  'Token exchange timed out after ${OAuthConfig.apiTimeoutSeconds} seconds',
+                  Duration(seconds: OAuthConfig.apiTimeoutSeconds),
+                );
+              },
+            );
+      } on SocketException catch (e) {
+        _logger.e('Network error during token exchange', error: e);
+        final errorMessage = e.message.toLowerCase();
+        String details;
+        
+        if (errorMessage.contains('operation not permitted') || 
+            errorMessage.contains('errno = 1')) {
+          details = 'macOS Firewall is blocking the connection. '
+              'Please go to System Settings → Network → Firewall and temporarily disable it for development. '
+              'See MACOS_NETWORK_PERMISSIONS.md for details.';
+        } else {
+          details = 'Failed to connect to the server. Please check your internet connection and try again. '
+              'If the problem persists, it may be a macOS network permission issue.';
+        }
+        
+        return failure(NetworkFailure(details: details));
+      } on TimeoutException catch (e) {
+        _logger.e('Token exchange timeout', error: e);
+        return failure(NetworkFailure(
+          details: 'Request timed out. Please check your internet connection and try again.',
+        ),);
+      } on Exception catch (e) {
+        _logger.e('Unexpected error during token exchange', error: e);
+        return failure(NetworkFailure(
+          details: 'An unexpected network error occurred: ${e.toString()}',
+        ),);
+      }
 
       _logger.w('Token response status: ${tokenResponse.statusCode}');
 

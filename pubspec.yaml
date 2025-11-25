@@ -29,7 +29,6 @@ dependencies:
   # OAuth
   oauth2: ^2.0.2
   crypto: ^3.0.5
-  web: ^0.5.1
 
   # JSON Serialization
   json_annotation: ^4.9.0

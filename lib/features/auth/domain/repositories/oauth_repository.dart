@@ -8,6 +8,10 @@ abstract class OAuthRepository {
   /// Completes the authentication flow with the received code
   Future<Result<oauth2.Client>> handleAuthorizationResponse(String responseUrl);
 
+  /// Desktop OAuth flow - handles everything including opening browser
+  /// Only available on desktop platforms (macOS, Windows, Linux)
+  Future<Result<oauth2.Client>> loginWithDesktop();
+
   /// Loads the saved OAuth client (if it exists and is valid)
   Future<Result<oauth2.Client?>> loadSavedClient();
 

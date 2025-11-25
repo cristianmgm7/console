@@ -13,14 +13,70 @@ import 'package:injectable/injectable.dart';
 @singleton
 class AppRouter {
   AppRouter() {
+    // Función para obtener la ruta inicial válida
+    // En macOS/iOS, siempre usar /login como ruta inicial
+    // porque Uri.base.path puede contener rutas del sistema de archivos
+    String getInitialLocation() {
+      final basePath = Uri.base.path;
+      debugPrint('📍 Uri.base.path: $basePath');
+      
+      // En desktop/mobile, siempre empezar en login
+      // Solo en web usamos Uri.base.path
+      debugPrint('📍 Using initial location: ${AppRoutes.login}');
+      return AppRoutes.login;
+    }
 
-    // Usar la URL actual como initialLocation, o /login si no hay path
-    final initialPath =
-        Uri.base.path.isEmpty || Uri.base.path == '/' ? AppRoutes.login : Uri.base.path;
-
+    final initialLoc = getInitialLocation();
+    debugPrint('🚀 Initializing GoRouter with location: $initialLoc');
+    
     router = GoRouter(
-      initialLocation: initialPath,
+      initialLocation: initialLoc,
       debugLogDiagnostics: true,
+      redirect: (context, state) {
+        final path = state.uri.path;
+        debugPrint('🔀 GoRouter redirect check: $path');
+        
+        // Detectar rutas del sistema de archivos y redirigir a login
+        final isFileSystemPath = path.contains('/Users/') ||
+            path.contains('/Library/') ||
+            path.contains('/var/') ||
+            path.contains('/private/') ||
+            path.contains('/System/') ||
+            path.contains('/Applications/') ||
+            (!path.startsWith('/') && path.isNotEmpty) ||
+            path.contains(r'\');
+        
+        if (isFileSystemPath) {
+          debugPrint('🔀 Redirecting from file system path to /login');
+          return AppRoutes.login;
+        }
+        
+        // Si la ruta está vacía o es solo "/", redirigir a login
+        if (path.isEmpty || path == '/') {
+          debugPrint('🔀 Redirecting empty path to /login');
+          return AppRoutes.login;
+        }
+        
+        // Validar que la ruta sea válida
+        final validRoutes = [
+          AppRoutes.login,
+          AppRoutes.oauthCallback,
+          AppRoutes.dashboard,
+          AppRoutes.users,
+          AppRoutes.voiceMemos,
+          AppRoutes.settings,
+        ];
+        
+        // Si no es una ruta válida y no es un callback, redirigir a login
+        if (!validRoutes.contains(path) && !path.startsWith('/auth/callback')) {
+          debugPrint('🔀 Redirecting invalid path "$path" to /login');
+          return AppRoutes.login;
+        }
+        
+        // No redirigir si la ruta es válida
+        debugPrint('✅ GoRouter allowing path: $path');
+        return null;
+      },
       routes: [
         // Standalone login route (no shell)
         GoRoute(
@@ -85,9 +141,22 @@ class AppRouter {
         ),
       ],
       errorBuilder: (context, state) {
-        return Scaffold(
+        // Log del error para debugging
+        debugPrint('🚨 GoRouter Error: ${state.uri.path}');
+        debugPrint('🚨 GoRouter Error - Full URI: ${state.uri}');
+        debugPrint('🚨 GoRouter Error - Matched subloc: ${state.matchedLocation}');
+        
+        // Redirigir a login inmediatamente
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            context.go(AppRoutes.login);
+          }
+        });
+        
+        // Mientras tanto, mostrar loading
+        return const Scaffold(
           body: Center(
-            child: Text('Page not found: ${state.uri.path}'),
+            child: CircularProgressIndicator(),
           ),
         );
       },
