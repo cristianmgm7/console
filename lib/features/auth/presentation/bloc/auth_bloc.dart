@@ -21,13 +21,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
 
-
-
     emit(const AuthLoading());
 
-
     final result = await _oauthRepository.isAuthenticated();
-
+    
     result.fold(
       onSuccess: (isAuthenticated) {
 
@@ -106,8 +103,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _oauthRepository.logout();
 
     result.fold(
-      onSuccess: (_) => emit(const LoggedOut()),
-      onFailure: (_) => emit(const LoggedOut()),
+      onSuccess: (_) => emit(const Unauthenticated()),
+      onFailure: (_) => emit(const Unauthenticated()),
     );
   }
 }

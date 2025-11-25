@@ -1,5 +1,9 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -7,16 +11,25 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          // User Profile Section
-          Card(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // Navigate to login when logged out
+        if (state is LoggedOut || state is Unauthenticated) {
+          if (context.mounted) {
+            context.go(AppRoutes.login);
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Settings'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            // User Profile Section
+            Card(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -45,11 +58,11 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 24),
 
-          // Settings Section
-          Text(
+            // Settings Section
+            Text(
             'General',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -91,11 +104,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 24),
 
-          // Account Section
-          Text(
+            // Account Section
+            Text(
             'Account',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -124,11 +137,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 24),
 
-          // Logout Button
-          Card(
+            // Logout Button
+            Card(
             color: Theme.of(context).colorScheme.errorContainer,
             child: ListTile(
               leading: Icon(
@@ -157,7 +170,8 @@ class SettingsScreen extends StatelessWidget {
                       FilledButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          context.go(AppRoutes.login);
+                          // Dispatch logout event to AuthBloc
+                          context.read<AuthBloc>().add(const LogoutRequested());
                         },
                         child: const Text('Logout'),
                       ),
@@ -167,7 +181,8 @@ class SettingsScreen extends StatelessWidget {
               },
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

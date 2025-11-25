@@ -1,9 +1,11 @@
+import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:web/web.dart' as web;
 
 class OAuthCallbackScreen extends StatefulWidget {
@@ -41,7 +43,28 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        // Navigate to dashboard when authenticated
+        if (state is Authenticated) {
+          // Use a small delay to ensure the state is fully processed
+          await Future.microtask(() {
+            if (context.mounted) {
+              context.go(AppRoutes.dashboard);
+            }
+          });
+        } else if (state is AuthError) {
+          // Show error snackbar
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      },
       builder: (context, state) {
         // Log del estado actual para debugging
 
@@ -73,7 +96,7 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      context.go(AppRoutes.login);
                     },
                     child: const Text('Try Again'),
                   ),
