@@ -2,21 +2,21 @@ import 'package:oauth2/oauth2.dart' as oauth2;
 import '../../../../core/utils/result.dart';
 
 abstract class OAuthRepository {
-  /// Inicia el flujo de autenticación y devuelve la URL de autorización
+  /// Starts the authentication flow and returns the authorization URL
   Future<Result<String>> getAuthorizationUrl();
 
-  /// Completa el flujo de autenticación con el código recibido
+  /// Completes the authentication flow with the received code
   Future<Result<oauth2.Client>> handleAuthorizationResponse(String responseUrl);
 
-  /// Carga el cliente OAuth guardado (si existe y es válido)
+  /// Loads the saved OAuth client (if it exists and is valid)
   Future<Result<oauth2.Client?>> loadSavedClient();
 
-  /// Verifica si hay una sesión activa
+  /// Checks if there is an active session
   Future<Result<bool>> isAuthenticated();
 
-  /// Cierra sesión y elimina las credenciales
+  /// Logs out and deletes the credentials
   Future<Result<void>> logout();
 
-  /// Obtiene el cliente OAuth para hacer llamadas API
+  /// Gets the OAuth client for making API calls
   Future<Result<oauth2.Client?>> getClient();
 }
