@@ -11,7 +11,6 @@ fi
 
 # Run Flutter with dart-define for each environment variable
 flutter run -d chrome \
-  --web-port=8080 \
   --dart-define=OAUTH_CLIENT_ID="$OAUTH_CLIENT_ID" \
   --dart-define=OAUTH_CLIENT_SECRET="$OAUTH_CLIENT_SECRET" \
   --dart-define=OAUTH_REDIRECT_URL="$OAUTH_REDIRECT_URL" \
