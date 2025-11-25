@@ -1,38 +1,18 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/usecases/generate_auth_url_usecase.dart';
-import '../../domain/usecases/exchange_code_usecase.dart';
-import '../../domain/usecases/refresh_token_usecase.dart';
-import '../../domain/usecases/load_saved_token_usecase.dart';
-import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/repositories/oauth_repository.dart';
 import '../../../../core/utils/failure_mapper.dart';
-import '../../../../core/di/injection.dart';
-import '../../infrastructure/services/token_refresher_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 @LazySingleton()
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final GenerateAuthUrlUseCase _generateAuthUrl;
-  final ExchangeCodeUseCase _exchangeCode;
-  final RefreshTokenUseCase _refreshToken;
-  final LoadSavedTokenUseCase _loadSavedToken;
-  final LogoutUseCase _logout;
+  final OAuthRepository _oauthRepository;
 
-  // Get TokenRefresherService lazily from service locator to break circular dependency
-  TokenRefresherService get _tokenRefresher => getIt<TokenRefresherService>();
-
-  AuthBloc(
-    this._generateAuthUrl,
-    this._exchangeCode,
-    this._refreshToken,
-    this._loadSavedToken,
-    this._logout,
-  ) : super(const AuthInitial()) {
+  AuthBloc(this._oauthRepository) : super(const AuthInitial()) {
     on<AppStarted>(_onAppStarted);
     on<LoginRequested>(_onLoginRequested);
-    on<OAuthCallbackReceived>(_onOAuthCallbackReceived);
-    on<TokenRefreshRequested>(_onTokenRefreshRequested);
+    on<AuthorizationResponseReceived>(_onAuthorizationResponseReceived);
     on<LogoutRequested>(_onLogoutRequested);
   }
 
@@ -42,22 +22,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
 
-    final result = await _loadSavedToken();
+    final result = await _oauthRepository.isAuthenticated();
 
     result.fold(
-      onSuccess: (token) {
-        if (token == null) {
-          emit(const Unauthenticated());
-        } else if (token.isValid) {
-          _tokenRefresher.startMonitoring();
+      onSuccess: (isAuthenticated) {
+        if (isAuthenticated) {
           emit(const Authenticated());
-        } else if (token.canRefresh) {
-          add(const TokenRefreshRequested());
         } else {
           emit(const Unauthenticated());
         }
       },
-      onFailure: (failure) {
+      onFailure: (_) {
         emit(const Unauthenticated());
       },
     );
@@ -67,7 +42,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginRequested event,
     Emitter<AuthState> emit,
   ) async {
-    final result = await _generateAuthUrl();
+    final result = await _oauthRepository.getAuthorizationUrl();
 
     result.fold(
       onSuccess: (url) {
@@ -80,41 +55,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
-  Future<void> _onOAuthCallbackReceived(
-    OAuthCallbackReceived event,
+  Future<void> _onAuthorizationResponseReceived(
+    AuthorizationResponseReceived event,
     Emitter<AuthState> emit,
   ) async {
     emit(const ProcessingCallback());
 
-    final result = await _exchangeCode(
-      code: event.code,
-      state: event.state,
+    final result = await _oauthRepository.handleAuthorizationResponse(
+      event.responseUrl,
     );
 
     result.fold(
-      onSuccess: (token) {
-        _tokenRefresher.startMonitoring();
+      onSuccess: (_) {
         emit(const Authenticated(message: 'Login successful'));
       },
       onFailure: (failure) {
-        emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
-        emit(const Unauthenticated());
-      },
-    );
-  }
-
-  Future<void> _onTokenRefreshRequested(
-    TokenRefreshRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    final result = await _refreshToken();
-
-    result.fold(
-      onSuccess: (token) {
-        emit(const Authenticated());
-      },
-      onFailure: (failure) {
-        _tokenRefresher.stopMonitoring();
         emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
         emit(const Unauthenticated());
       },
@@ -125,19 +80,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    _tokenRefresher.stopMonitoring();
-
-    final result = await _logout();
+    final result = await _oauthRepository.logout();
 
     result.fold(
       onSuccess: (_) => emit(const LoggedOut()),
       onFailure: (_) => emit(const LoggedOut()),
     );
-  }
-
-  @override
-  Future<void> close() {
-    _tokenRefresher.dispose();
-    return super.close();
   }
 }

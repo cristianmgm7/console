@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import '../config/oauth_config.dart';
@@ -41,6 +42,13 @@ abstract class RegisterModule {
           colors: true, // Colorful log messages
           printEmojis: true, // Print an emoji for each log message
           dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart, // Should each log print contain a timestamp
+        ),
+      );
+
+  @lazySingleton
+  FlutterSecureStorage get secureStorage => const FlutterSecureStorage(
+        aOptions: AndroidOptions(
+          encryptedSharedPreferences: true,
         ),
       );
 }

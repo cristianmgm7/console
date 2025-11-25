@@ -5,15 +5,11 @@ import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 
 class OAuthCallbackScreen extends StatefulWidget {
-  final String? code;
-  final String? state;
-  final String? error;
+  final Uri callbackUri;
 
   const OAuthCallbackScreen({
     super.key,
-    this.code,
-    this.state,
-    this.error,
+    required this.callbackUri,
   });
 
   @override
@@ -24,24 +20,14 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.code != null && widget.state != null) {
-      context.read<AuthBloc>().add(OAuthCallbackReceived(
-            code: widget.code!,
-            state: widget.state!,
-          ));
-    }
+    // Enviar la URL completa al BLoC
+    context.read<AuthBloc>().add(
+      AuthorizationResponseReceived(widget.callbackUri.toString()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.error != null) {
-      return Scaffold(
-        body: Center(
-          child: Text('Login failed: ${widget.error}'),
-        ),
-      );
-    }
-
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is ProcessingCallback) {
@@ -55,7 +41,7 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         if (state is Authenticated) {
           return const Scaffold(
             body: Center(
-              child: Text('Login successful! You can close this window.'),
+              child: Text('Login successful! Redirecting...'),
             ),
           );
         }
@@ -63,7 +49,19 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         if (state is AuthError) {
           return Scaffold(
             body: Center(
-              child: Text('Error: ${state.message}'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Error: ${state.message}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Try Again'),
+                  ),
+                ],
+              ),
             ),
           );
         }

@@ -31,7 +31,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String codeChallenge,
     required String state,
   }) async {
-    final uri = Uri.parse(OAuthConfig.authUrl).replace(queryParameters: {
+    final uri = Uri.parse(OAuthConfig.authorizationEndpoint).replace(queryParameters: {
       'response_type': 'code',
       'client_id': OAuthConfig.clientId,
       'redirect_uri': OAuthConfig.redirectUrl,
@@ -51,7 +51,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final response = await _dio.post(
-        OAuthConfig.tokenUrl,
+        OAuthConfig.tokenEndpoint,
         data: {
           'grant_type': 'authorization_code',
           'client_id': OAuthConfig.clientId,
@@ -78,7 +78,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<TokenModel> refreshAccessToken(String refreshToken) async {
     try {
       final response = await _dio.post(
-        OAuthConfig.tokenUrl,
+        OAuthConfig.tokenEndpoint,
         data: {
           'grant_type': 'refresh_token',
           'client_id': OAuthConfig.clientId,

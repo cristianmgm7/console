@@ -15,21 +15,14 @@ class LoginRequested extends AuthEvent {
   const LoginRequested();
 }
 
-class OAuthCallbackReceived extends AuthEvent {
-  final String code;
-  final String state;
+// NEW: Maneja la URL de callback completa
+class AuthorizationResponseReceived extends AuthEvent {
+  final String responseUrl;
 
-  const OAuthCallbackReceived({
-    required this.code,
-    required this.state,
-  });
+  const AuthorizationResponseReceived(this.responseUrl);
 
   @override
-  List<Object?> get props => [code, state];
-}
-
-class TokenRefreshRequested extends AuthEvent {
-  const TokenRefreshRequested();
+  List<Object?> get props => [responseUrl];
 }
 
 class LogoutRequested extends AuthEvent {

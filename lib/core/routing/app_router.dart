@@ -33,16 +33,10 @@ class AppRouter {
           path: AppRoutes.oauthCallback,
           name: 'oauthCallback',
           pageBuilder: (context, state) {
-            final code = state.uri.queryParameters['code'];
-            final stateParam = state.uri.queryParameters['state'];
-            final error = state.uri.queryParameters['error'];
-
             return MaterialPage(
               key: state.pageKey,
               child: OAuthCallbackScreen(
-                code: code,
-                state: stateParam,
-                error: error,
+                callbackUri: state.uri,
               ),
             );
           },
