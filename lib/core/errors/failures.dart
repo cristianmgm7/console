@@ -2,10 +2,10 @@ import 'package:equatable/equatable.dart';
 
 /// Base class for all domain failures
 sealed class AppFailure extends Equatable {
+  const AppFailure({required this.code, this.details});
+
   final String code;
   final String? details;
-
-  const AppFailure({required this.code, this.details});
 
   @override
   List<Object?> get props => [code, details];
@@ -38,12 +38,13 @@ final class NetworkFailure extends AppFailure {
 }
 
 final class ServerFailure extends AppFailure {
-  final int statusCode;
 
   const ServerFailure({
     required this.statusCode,
     super.details,
   }) : super(code: 'SERVER_ERROR');
+  
+  final int statusCode;
 
   @override
   List<Object?> get props => [code, details, statusCode];

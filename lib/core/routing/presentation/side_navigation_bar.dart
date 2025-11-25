@@ -1,6 +1,6 @@
+import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../app_routes.dart';
 
 class SideNavigationBar extends StatelessWidget {
   const SideNavigationBar({super.key});
@@ -13,11 +13,10 @@ class SideNavigationBar extends StatelessWidget {
       width: 72,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // App branding header
           Container(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Icon(
               Icons.mic,
               size: 24,
@@ -28,7 +27,7 @@ class SideNavigationBar extends StatelessWidget {
           // Navigation items
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 _NavigationItem(
                   icon: Icons.message,
@@ -50,7 +49,7 @@ class SideNavigationBar extends StatelessWidget {
           // Bottom section - User/Settings
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: Material(
               color: currentPath == AppRoutes.settings
                   ? Theme.of(context).colorScheme.primaryContainer
@@ -62,7 +61,7 @@ class SideNavigationBar extends StatelessWidget {
                 child: Tooltip(
                   message: 'Settings',
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(12),
                     child: CircleAvatar(
                       radius: 18,
                       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -84,11 +83,6 @@ class SideNavigationBar extends StatelessWidget {
 }
 
 class _NavigationItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String route;
-  final bool isSelected;
-  final VoidCallback onTap;
 
   const _NavigationItem({
     required this.icon,
@@ -98,12 +92,18 @@ class _NavigationItem extends StatelessWidget {
     required this.onTap,
   });
 
+  final IconData icon;
+  final String label;
+  final String route;
+  final bool isSelected;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
         color: isSelected ? colorScheme.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -114,8 +114,8 @@ class _NavigationItem extends StatelessWidget {
             message: label,
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
+                horizontal: 16,
+                vertical: 12,
               ),
               child: Icon(
                 icon,

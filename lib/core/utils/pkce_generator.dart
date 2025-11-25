@@ -41,4 +41,3 @@ class PKCEGenerator {
     ).join();
   }
 }
-

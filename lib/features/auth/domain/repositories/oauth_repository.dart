@@ -1,5 +1,5 @@
+import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
-import '../../../../core/utils/result.dart';
 
 abstract class OAuthRepository {
   /// Starts the authentication flow and returns the authorization URL

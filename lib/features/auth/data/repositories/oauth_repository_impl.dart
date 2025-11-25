@@ -42,7 +42,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(const ConfigurationFailure(
           details:
               'OAuth client_id is not configured. Please set OAUTH_CLIENT_ID environment variable.',
-        ));
+        ),);
       }
 
       // Generar PKCE codes manualmente para poder guardarlos
@@ -70,8 +70,11 @@ class OAuthRepositoryImpl implements OAuthRepository {
       _logger.w('Authorization URL query params: ${authUrl.queryParameters}');
 
       return success(authUrl.toString());
-    } catch (e, stack) {
+    } on Exception catch (e, stack) {
       _logger.e('Error creating authorization URL', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: e.toString()));
+    } on StackTrace catch (e) {
+      _logger.e('Error creating authorization URL', error: e);
       return failure(UnknownFailure(details: e.toString()));
     }
   }
@@ -102,7 +105,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(AuthFailure(
           code: error,
           details: responseUri.queryParameters['error_description'] ?? 'Authorization failed',
-        ));
+        ),);
       }
 
       // Si no hay código de autorización
@@ -110,7 +113,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(const AuthFailure(
           code: 'NO_CODE',
           details: 'No authorization code received',
-        ));
+        ),);
       }
 
       // Recuperar el codeVerifier del sessionStorage usando el state
@@ -118,7 +121,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(const AuthFailure(
           code: 'NO_STATE',
           details: 'No state parameter received',
-        ));
+        ),);
       }
 
       final oauthState = await _localDataSource.loadOAuthState(state);
@@ -129,7 +132,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(const AuthFailure(
           code: 'NO_CODE_VERIFIER',
           details: 'No authorization grant found. Please try logging in again.',
-        ));
+        ),);
       }
 
       final codeVerifier = oauthState['codeVerifier']!;
@@ -165,12 +168,13 @@ class OAuthRepositoryImpl implements OAuthRepository {
           return failure(AuthFailure(
             code: errorJson['error']?.toString() ?? 'TOKEN_EXCHANGE_FAILED',
             details: errorJson['error_description']?.toString() ?? 'Token exchange failed',
-          ));
-        } catch (e) {
+          ),);
+        } on Exception catch (e) {
+          _logger.e('Error parsing token response', error: e);
           return failure(AuthFailure(
             code: 'TOKEN_EXCHANGE_FAILED',
             details: 'Token exchange failed: ${tokenResponse.body}',
-          ));
+          ),);
         }
       }
 
@@ -211,7 +215,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       oauth2.Credentials credentials;
       try {
         credentials = oauth2.Credentials.fromJson(jsonString);
-      } catch (e) {
+      } on Exception catch (e) {
         _logger.e('Error creating credentials', error: e);
         // Intentar crear credentials directamente con el constructor
         // Nota: oauth2.Credentials no tiene constructor público, así que debemos usar fromJson

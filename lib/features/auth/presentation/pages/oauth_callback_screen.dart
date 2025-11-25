@@ -1,11 +1,10 @@
-import 'package:web/web.dart' as web;
-
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:web/web.dart' as web;
 
 class OAuthCallbackScreen extends StatefulWidget {
   const OAuthCallbackScreen({

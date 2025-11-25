@@ -17,9 +17,9 @@ class LoginRequested extends AuthEvent {
 
 // NEW: Maneja la URL de callback completa
 class AuthorizationResponseReceived extends AuthEvent {
-  final String responseUrl;
 
   const AuthorizationResponseReceived(this.responseUrl);
+  final String responseUrl;
 
   @override
   List<Object?> get props => [responseUrl];

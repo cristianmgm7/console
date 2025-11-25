@@ -1,4 +1,4 @@
-import '../errors/failures.dart';
+import 'package:carbon_voice_console/core/errors/failures.dart';
 
 /// Maps domain failures to user-friendly messages
 /// Keeps domain layer pure and enables i18n

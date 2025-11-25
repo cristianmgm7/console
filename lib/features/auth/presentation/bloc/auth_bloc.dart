@@ -1,13 +1,12 @@
+import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
+import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/repositories/oauth_repository.dart';
-import '../../../../core/utils/failure_mapper.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
 
 @LazySingleton()
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final OAuthRepository _oauthRepository;
 
   AuthBloc(this._oauthRepository) : super(const AuthInitial()) {
     on<AppStarted>(_onAppStarted);
@@ -15,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthorizationResponseReceived>(_onAuthorizationResponseReceived);
     on<LogoutRequested>(_onLogoutRequested);
   }
+  final OAuthRepository _oauthRepository;
 
   Future<void> _onAppStarted(
     AppStarted event,

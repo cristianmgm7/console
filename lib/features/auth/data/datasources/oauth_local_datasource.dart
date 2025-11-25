@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
-import 'dart:convert';
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 
 abstract class OAuthLocalDataSource {
   Future<void> saveCredentials(oauth2.Credentials credentials);
@@ -18,9 +20,13 @@ abstract class OAuthLocalDataSource {
 
 @LazySingleton(as: OAuthLocalDataSource)
 class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
+  OAuthLocalDataSourceImpl(this._storage);
+
   static const _credentialsKey = 'oauth_credentials';
   final FlutterSecureStorage _storage;
-  OAuthLocalDataSourceImpl(this._storage);
+
+  final Logger _logger = Logger();
+  
   @override
   Future<void> saveCredentials(oauth2.Credentials credentials) async {
     final json = credentials.toJson();
@@ -34,8 +40,9 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
     try {
       // oauth2.Credentials.fromJson expects a JSON string, not a Map
       return oauth2.Credentials.fromJson(jsonString);
-    } catch (e) {
-      // Credentials corruptas o formato antiguo
+    } on Exception catch (e) {
+      _logger.e('Error loading credentials', error: e);
+      // Credentials corrupted or old format
       return null;
     }
   }
@@ -55,8 +62,10 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
         'codeVerifier': codeVerifier,
         'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
       };
-      html.window.sessionStorage['oauth_state_$state'] = jsonEncode(data);
-    } catch (e) {}
+      web.window.sessionStorage['oauth_state_$state'] = jsonEncode(data);
+    } on Exception catch (e) {
+      _logger.e('Error saving OAuth state', error: e);
+    }
   }
 
   @override
@@ -64,7 +73,7 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
     if (!kIsWeb) return null;
 
     try {
-      final dataStr = html.window.sessionStorage['oauth_state_$state'];
+      final dataStr = web.window.sessionStorage['oauth_state_$state'];
       if (dataStr == null) {
         return null;
       }
@@ -74,7 +83,8 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
         'state': data['state'] as String,
         'codeVerifier': data['codeVerifier'] as String,
       };
-    } catch (e) {
+    } on Exception catch (e) {
+      _logger.e('Error loading OAuth state', error: e);
       return null;
     }
   }
@@ -84,7 +94,9 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
     if (!kIsWeb) return;
 
     try {
-      html.window.sessionStorage.remove('oauth_state_$state');
-    } catch (e) {}
+      web.window.sessionStorage['oauth_state_$state'] = '';
+    } on Exception catch (e) {
+      _logger.e('Error clearing OAuth state', error: e);
+    }
   }
 }
