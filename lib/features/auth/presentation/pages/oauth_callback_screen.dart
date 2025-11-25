@@ -8,12 +8,10 @@ import '../bloc/auth_state.dart';
 
 class OAuthCallbackScreen extends StatefulWidget {
   final Uri callbackUri;
-
   const OAuthCallbackScreen({
     super.key,
     required this.callbackUri,
   });
-
   @override
   State<OAuthCallbackScreen> createState() => _OAuthCallbackScreenState();
 }
@@ -24,28 +22,20 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
     super.initState();
     // Log para debugging en consola del navegador
 
-
-
-    
     // En web, usar la URL completa del navegador para obtener los query params
     String fullUrl;
     if (kIsWeb) {
       final currentUrl = html.window.location.href;
-
       fullUrl = currentUrl;
     } else {
       // En otras plataformas, usar la URI del router
       fullUrl = widget.callbackUri.toString();
     }
-    
 
-
-    
     // Enviar la URL completa al BLoC
     context.read<AuthBloc>().add(
-      AuthorizationResponseReceived(fullUrl),
-    );
-
+          AuthorizationResponseReceived(fullUrl),
+        );
   }
 
   @override
@@ -55,13 +45,9 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         // Log del estado actual para debugging
 
         if (state is AuthError) {
-
         } else if (state is Authenticated) {
+        } else if (state is ProcessingCallback) {}
 
-        } else if (state is ProcessingCallback) {
-
-        }
-        
         if (state is ProcessingCallback) {
           return const Scaffold(
             body: Center(
@@ -69,7 +55,6 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
             ),
           );
         }
-
         if (state is Authenticated) {
           return const Scaffold(
             body: Center(
@@ -77,7 +62,6 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
             ),
           );
         }
-
         if (state is AuthError) {
           return Scaffold(
             body: Center(
@@ -97,7 +81,6 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
             ),
           );
         }
-
         return const Scaffold(
           body: Center(
             child: Text('Processing login...'),

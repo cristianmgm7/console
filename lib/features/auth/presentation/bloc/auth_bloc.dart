@@ -22,7 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     print('🟡 AuthBloc: AppStarted event received');
     print('🟡 AuthBloc: Current URL path: ${Uri.base.path}');
-    
+
     emit(const AuthLoading());
     print('🟡 AuthBloc: Emitted AuthLoading state');
 
@@ -32,17 +32,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       onSuccess: (isAuthenticated) {
         print('🟡 AuthBloc: isAuthenticated check result: $isAuthenticated');
         if (isAuthenticated) {
-          print('🟢 AuthBloc: User is authenticated, emitting Authenticated state');
+          print(
+              '🟢 AuthBloc: User is authenticated, emitting Authenticated state');
           emit(const Authenticated());
         } else {
-          print('🟡 AuthBloc: User is not authenticated, emitting Unauthenticated state');
+          print(
+              '🟡 AuthBloc: User is not authenticated, emitting Unauthenticated state');
           // NO redirigir a login si estamos en el callback route
           // El router manejará la navegación
           emit(const Unauthenticated());
         }
       },
       onFailure: (_) {
-        print('🔴 AuthBloc: Error checking authentication, emitting Unauthenticated state');
+        print(
+            '🔴 AuthBloc: Error checking authentication, emitting Unauthenticated state');
         emit(const Unauthenticated());
       },
     );
@@ -63,7 +66,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       onFailure: (failure) {
         print('🔴 AuthBloc: Failed to create authorization URL');
-        print('🔴 AuthBloc: Error: ${FailureMapper.mapToMessage(failure.failure)}');
+        print(
+            '🔴 AuthBloc: Error: ${FailureMapper.mapToMessage(failure.failure)}');
         emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
         emit(const Unauthenticated());
       },
@@ -76,7 +80,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     print('🟡 AuthBloc: AuthorizationResponseReceived event received');
     print('🟡 AuthBloc: Response URL: ${event.responseUrl}');
-    
+
     emit(const ProcessingCallback());
     print('🟡 AuthBloc: Emitted ProcessingCallback state');
 
@@ -86,13 +90,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       onSuccess: (_) {
-        print('🟢 AuthBloc: Token exchange successful! Emitting Authenticated state');
+        print(
+            '🟢 AuthBloc: Token exchange successful! Emitting Authenticated state');
         emit(const Authenticated(message: 'Login successful'));
       },
       onFailure: (failure) {
         print('🔴 AuthBloc: Token exchange failed!');
         print('🔴 AuthBloc: Failure: ${failure.failure}');
-        print('🔴 AuthBloc: Error message: ${FailureMapper.mapToMessage(failure.failure)}');
+        print(
+            '🔴 AuthBloc: Error message: ${FailureMapper.mapToMessage(failure.failure)}');
         emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
         emit(const Unauthenticated());
       },

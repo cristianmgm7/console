@@ -10,6 +10,3 @@ class AppRoutes {
   static const String voiceMemos = '/dashboard/voice-memos';
   static const String settings = '/dashboard/settings';
 }
-
-
-

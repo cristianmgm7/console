@@ -17,8 +17,11 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected 
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
+        color: isSelected
+            ? Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.3)
             : Colors.transparent,
       ),
       child: Padding(
@@ -33,9 +36,9 @@ class MessageCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            
+
             const SizedBox(width: 8),
-            
+
             // Date
             SizedBox(
               width: 120,
@@ -49,28 +52,28 @@ class MessageCard extends StatelessWidget {
                   Text(
                     'Received: ${_formatFullDate(message.date)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Owner
             SizedBox(
               width: 140,
               child: Text(
                 message.owner,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Message
             Expanded(
               child: Column(
@@ -86,15 +89,15 @@ class MessageCard extends StatelessWidget {
                   Text(
                     message.project,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // AI Action Button
             SizedBox(
               width: 60,
@@ -123,9 +126,9 @@ class MessageCard extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Duration
             SizedBox(
               width: 60,
@@ -135,9 +138,9 @@ class MessageCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Status
             SizedBox(
               width: 90,
@@ -151,16 +154,16 @@ class MessageCard extends StatelessWidget {
                   child: Text(
                     message.status,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                 ),
               ),
             ),
-            
+
             const SizedBox(width: 8),
-            
+
             // Menu
             PopupMenuButton(
               icon: const Icon(Icons.more_vert),
@@ -231,7 +234,7 @@ class MessageCard extends StatelessWidget {
     final minute = date.minute.toString().padLeft(2, '0');
     final period = hour >= 12 ? 'PM' : 'AM';
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    
+
     return '$displayHour:$minute $period ${date.month}/${date.day}/${date.year % 100}';
   }
 
@@ -258,4 +261,3 @@ class MessageCard extends StatelessWidget {
     }
   }
 }
-

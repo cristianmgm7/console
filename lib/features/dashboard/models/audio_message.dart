@@ -17,4 +17,3 @@ class AudioMessage {
     required this.project,
   });
 }
-

@@ -31,7 +31,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '2',
       date: DateTime(2023, 10, 26, 14, 10),
       owner: 'Jane Doe',
-      message: 'Discussing the quarterly results and planning for the next phase of th...',
+      message:
+          'Discussing the quarterly results and planning for the next phase of th...',
       duration: const Duration(minutes: 1, seconds: 23),
       status: 'New',
       project: 'Internal Sprint',
@@ -49,7 +50,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '4',
       date: DateTime(2023, 10, 25, 9, 30),
       owner: 'Sarah Johnson',
-      message: 'Client Call - Q3 Strategy review and discussion about upcoming initiatives.',
+      message:
+          'Client Call - Q3 Strategy review and discussion about upcoming initiatives.',
       duration: const Duration(minutes: 12, seconds: 31),
       status: 'Processed',
       project: 'Project Phoenix',
@@ -58,7 +60,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '5',
       date: DateTime(2023, 10, 26, 8, 55),
       owner: 'Mike Chen',
-      message: 'Daily Standup Recording - team updates and blockers discussion.',
+      message:
+          'Daily Standup Recording - team updates and blockers discussion.',
       duration: const Duration(minutes: 8, seconds: 55),
       status: 'New',
       project: 'Internal Sprint',
@@ -67,7 +70,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '6',
       date: DateTime(2023, 10, 24, 16, 20),
       owner: 'Emily Parker',
-      message: 'Onboarding Interview #12 - discussing role expectations and team culture.',
+      message:
+          'Onboarding Interview #12 - discussing role expectations and team culture.',
       duration: const Duration(minutes: 45, seconds: 2),
       status: 'Archived',
       project: 'HR Initiatives',
@@ -85,7 +89,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '8',
       date: DateTime(2023, 10, 22, 10, 45),
       owner: 'Lisa Wong',
-      message: 'Architecture review meeting - discussing microservices migration strategy.',
+      message:
+          'Architecture review meeting - discussing microservices migration strategy.',
       duration: const Duration(minutes: 32, seconds: 18),
       status: 'Processed',
       project: 'Tech Infrastructure',
@@ -94,7 +99,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '9',
       date: DateTime(2023, 10, 21, 13, 30),
       owner: 'David Kim',
-      message: 'Customer feedback session - analyzing user pain points and feature requests.',
+      message:
+          'Customer feedback session - analyzing user pain points and feature requests.',
       duration: const Duration(minutes: 25, seconds: 10),
       status: 'New',
       project: 'Product Research',
@@ -103,7 +109,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '10',
       date: DateTime(2023, 10, 20, 11, 0),
       owner: 'Amanda Torres',
-      message: 'Budget planning discussion - Q4 allocation and resource optimization.',
+      message:
+          'Budget planning discussion - Q4 allocation and resource optimization.',
       duration: const Duration(minutes: 28, seconds: 33),
       status: 'Processed',
       project: 'Finance Review',
@@ -112,7 +119,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '11',
       date: DateTime(2023, 10, 19, 15, 15),
       owner: 'Robert Lee',
-      message: 'Security audit findings - critical vulnerabilities and remediation plan.',
+      message:
+          'Security audit findings - critical vulnerabilities and remediation plan.',
       duration: const Duration(minutes: 19, seconds: 47),
       status: 'Processed',
       project: 'Security Operations',
@@ -121,7 +129,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '12',
       date: DateTime(2023, 10, 18, 9, 20),
       owner: 'Jennifer Martinez',
-      message: 'Marketing campaign review - analyzing metrics and ROI for recent initiatives.',
+      message:
+          'Marketing campaign review - analyzing metrics and ROI for recent initiatives.',
       duration: const Duration(minutes: 22, seconds: 5),
       status: 'Archived',
       project: 'Marketing Strategy',
@@ -163,293 +172,326 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Stack(
         children: [
           Column(
-        children: [
-          // App Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).dividerColor,
+            children: [
+              // App Bar
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).dividerColor,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Title
+                    Text(
+                      'Audio Messages',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+
+                    const SizedBox(width: 32),
+
+                    // Workspace Dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.3),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedWorkspace,
+                        underline: const SizedBox.shrink(),
+                        icon: const Icon(Icons.arrow_drop_down),
+                        items: [
+                          'Personal',
+                          'Work',
+                          'Side Project',
+                          'Research',
+                          'Client Work',
+                        ].map((String workspace) {
+                          return DropdownMenuItem<String>(
+                            value: workspace,
+                            child: Text(workspace),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedWorkspace = newValue!;
+                          });
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Search Field
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 250),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Conversation ID',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.3),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.3),
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Conversation Name Display
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Project Phoenix - Q4 Strategy Meeting',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const Spacer(),
+                  ],
                 ),
               ),
-            ),
-            child: Row(
-              children: [
-                // Title
-                Text(
-                  'Audio Messages',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+              // Table Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      // Select All Checkbox
+                      Checkbox(
+                        value: _selectAll,
+                        onChanged: _toggleSelectAll,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // Headers
+                      SizedBox(
+                        width: 120,
+                        child: Row(
+                          children: [
+                            Text(
+                              'Date',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            const Icon(Icons.arrow_upward, size: 16),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      SizedBox(
+                        width: 140,
+                        child: Text(
+                          'Owner',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      Expanded(
+                        child: Text(
+                          'Message',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      const SizedBox(width: 60), // AI Action space
+
+                      const SizedBox(width: 16),
+
+                      SizedBox(
+                        width: 60,
+                        child: Row(
+                          children: [
+                            Text(
+                              'Dur',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            const Icon(Icons.unfold_more, size: 16),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      SizedBox(
+                        width: 90,
+                        child: Text(
+                          'Status',
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 56), // Menu space
+                    ],
                   ),
                 ),
-                
-                const SizedBox(width: 32),
-                
-                // Workspace Dropdown
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: _selectedWorkspace,
-                    underline: const SizedBox.shrink(),
-                    icon: const Icon(Icons.arrow_drop_down),
-                    items: [
-                      'Personal',
-                      'Work',
-                      'Side Project',
-                      'Research',
-                      'Client Work',
-                    ].map((String workspace) {
-                      return DropdownMenuItem<String>(
-                        value: workspace,
-                        child: Text(workspace),
+              ),
+
+              // Messages List
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                  child: ListView.builder(
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return MessageCard(
+                        message: message,
+                        isSelected: _selectedMessages.contains(message.id),
+                        onSelected: (value) =>
+                            _toggleMessageSelection(message.id, value),
                       );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedWorkspace = newValue!;
-                      });
                     },
                   ),
                 ),
-                
-                const SizedBox(width: 16),
-                
-                // Search Field
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 250),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Conversation ID',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                // Conversation Name Display
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 300),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'Project Phoenix - Q4 Strategy Meeting',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const Spacer(),
-                          
-              ],
-            ),
-          ),
-          // Table Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 64.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                border: Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                    width: 1,
-                  ),
-                ),
               ),
-            child: Row(
-              children: [
-                // Select All Checkbox
-                Checkbox(
-                  value: _selectAll,
-                  onChanged: _toggleSelectAll,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                
-                const SizedBox(width: 8),
-                
-                // Headers
-                SizedBox(
-                  width: 120,
-                  child: Row(
-                    children: [
-                      Text(
-                        'Date',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Icon(Icons.arrow_upward, size: 16),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                SizedBox(
-                  width: 140,
-                  child: Text(
-                    'Owner',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                Expanded(
-                  child: Text(
-                    'Message',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                const SizedBox(width: 60), // AI Action space
-                
-                const SizedBox(width: 16),
-                
-                SizedBox(
-                  width: 60,
-                  child: Row(
-                    children: [
-                      Text(
-                        'Dur',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Icon(Icons.unfold_more, size: 16),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                SizedBox(
-                  width: 90,
-                  child: Text(
-                    'Status',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(width: 56), // Menu space
-              ],
-            ),
-            ),
+
+              // // Pagination
+              // Container(
+              //   padding: const EdgeInsets.symmetric(vertical: 16.0),
+              //   decoration: BoxDecoration(
+              //     color: Theme.of(context).colorScheme.surface,
+              //     border: Border(
+              //       top: BorderSide(
+              //         color: Theme.of(context).dividerColor,
+              //       ),
+              //     ),
+              //   ),
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.center,
+              //     children: [
+              //       IconButton(
+              //         icon: const Icon(Icons.chevron_left),
+              //         onPressed: () {
+              //           // TODO: Previous page
+              //         },
+              //       ),
+              //       const SizedBox(width: 16),
+              //       Text(
+              //         'Page 1 of 12',
+              //         style: Theme.of(context).textTheme.bodyMedium,
+              //       ),
+              //       const SizedBox(width: 16),
+              //       IconButton(
+              //         icon: const Icon(Icons.chevron_right),
+              //         onPressed: () {
+              //           // TODO: Next page
+              //         },
+              //       ),
+              //     ],
+              //   ),
+              //           ),
+            ],
           ),
-          
-          // Messages List
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 64.0),
-              child: ListView.builder(
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  return MessageCard(
-                    message: message,
-                    isSelected: _selectedMessages.contains(message.id),
-                    onSelected: (value) => _toggleMessageSelection(message.id, value),
-                  );
-                },
-              ),
-            ),
-          ),
-          
-          // // Pagination
-          // Container(
-          //   padding: const EdgeInsets.symmetric(vertical: 16.0),
-          //   decoration: BoxDecoration(
-          //     color: Theme.of(context).colorScheme.surface,
-          //     border: Border(
-          //       top: BorderSide(
-          //         color: Theme.of(context).dividerColor,
-          //       ),
-          //     ),
-          //   ),
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: [
-          //       IconButton(
-          //         icon: const Icon(Icons.chevron_left),
-          //         onPressed: () {
-          //           // TODO: Previous page
-          //         },
-          //       ),
-          //       const SizedBox(width: 16),
-          //       Text(
-          //         'Page 1 of 12',
-          //         style: Theme.of(context).textTheme.bodyMedium,
-          //       ),
-          //       const SizedBox(width: 16),
-          //       IconButton(
-          //         icon: const Icon(Icons.chevron_right),
-          //         onPressed: () {
-          //           // TODO: Next page
-          //         },
-          //       ),
-          //     ],
-          //   ),
-          //           ),
-        ],
-          ),
-          
+
           // Floating Action Panel
           if (_selectedMessages.isNotEmpty)
             Positioned(
@@ -463,7 +505,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // TODO: Implement download
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                        content: Text(
+                            'Downloading ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -471,7 +514,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // TODO: Implement summarize
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
+                        content: Text(
+                            'Summarizing ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -479,7 +523,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // TODO: Implement AI chat
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
+                        content: Text(
+                            'Opening AI chat for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },

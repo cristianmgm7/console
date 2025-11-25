@@ -13,18 +13,11 @@ import 'app_routes.dart';
 @singleton
 class AppRouter {
   late final GoRouter router;
-
   AppRouter() {
-
-
-
-    
     // Usar la URL actual como initialLocation, o /login si no hay path
-    final initialPath = Uri.base.path.isEmpty || Uri.base.path == '/' 
-        ? AppRoutes.login 
+    final initialPath = Uri.base.path.isEmpty || Uri.base.path == '/'
+        ? AppRoutes.login
         : Uri.base.path;
-
-    
     router = GoRouter(
       initialLocation: initialPath,
       debugLogDiagnostics: true,
@@ -45,15 +38,9 @@ class AppRouter {
           pageBuilder: (context, state) {
             // Log para debugging
 
-
-
-
-
-
-            
             // Usar la URI completa con todos los query parameters
             final fullUri = state.uri;
-            
+
             return MaterialPage(
               key: state.pageKey,
               child: OAuthCallbackScreen(
@@ -98,7 +85,6 @@ class AppRouter {
         ),
       ],
       errorBuilder: (context, state) {
-
         return Scaffold(
           body: Center(
             child: Text('Page not found: ${state.uri.path}'),
@@ -106,13 +92,8 @@ class AppRouter {
         );
       },
     );
-    
+
     // Log cuando el router está listo
-
   }
-
   GoRouter get instance => router;
 }
-
-
-

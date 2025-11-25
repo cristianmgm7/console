@@ -18,15 +18,15 @@ sealed class Result<T> {
 
   /// Get value or null (use with caution)
   T? get valueOrNull => switch (this) {
-    Success(value: final v) => v,
-    Failure() => null,
-  };
+        Success(value: final v) => v,
+        Failure() => null,
+      };
 
   /// Get failure or null
   AppFailure? get failureOrNull => switch (this) {
-    Success() => null,
-    Failure(failure: final f) => f,
-  };
+        Success() => null,
+        Failure(failure: final f) => f,
+      };
 }
 
 /// Success result
@@ -46,8 +46,7 @@ final class Success<T> extends Result<T> {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Success<T> && value == other.value;
+      identical(this, other) || other is Success<T> && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -70,8 +69,7 @@ final class Failure<T> extends Result<T> {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Failure<T> && failure == other.failure;
+      identical(this, other) || other is Failure<T> && failure == other.failure;
 
   @override
   int get hashCode => failure.hashCode;

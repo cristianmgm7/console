@@ -8,7 +8,7 @@ class SideNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
-    
+
     return Container(
       width: 72,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -44,7 +44,6 @@ class SideNavigationBar extends StatelessWidget {
                   isSelected: currentPath == AppRoutes.voiceMemos,
                   onTap: () => context.go(AppRoutes.voiceMemos),
                 ),
-                
               ],
             ),
           ),
@@ -102,13 +101,11 @@ class _NavigationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
       child: Material(
-        color: isSelected
-            ? colorScheme.primaryContainer
-            : Colors.transparent,
+        color: isSelected ? colorScheme.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
@@ -134,4 +131,3 @@ class _NavigationItem extends StatelessWidget {
     );
   }
 }
-

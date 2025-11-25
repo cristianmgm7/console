@@ -17,29 +17,24 @@ final class AuthFailure extends AppFailure {
 }
 
 final class TokenExpiredFailure extends AppFailure {
-  const TokenExpiredFailure()
-      : super(code: 'TOKEN_EXPIRED');
+  const TokenExpiredFailure() : super(code: 'TOKEN_EXPIRED');
 }
 
 final class InvalidCredentialsFailure extends AppFailure {
-  const InvalidCredentialsFailure()
-      : super(code: 'INVALID_CREDENTIALS');
+  const InvalidCredentialsFailure() : super(code: 'INVALID_CREDENTIALS');
 }
 
 final class InvalidStateFailure extends AppFailure {
-  const InvalidStateFailure()
-      : super(code: 'INVALID_STATE');
+  const InvalidStateFailure() : super(code: 'INVALID_STATE');
 }
 
 final class UserCancelledFailure extends AppFailure {
-  const UserCancelledFailure()
-      : super(code: 'USER_CANCELLED');
+  const UserCancelledFailure() : super(code: 'USER_CANCELLED');
 }
 
 /// Network failures
 final class NetworkFailure extends AppFailure {
-  const NetworkFailure({super.details})
-      : super(code: 'NETWORK_ERROR');
+  const NetworkFailure({super.details}) : super(code: 'NETWORK_ERROR');
 }
 
 final class ServerFailure extends AppFailure {
@@ -56,8 +51,7 @@ final class ServerFailure extends AppFailure {
 
 /// Storage failures
 final class StorageFailure extends AppFailure {
-  const StorageFailure({super.details})
-      : super(code: 'STORAGE_ERROR');
+  const StorageFailure({super.details}) : super(code: 'STORAGE_ERROR');
 }
 
 /// Configuration failures
@@ -68,6 +62,5 @@ final class ConfigurationFailure extends AppFailure {
 
 /// Unknown failures
 final class UnknownFailure extends AppFailure {
-  const UnknownFailure({super.details})
-      : super(code: 'UNKNOWN_ERROR');
+  const UnknownFailure({super.details}) : super(code: 'UNKNOWN_ERROR');
 }

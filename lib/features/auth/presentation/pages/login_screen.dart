@@ -16,15 +16,17 @@ class LoginScreen extends StatelessWidget {
         if (state is RedirectToOAuth) {
           final uri = Uri.parse(state.url);
           print('🟡 LoginScreen: Redirecting to OAuth URL: ${state.url}');
-          
+
           if (await canLaunchUrl(uri)) {
             // En web, redirigir en la misma ventana para que el callback funcione
             // En desktop/mobile, abrir en aplicación externa
             if (kIsWeb) {
-              print('🟡 LoginScreen: Web detected - redirecting in same window');
+              print(
+                  '🟡 LoginScreen: Web detected - redirecting in same window');
               await launchUrl(uri, webOnlyWindowName: '_self');
             } else {
-              print('🟡 LoginScreen: Non-web platform - opening external application');
+              print(
+                  '🟡 LoginScreen: Non-web platform - opening external application');
               await launchUrl(uri, mode: LaunchMode.externalApplication);
             }
           } else {

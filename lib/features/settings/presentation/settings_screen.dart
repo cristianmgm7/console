@@ -23,7 +23,8 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
                     child: Icon(
                       Icons.person,
                       size: 40,
@@ -47,7 +48,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Settings Section
           Text(
             'General',
@@ -93,7 +94,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Account Section
           Text(
             'Account',
@@ -126,7 +127,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Logout Button
           Card(
             color: Theme.of(context).colorScheme.errorContainer,
@@ -172,4 +173,3 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-

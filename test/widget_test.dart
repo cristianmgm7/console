@@ -19,4 +19,3 @@ void main() {
     expect(find.text('Welcome to Carbon Voice Console'), findsOneWidget);
   });
 }
-

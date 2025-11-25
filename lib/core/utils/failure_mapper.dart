@@ -7,33 +7,20 @@ class FailureMapper {
 
   static String mapToMessage(AppFailure failure) {
     return switch (failure) {
-      TokenExpiredFailure() =>
-        'Your session has expired. Please login again.',
-
-      InvalidCredentialsFailure() =>
-        'Invalid credentials. Please try again.',
-
-      InvalidStateFailure() =>
-        'Security validation failed. Please try again.',
-
-      UserCancelledFailure() =>
-        'Login was cancelled.',
-
+      TokenExpiredFailure() => 'Your session has expired. Please login again.',
+      InvalidCredentialsFailure() => 'Invalid credentials. Please try again.',
+      InvalidStateFailure() => 'Security validation failed. Please try again.',
+      UserCancelledFailure() => 'Login was cancelled.',
       NetworkFailure(details: final d) =>
         'Network error. ${d ?? "Please check your connection."}',
-
       ServerFailure(statusCode: final code, details: final d) =>
         'Server error ($code). ${d ?? "Please try again later."}',
-
       StorageFailure(details: final d) =>
         'Storage error. ${d ?? "Please try again."}',
-
       ConfigurationFailure(details: final d) =>
         'Configuration error: ${d ?? "Contact support."}',
-
       AuthFailure(code: final c, details: final d) =>
         'Authentication failed: ${d ?? c}',
-
       UnknownFailure(details: final d) =>
         'An unexpected error occurred. ${d ?? ""}',
     };

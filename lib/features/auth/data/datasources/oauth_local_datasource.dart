@@ -3,13 +3,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 import 'dart:convert';
-import 'dart:html' as html; 
+import 'dart:html' as html;
 
 abstract class OAuthLocalDataSource {
   Future<void> saveCredentials(oauth2.Credentials credentials);
   Future<oauth2.Credentials?> loadCredentials();
   Future<void> deleteCredentials();
-  
+
   // Para web: guardar/recuperar el state del OAuth flow
   Future<void> saveOAuthState(String state, String codeVerifier);
   Future<Map<String, String>?> loadOAuthState(String state);
@@ -20,9 +20,7 @@ abstract class OAuthLocalDataSource {
 class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   static const _credentialsKey = 'oauth_credentials';
   final FlutterSecureStorage _storage;
-
   OAuthLocalDataSourceImpl(this._storage);
-
   @override
   Future<void> saveCredentials(oauth2.Credentials credentials) async {
     final json = credentials.toJson();
@@ -33,7 +31,6 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   Future<oauth2.Credentials?> loadCredentials() async {
     final jsonString = await _storage.read(key: _credentialsKey);
     if (jsonString == null) return null;
-
     try {
       // oauth2.Credentials.fromJson expects a JSON string, not a Map
       return oauth2.Credentials.fromJson(jsonString);
@@ -51,7 +48,7 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   @override
   Future<void> saveOAuthState(String state, String codeVerifier) async {
     if (!kIsWeb) return;
-    
+
     try {
       final data = {
         'state': state,
@@ -59,31 +56,25 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
         'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
       };
       html.window.sessionStorage['oauth_state_$state'] = jsonEncode(data);
-
-    } catch (e) {
-
-    }
+    } catch (e) {}
   }
 
   @override
   Future<Map<String, String>?> loadOAuthState(String state) async {
     if (!kIsWeb) return null;
-    
+
     try {
       final dataStr = html.window.sessionStorage['oauth_state_$state'];
       if (dataStr == null) {
-
         return null;
       }
-      
-      final data = jsonDecode(dataStr) as Map<String, dynamic>;
 
+      final data = jsonDecode(dataStr) as Map<String, dynamic>;
       return {
         'state': data['state'] as String,
         'codeVerifier': data['codeVerifier'] as String,
       };
     } catch (e) {
-
       return null;
     }
   }
@@ -91,12 +82,9 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   @override
   Future<void> clearOAuthState(String state) async {
     if (!kIsWeb) return;
-    
+
     try {
       html.window.sessionStorage.remove('oauth_state_$state');
-
-    } catch (e) {
-
-    }
+    } catch (e) {}
   }
 }

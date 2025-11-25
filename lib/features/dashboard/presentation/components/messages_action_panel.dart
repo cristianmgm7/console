@@ -43,11 +43,11 @@ class MessagesActionPanel extends StatelessWidget {
           Text(
             '$selectedCount items selected',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           const SizedBox(width: 24),
-          
+
           // Download Button
           ElevatedButton.icon(
             onPressed: onDownload,
@@ -61,14 +61,17 @@ class MessagesActionPanel extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.3),
                 ),
               ),
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           // Summarize Button
           ElevatedButton.icon(
             onPressed: onSummarize,
@@ -82,14 +85,17 @@ class MessagesActionPanel extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.3),
                 ),
               ),
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           // AI Chat Button
           ElevatedButton.icon(
             onPressed: onAIChat,
@@ -110,4 +116,3 @@ class MessagesActionPanel extends StatelessWidget {
     );
   }
 }
-

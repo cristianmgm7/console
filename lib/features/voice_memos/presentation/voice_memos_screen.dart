@@ -129,9 +129,13 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 64.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
                     border: Border(
                       bottom: BorderSide(
                         color: Theme.of(context).dividerColor,
@@ -149,9 +153,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      
+
                       const SizedBox(width: 8),
-                      
+
                       // Headers
                       SizedBox(
                         width: 120,
@@ -159,77 +163,86 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Date',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                             const Icon(Icons.arrow_upward, size: 16),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(width: 16),
-                      
+
                       SizedBox(
                         width: 140,
                         child: Text(
                           'Owner',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ),
-                      
+
                       const SizedBox(width: 16),
-                      
+
                       Expanded(
                         child: Text(
                           'Message',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ),
-                      
+
                       const SizedBox(width: 16),
-                      
+
                       const SizedBox(width: 60), // AI Action space
-                      
+
                       const SizedBox(width: 16),
-                      
+
                       SizedBox(
                         width: 60,
                         child: Row(
                           children: [
                             Text(
                               'Dur',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                             const Icon(Icons.unfold_more, size: 16),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(width: 16),
-                      
+
                       SizedBox(
                         width: 90,
                         child: Text(
                           'Status',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ),
-                      
+
                       const SizedBox(width: 56), // Menu space
                     ],
                   ),
                 ),
               ),
-              
+
               // Messages List
               Expanded(
                 child: Padding(
@@ -241,7 +254,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       return MessageCard(
                         message: message,
                         isSelected: _selectedMessages.contains(message.id),
-                        onSelected: (value) => _toggleMessageSelection(message.id, value),
+                        onSelected: (value) =>
+                            _toggleMessageSelection(message.id, value),
                       );
                     },
                   ),
@@ -249,7 +263,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               ),
             ],
           ),
-          
+
           // Floating Action Panel
           if (_selectedMessages.isNotEmpty)
             Positioned(
@@ -263,7 +277,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement download
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                        content: Text(
+                            'Downloading ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -271,7 +286,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement summarize
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
+                        content: Text(
+                            'Summarizing ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -279,7 +295,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement AI chat
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
+                        content: Text(
+                            'Opening AI chat for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -291,4 +308,3 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
     );
   }
 }
-
