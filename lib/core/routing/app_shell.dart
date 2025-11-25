@@ -1,13 +1,12 @@
+import 'package:carbon_voice_console/core/routing/presentation/side_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'presentation/side_navigation_bar.dart';
 
 class AppShell extends StatelessWidget {
-  final Widget child;
 
   const AppShell({
-    super.key,
-    required this.child,
+    required this.child, super.key,
   });
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {

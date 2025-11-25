@@ -1,27 +1,28 @@
+import 'dart:convert';
+
+import 'package:carbon_voice_console/core/config/oauth_config.dart';
+import 'package:carbon_voice_console/core/errors/failures.dart';
+import 'package:carbon_voice_console/core/utils/pkce_generator.dart';
+import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/auth/data/datasources/oauth_local_datasource.dart';
+import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
+import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../../../core/config/oauth_config.dart';
-import '../../../../core/utils/result.dart';
-import '../../../../core/utils/pkce_generator.dart';
-import '../../../../core/errors/failures.dart';
-import '../../domain/repositories/oauth_repository.dart';
-import '../datasources/oauth_local_datasource.dart';
 
 @LazySingleton(as: OAuthRepository)
 class OAuthRepositoryImpl implements OAuthRepository {
-  final OAuthLocalDataSource _localDataSource;
-  final Logger _logger;
-
-  oauth2.AuthorizationCodeGrant? _grant;
-  oauth2.Client? _client;
 
   OAuthRepositoryImpl(
     this._localDataSource,
     this._logger,
   );
+
+  final OAuthLocalDataSource _localDataSource;
+  final Logger _logger;
+
+  oauth2.Client? _client;
 
   @override
   Future<Result<String>> getAuthorizationUrl() async {
@@ -246,11 +247,11 @@ class OAuthRepositoryImpl implements OAuthRepository {
       return failure(AuthFailure(
         code: e.error,
         details: e.description ?? 'Authorization failed',
-      ));
-    } catch (e, stack) {
-      _logger.e('Error handling authorization response', error: e, stackTrace: stack);
+      ),);
+    } on Exception catch (e) {
+      _logger.e('Error handling authorization response', error: e);
       _logger.e('Error type: ${e.runtimeType}');
-      _logger.e('Error message: ${e.toString()}');
+      _logger.e('Error message: $e');
       return failure(UnknownFailure(details: e.toString()));
     }
   }
@@ -275,8 +276,8 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       _logger.i('Client loaded from saved credentials');
       return success(_client);
-    } catch (e, stack) {
-      _logger.e('Error loading saved client', error: e, stackTrace: stack);
+    } on Exception catch (e) {
+      _logger.e('Error loading saved client', error: e);
       return success(null); // Return null on error, not failure
     }
   }
@@ -294,7 +295,8 @@ class OAuthRepositoryImpl implements OAuthRepository {
         onSuccess: (client) => success(client != null && !client.credentials.isExpired),
         onFailure: (_) => success(false),
       );
-    } catch (e) {
+    } on Exception catch (e) {
+      _logger.e('Error checking authentication', error: e);
       return success(false);
     }
   }
@@ -313,8 +315,8 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       _logger.i('Logout successful');
       return success(null);
-    } catch (e, stack) {
-      _logger.e('Error during logout', error: e, stackTrace: stack);
+    } on Exception catch (e) {
+      _logger.e('Error during logout', error: e);
       return failure(UnknownFailure(details: e.toString()));
     }
   }
@@ -328,7 +330,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       // Intentar cargar cliente guardado
       return await loadSavedClient();
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('Error getting client', error: e);
       return failure(UnknownFailure(details: e.toString()));
     }

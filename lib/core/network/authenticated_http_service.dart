@@ -1,15 +1,16 @@
 import 'dart:convert';
+
+import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
-import '../../features/auth/domain/repositories/oauth_repository.dart';
 
 /// Service para realizar llamadas HTTP autenticadas usando oauth2.Client
 @LazySingleton()
 class AuthenticatedHttpService {
-  final OAuthRepository _oauthRepository;
-
   AuthenticatedHttpService(this._oauthRepository);
+
+  final OAuthRepository _oauthRepository;
 
   /// Obtiene el cliente oauth2 (con refresh automático)
   Future<oauth2.Client?> _getClient() async {

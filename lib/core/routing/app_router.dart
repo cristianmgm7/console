@@ -1,22 +1,23 @@
+import 'package:carbon_voice_console/core/routing/app_routes.dart';
+import 'package:carbon_voice_console/core/routing/app_shell.dart';
+import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
+import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:carbon_voice_console/features/settings/presentation/settings_screen.dart';
+import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
-import 'app_shell.dart';
-import '../../features/auth/presentation/pages/login_screen.dart';
-import '../../features/auth/presentation/pages/oauth_callback_screen.dart';
-import '../../features/dashboard/presentation/dashboard_screen.dart';
-import '../../features/users/presentation/users_screen.dart';
-import '../../features/voice_memos/presentation/voice_memos_screen.dart';
-import '../../features/settings/presentation/settings_screen.dart';
-import 'app_routes.dart';
 
 @singleton
 class AppRouter {
-  late final GoRouter router;
   AppRouter() {
+
     // Usar la URL actual como initialLocation, o /login si no hay path
     final initialPath =
         Uri.base.path.isEmpty || Uri.base.path == '/' ? AppRoutes.login : Uri.base.path;
+
     router = GoRouter(
       initialLocation: initialPath,
       debugLogDiagnostics: true,
@@ -94,5 +95,6 @@ class AppRouter {
 
     // Log cuando el router está listo
   }
+  late final GoRouter router;
   GoRouter get instance => router;
 }

@@ -1,6 +1,6 @@
+import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/routing/app_routes.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,12 +13,12 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         children: [
           // User Profile Section
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
                   CircleAvatar(
@@ -142,9 +142,9 @@ class SettingsScreen extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              onTap: () {
+              onTap: () async {
                 // Show confirmation dialog
-                showDialog(
+                await showDialog<void>(
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Logout'),

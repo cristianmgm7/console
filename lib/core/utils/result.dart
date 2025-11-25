@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/errors/failures.dart';
+import 'package:meta/meta.dart';
 
 /// Sealed Result type for type-safe error handling
 sealed class Result<T> {
@@ -7,7 +8,7 @@ sealed class Result<T> {
   /// Fold pattern for exhaustive handling
   R fold<R>({
     required R Function(T value) onSuccess,
-    required R Function(Failure failure) onFailure,
+    required R Function(Failure<T> failure) onFailure,
   });
 
   /// Check if result is success
@@ -30,6 +31,7 @@ sealed class Result<T> {
 }
 
 /// Success result
+@immutable
 final class Success<T> extends Result<T> {
   const Success(this.value);
   final T value;
@@ -37,7 +39,7 @@ final class Success<T> extends Result<T> {
   @override
   R fold<R>({
     required R Function(T value) onSuccess,
-    required R Function(Failure failure) onFailure,
+    required R Function(Failure<T> failure) onFailure,
   }) =>
       onSuccess(value);
 
@@ -52,10 +54,11 @@ final class Success<T> extends Result<T> {
   int get hashCode => value.hashCode;
 }
 
-/// Failure result (non-generic)
+/// Failure result
+@immutable
 final class Failure<T> extends Result<T> {
-  final AppFailure failure;
   const Failure(this.failure);
+  final AppFailure failure;
 
   @override
   R fold<R>({
@@ -67,6 +70,7 @@ final class Failure<T> extends Result<T> {
   @override
   String toString() => 'Failure($failure)';
 
+  
   @override
   bool operator ==(Object other) =>
       identical(this, other) || other is Failure<T> && failure == other.failure;
@@ -79,7 +83,7 @@ final class Failure<T> extends Result<T> {
 extension ResultFuture<T> on Future<Result<T>> {
   Future<R> foldAsync<R>({
     required R Function(T value) onSuccess,
-    required R Function(Failure failure) onFailure,
+    required R Function(Failure<T> failure) onFailure,
   }) async {
     final result = await this;
     return result.fold(onSuccess: onSuccess, onFailure: onFailure);

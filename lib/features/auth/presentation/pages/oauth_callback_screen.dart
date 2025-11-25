@@ -1,4 +1,4 @@
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
@@ -27,7 +27,7 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
     // En web, usar la URL completa del navegador para obtener los query params
     String fullUrl;
     if (kIsWeb) {
-      final currentUrl = html.window.location.href;
+      final currentUrl = web.window.location.href;
       fullUrl = currentUrl;
     } else {
       // En otras plataformas, usar la URI del router
