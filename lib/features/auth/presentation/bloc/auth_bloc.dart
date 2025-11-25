@@ -55,7 +55,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (kIsWeb) {
       // Web flow: Get URL and redirect
       final result = await _oauthRepository.getAuthorizationUrl();
-
       result.fold(
         onSuccess: (url) {
           emit(RedirectToOAuth(url));
@@ -68,7 +67,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else {
       // Desktop flow: Handle everything automatically
       final result = await _oauthRepository.loginWithDesktop();
-
       result.fold(
         onSuccess: (_) {
           emit(const Authenticated(message: 'Login successful'));
@@ -85,25 +83,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthorizationResponseReceived event,
     Emitter<AuthState> emit,
   ) async {
-
-
-
     emit(const ProcessingCallback());
-
-
     final result = await _oauthRepository.handleAuthorizationResponse(
       event.responseUrl,
     );
-
     result.fold(
       onSuccess: (_) {
-
         emit(const Authenticated(message: 'Login successful'));
       },
       onFailure: (failure) {
-
-
-
         emit(AuthError(FailureMapper.mapToMessage(failure.failure)));
         emit(const Unauthenticated());
       },
@@ -115,7 +103,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final result = await _oauthRepository.logout();
-
     result.fold(
       onSuccess: (_) => emit(const Unauthenticated()),
       onFailure: (_) => emit(const Unauthenticated()),

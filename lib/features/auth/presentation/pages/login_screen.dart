@@ -1,9 +1,11 @@
+import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -15,8 +17,6 @@ class LoginScreen extends StatelessWidget {
       listener: (context, state) async {
         if (state is RedirectToOAuth) {
           final uri = Uri.parse(state.url);
-
-
           if (await canLaunchUrl(uri)) {
             // En web, redirigir en la misma ventana para que el callback funcione
             // En desktop/mobile, abrir en aplicación externa
@@ -34,6 +34,12 @@ class LoginScreen extends StatelessWidget {
                 const SnackBar(content: Text('Could not launch login URL')),
               );
             }
+          }
+        } else if (state is Authenticated) {
+          // Navigate to dashboard when authentication succeeds
+          // This handles desktop flow where loginWithDesktop completes successfully
+          if (context.mounted) {
+            context.go(AppRoutes.dashboard);
           }
         } else if (state is AuthError) {
 

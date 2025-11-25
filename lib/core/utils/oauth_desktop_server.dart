@@ -11,10 +11,12 @@ class OAuthDesktopServer {
     this.port = 3000,
     this.callbackPath = '/auth/callback',
   });
-  final Logger _logger = Logger();
+
   HttpServer? _server;
   final int port;
   final String callbackPath;
+
+  final Logger _logger = Logger();
 
   /// Inicia el servidor local y abre el navegador con la URL de OAuth
   /// Retorna la URL completa con el código de autorización cuando el callback es recibido
@@ -25,8 +27,8 @@ class OAuthDesktopServer {
       // Intentar iniciar servidor HTTP local, con fallback a puerto alternativo
       try {
         _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-      } catch (e) {
-        _logger.w('⚠️ Port $port is busy, trying alternative ports...');
+      } on SocketException catch (e) {
+        _logger.e('❌ Error binding to port $port: ${e.message}');
         // Intentar puertos alternativos: 3001, 8080, 9090
         final alternativePorts = [3001, 8080, 9090];
         for (final altPort in alternativePorts) {
@@ -34,7 +36,8 @@ class OAuthDesktopServer {
             _server = await HttpServer.bind(InternetAddress.loopbackIPv4, altPort);
             _logger.i('✅ Using alternative port $altPort');
             break;
-          } catch (_) {
+          } on SocketException catch (e) {
+            _logger.e('❌ Error binding to port $altPort: ${e.message}');
             continue;
           }
         }
@@ -91,20 +94,20 @@ class OAuthDesktopServer {
         const Duration(minutes: 5),
         onTimeout: () {
           _logger.e('⏱️ OAuth timeout - no callback received in 5 minutes');
-          close();
+          unawaited(close());
           throw TimeoutException('OAuth authentication timeout');
         },
       );
     } catch (e) {
       _logger.e('❌ OAuth server error: $e');
-      close();
+      await close();
       rethrow;
     }
   }
 
   /// Cierra el servidor local
-  void close() {
-    _server?.close(force: true);
+  Future<void> close() async {
+    await _server?.close(force: true);
     _server = null;
     _logger.i('🛑 OAuth server closed');
   }

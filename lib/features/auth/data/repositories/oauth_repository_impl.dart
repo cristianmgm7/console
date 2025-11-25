@@ -24,27 +24,21 @@ class OAuthRepositoryImpl implements OAuthRepository {
   ) : _desktopServer = kIsWeb ? null : OAuthDesktopServer();
 
   final OAuthLocalDataSource _localDataSource;
-  final Logger _logger;
   final OAuthDesktopServer? _desktopServer;
+  final Logger _logger;
 
   oauth2.Client? _client;
   
   // Store code verifiers for desktop OAuth (since we can't use sessionStorage)
   final Map<String, String> _desktopOAuthStates = {};
 
+  // This method is used to get the authorization URL for the web platform
   @override
   Future<Result<String>> getAuthorizationUrl() async {
     try {
       _logger.d('Creating authorization URL');
-
-      // Debug: Log client_id to verify it's set correctly
-      _logger.w('OAuth Config - Client ID: ${OAuthConfig.clientId}');
-      _logger.w('OAuth Config - Client ID length: ${OAuthConfig.clientId.length}');
-      _logger.w('OAuth Config - Client ID is default: ${OAuthConfig.clientId == "YOUR_CLIENT_ID"}');
-      _logger.w('OAuth Config - Authorization Endpoint: ${OAuthConfig.authorizationEndpoint}');
-      _logger.w('OAuth Config - Redirect URI: ${OAuthConfig.redirectUrl}');
-
       // Validate client_id is not the default value
+      // validate that the client_id is not empty
       if (OAuthConfig.clientId == 'YOUR_CLIENT_ID' || OAuthConfig.clientId.isEmpty) {
         _logger.e('Invalid client_id: ${OAuthConfig.clientId}');
         return failure(const ConfigurationFailure(
@@ -53,12 +47,12 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ),);
       }
 
-      // Generar PKCE codes manualmente para poder guardarlos
+      // Generate PKCE codes manually to be able to save them
       final codeVerifier = PKCEGenerator.generateCodeVerifier();
       final codeChallenge = PKCEGenerator.generateCodeChallenge(codeVerifier);
       final state = PKCEGenerator.generateState();
 
-      // Guardar el codeVerifier y state
+      // Save the codeVerifier and state
       if (kIsWeb) {
         // En web, usar sessionStorage
         await _localDataSource.saveOAuthState(state, codeVerifier);
@@ -84,10 +78,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
           'state': state,
         },
       );
-
       _logger.i('Authorization URL created: $authUrl');
-      _logger.w('Authorization URL query params: ${authUrl.queryParameters}');
-
       return success(authUrl.toString());
     } on Exception catch (e, stack) {
       _logger.e('Error creating authorization URL', error: e, stackTrace: stack);
@@ -101,16 +92,14 @@ class OAuthRepositoryImpl implements OAuthRepository {
   /// Desktop OAuth flow - handles everything including opening browser and capturing callback
   @override
   Future<Result<oauth2.Client>> loginWithDesktop() async {
+    // make sure we are on a desktop platform
     if (_desktopServer == null || kIsWeb) {
       _logger.e('Desktop server not available (kIsWeb: $kIsWeb)');
       return failure(const ConfigurationFailure(
         details: 'Desktop OAuth is only available on desktop platforms',
       ),);
     }
-
     try {
-      _logger.i('🖥️  Starting desktop OAuth flow...');
-
       // Get authorization URL (will use desktop redirect URI)
       final urlResult = await getAuthorizationUrl();
       
@@ -132,7 +121,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       );
     } on Exception catch (e, stack) {
       _logger.e('❌ Desktop OAuth failed', error: e, stackTrace: stack);
-      _desktopServer.close(); // Cleanup
+      await _desktopServer.close(); // Cleanup
       return failure(AuthFailure(
         code: 'DESKTOP_OAUTH_FAILED',
         details: 'Desktop OAuth flow failed: $e',
@@ -144,8 +133,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
   Future<Result<oauth2.Client>> handleAuthorizationResponse(String responseUrl) async {
     try {
       // Log directo a consola del navegador
-
-      _logger.d('Handling authorization response');
       _logger.w('Response URL: $responseUrl');
 
       // Parsear la URL de respuesta
@@ -216,12 +203,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
         _desktopOAuthStates.remove(state);
       }
 
-      _logger.d('Code verifier found: ${codeVerifier!.substring(0, 10)}...');
-
-      // Hacer token exchange manualmente con HTTP
-      _logger.d('Attempting manual token exchange...');
-      _logger.i('Token endpoint: ${OAuthConfig.tokenEndpointUri}');
-
       // Usar el redirect URI correcto según la plataforma
       const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
       _logger.i('Using redirect URI for token exchange: $redirectUri');
@@ -248,12 +229,12 @@ class OAuthRepositoryImpl implements OAuthRepository {
               body: tokenBody,
             )
             .timeout(
-              Duration(seconds: OAuthConfig.apiTimeoutSeconds),
+              const Duration(seconds: OAuthConfig.apiTimeoutSeconds),
               onTimeout: () {
                 _logger.e('Token exchange timeout after ${OAuthConfig.apiTimeoutSeconds}s');
                 throw TimeoutException(
                   'Token exchange timed out after ${OAuthConfig.apiTimeoutSeconds} seconds',
-                  Duration(seconds: OAuthConfig.apiTimeoutSeconds),
+                  const Duration(seconds: OAuthConfig.apiTimeoutSeconds),
                 );
               },
             );
@@ -275,13 +256,13 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(NetworkFailure(details: details));
       } on TimeoutException catch (e) {
         _logger.e('Token exchange timeout', error: e);
-        return failure(NetworkFailure(
+        return failure(const NetworkFailure(
           details: 'Request timed out. Please check your internet connection and try again.',
         ),);
       } on Exception catch (e) {
         _logger.e('Unexpected error during token exchange', error: e);
         return failure(NetworkFailure(
-          details: 'An unexpected network error occurred: ${e.toString()}',
+          details: 'An unexpected network error occurred: $e',
         ),);
       }
 
@@ -344,9 +325,9 @@ class OAuthRepositoryImpl implements OAuthRepository {
         credentials = oauth2.Credentials.fromJson(jsonString);
       } on Exception catch (e) {
         _logger.e('Error creating credentials', error: e);
-        // Intentar crear credentials directamente con el constructor
-        // Nota: oauth2.Credentials no tiene constructor público, así que debemos usar fromJson
-        // El problema podría ser el formato del JSON
+        // Try to create credentials directly with the constructor
+        // Note: oauth2.Credentials does not have a public constructor, so we must use fromJson
+        // The issue might be the JSON format
         rethrow;
       }
 
