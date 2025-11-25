@@ -1,17 +1,17 @@
+import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
 import 'package:flutter/material.dart';
-import '../../models/audio_message.dart';
 
 class MessageCard extends StatelessWidget {
-  final AudioMessage message;
-  final bool isSelected;
-  final ValueChanged<bool?> onSelected;
-
   const MessageCard({
-    super.key,
     required this.message,
     required this.isSelected,
     required this.onSelected,
+    super.key,
   });
+
+  final AudioMessage message;
+  final bool isSelected;
+  final ValueChanged<bool?> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class MessageCard extends StatelessWidget {
             : Colors.transparent,
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             // Checkbox

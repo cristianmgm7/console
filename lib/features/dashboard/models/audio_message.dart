@@ -1,11 +1,4 @@
 class AudioMessage {
-  final String id;
-  final DateTime date;
-  final String owner;
-  final String message;
-  final Duration duration;
-  final String status;
-  final String project;
 
   AudioMessage({
     required this.id,
@@ -16,4 +9,12 @@ class AudioMessage {
     required this.status,
     required this.project,
   });
+  
+  final String id;
+  final DateTime date;
+  final String owner;
+  final String message;
+  final Duration duration;
+  final String status;
+  final String project;
 }

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 class MessagesActionPanel extends StatelessWidget {
-  final int selectedCount;
-  final VoidCallback onDownload;
-  final VoidCallback onSummarize;
-  final VoidCallback onAIChat;
 
   const MessagesActionPanel({
-    super.key,
     required this.selectedCount,
     required this.onDownload,
     required this.onSummarize,
     required this.onAIChat,
+    super.key,
   });
+  final int selectedCount;
+  final VoidCallback onDownload;
+  final VoidCallback onSummarize;
+  final VoidCallback onAIChat;
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +21,8 @@ class MessagesActionPanel extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.all(16.0),
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),

@@ -1,17 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:html' as html;
-import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
-import '../bloc/auth_state.dart';
+
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OAuthCallbackScreen extends StatefulWidget {
-  final Uri callbackUri;
   const OAuthCallbackScreen({
-    super.key,
-    required this.callbackUri,
+    required this.callbackUri, super.key,
   });
+
+  final Uri callbackUri;
+
   @override
   State<OAuthCallbackScreen> createState() => _OAuthCallbackScreenState();
 }
