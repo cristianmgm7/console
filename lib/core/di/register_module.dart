@@ -3,12 +3,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import '../config/oauth_config.dart';
-import '../network/auth_interceptor.dart';
 
 @module
 abstract class RegisterModule {
+  // Mantener Dio SOLO para llamadas públicas (no autenticadas)
+  // Para llamadas autenticadas, usar AuthenticatedHttpService
   @LazySingleton()
-  Dio dio(AuthInterceptor authInterceptor) {
+  @Named('publicDio')
+  Dio publicDio() {
     final dio = Dio(
       BaseOptions(
         baseUrl: OAuthConfig.apiBaseUrl,
@@ -20,9 +22,6 @@ abstract class RegisterModule {
         },
       ),
     );
-
-    // Add auth interceptor (gets use cases lazily to avoid circular dependency)
-    dio.interceptors.add(authInterceptor);
 
     // Add logging in debug mode
     dio.interceptors.add(LogInterceptor(
