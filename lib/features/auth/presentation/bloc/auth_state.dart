@@ -16,9 +16,9 @@ class AuthLoading extends AuthState {
 }
 
 class Authenticated extends AuthState {
-  final String? message;
-
   const Authenticated({this.message});
+  
+  final String? message;
 
   @override
   List<Object?> get props => [message];
@@ -29,9 +29,9 @@ class Unauthenticated extends AuthState {
 }
 
 class RedirectToOAuth extends AuthState {
-  final String url;
-
   const RedirectToOAuth(this.url);
+  
+  final String url;
 
   @override
   List<Object?> get props => [url];
@@ -46,9 +46,9 @@ class LoggedOut extends AuthState {
 }
 
 class AuthError extends AuthState {
-  final String message;
-
   const AuthError(this.message);
+
+  final String message;
 
   @override
   List<Object?> get props => [message];

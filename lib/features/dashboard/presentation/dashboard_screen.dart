@@ -1,7 +1,7 @@
+import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:flutter/material.dart';
-import '../models/audio_message.dart';
-import 'components/message_card.dart';
-import 'components/messages_action_panel.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,7 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       date: DateTime(2023, 10, 26, 15, 45),
       owner: 'Travis Bogard',
       message: 'Some cool stuff in about a message here.',
-      duration: const Duration(minutes: 0, seconds: 18),
+      duration: const Duration(seconds: 18),
       status: 'Processed',
       project: 'Project Phoenix',
     ),
@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       date: DateTime(2023, 10, 26, 11, 55),
       owner: 'John Smith',
       message: 'Following up on the action items from the previous meeting.',
-      duration: const Duration(minutes: 0, seconds: 42),
+      duration: const Duration(seconds: 42),
       status: 'Processed',
       project: 'Project Phoenix',
     ),
@@ -101,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
     AudioMessage(
       id: '10',
-      date: DateTime(2023, 10, 20, 11, 0),
+      date: DateTime(2023, 10, 20, 11),
       owner: 'Amanda Torres',
       message: 'Budget planning discussion - Q4 allocation and resource optimization.',
       duration: const Duration(minutes: 28, seconds: 33),
@@ -147,7 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _toggleMessageSelection(String messageId, bool? value) {
     setState(() {
-      if (value == true) {
+      if (value ?? false) {
         _selectedMessages.add(messageId);
       } else {
         _selectedMessages.remove(messageId);
@@ -158,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
       child: Stack(
         children: [
@@ -166,7 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               // App Bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
                   border: Border(
@@ -293,9 +293,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               // Table Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                padding: const EdgeInsets.symmetric(horizontal: 64),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -304,7 +304,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     border: Border(
                       bottom: BorderSide(
                         color: Theme.of(context).dividerColor,
-                        width: 1,
                       ),
                     ),
                   ),
@@ -402,7 +401,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Messages List
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 64),
                   child: ListView.builder(
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {

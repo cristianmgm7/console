@@ -1,9 +1,9 @@
+import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/core/routing/app_router.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'core/di/injection.dart';
-import 'core/routing/app_router.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/bloc/auth_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Initialize dependency injection

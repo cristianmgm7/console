@@ -1,7 +1,7 @@
+import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:flutter/material.dart';
-import '../../dashboard/models/audio_message.dart';
-import '../../dashboard/presentation/components/message_card.dart';
-import '../../dashboard/presentation/components/messages_action_panel.dart';
 
 class VoiceMemosScreen extends StatefulWidget {
   const VoiceMemosScreen({super.key});
@@ -21,7 +21,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       date: DateTime(2023, 10, 26, 15, 45),
       owner: 'Travis Bogard',
       message: 'Quick team standup notes and action items.',
-      duration: const Duration(minutes: 0, seconds: 18),
+      duration: const Duration(seconds: 18),
       status: 'Processed',
       project: 'Team Updates',
     ),
@@ -39,7 +39,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       date: DateTime(2023, 10, 26, 11, 55),
       owner: 'Travis Bogard',
       message: 'Product roadmap planning for next quarter.',
-      duration: const Duration(minutes: 0, seconds: 42),
+      duration: const Duration(seconds: 42),
       status: 'Processed',
       project: 'Planning',
     ),
@@ -108,7 +108,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
 
   void _toggleMessageSelection(String messageId, bool? value) {
     setState(() {
-      if (value == true) {
+      if (value ?? false) {
         _selectedMessages.add(messageId);
       } else {
         _selectedMessages.remove(messageId);
@@ -119,7 +119,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: Theme.of(context).colorScheme.surface,
       child: Stack(
         children: [
@@ -127,9 +127,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
             children: [
               // Table Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                padding: const EdgeInsets.symmetric(horizontal: 64),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -138,7 +138,6 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     border: Border(
                       bottom: BorderSide(
                         color: Theme.of(context).dividerColor,
-                        width: 1,
                       ),
                     ),
                   ),
@@ -236,7 +235,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               // Messages List
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 64),
                   child: ListView.builder(
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {

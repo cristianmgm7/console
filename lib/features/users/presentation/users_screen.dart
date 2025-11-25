@@ -1,6 +1,6 @@
+import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/routing/app_routes.dart';
 
 class UsersScreen extends StatelessWidget {
   const UsersScreen({super.key});
@@ -19,7 +19,7 @@ class UsersScreen extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

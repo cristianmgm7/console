@@ -1,4 +1,4 @@
-import '../errors/failures.dart';
+import 'package:carbon_voice_console/core/errors/failures.dart';
 
 /// Sealed Result type for type-safe error handling
 sealed class Result<T> {
@@ -31,8 +31,8 @@ sealed class Result<T> {
 
 /// Success result
 final class Success<T> extends Result<T> {
-  final T value;
   const Success(this.value);
+  final T value;
 
   @override
   R fold<R>({
