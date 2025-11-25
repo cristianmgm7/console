@@ -23,8 +23,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                     child: Icon(
                       Icons.person,
                       size: 40,

@@ -18,10 +18,7 @@ class MessageCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withValues(alpha: 0.3)
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
             : Colors.transparent,
       ),
       child: Padding(

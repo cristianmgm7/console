@@ -129,8 +129,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 64.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -163,10 +162,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Date',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
@@ -181,10 +177,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                         width: 140,
                         child: Text(
                           'Owner',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -193,10 +188,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       Expanded(
                         child: Text(
                           'Message',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -212,10 +206,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Dur',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
@@ -230,10 +221,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                         width: 90,
                         child: Text(
                           'Status',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -254,8 +244,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       return MessageCard(
                         message: message,
                         isSelected: _selectedMessages.contains(message.id),
-                        onSelected: (value) =>
-                            _toggleMessageSelection(message.id, value),
+                        onSelected: (value) => _toggleMessageSelection(message.id, value),
                       );
                     },
                   ),
@@ -277,8 +266,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement download
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            'Downloading ${_selectedMessages.length} messages...'),
+                        content: Text('Downloading ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -286,8 +274,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement summarize
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            'Summarizing ${_selectedMessages.length} messages...'),
+                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -295,8 +282,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement AI chat
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            'Opening AI chat for ${_selectedMessages.length} messages...'),
+                        content:
+                            Text('Opening AI chat for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },

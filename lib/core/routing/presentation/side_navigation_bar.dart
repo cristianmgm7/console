@@ -120,9 +120,7 @@ class _NavigationItem extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 24,
-                color: isSelected
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurface,
+                color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
               ),
             ),
           ),

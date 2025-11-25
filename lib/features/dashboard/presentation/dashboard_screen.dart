@@ -31,8 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '2',
       date: DateTime(2023, 10, 26, 14, 10),
       owner: 'Jane Doe',
-      message:
-          'Discussing the quarterly results and planning for the next phase of th...',
+      message: 'Discussing the quarterly results and planning for the next phase of th...',
       duration: const Duration(minutes: 1, seconds: 23),
       status: 'New',
       project: 'Internal Sprint',
@@ -50,8 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '4',
       date: DateTime(2023, 10, 25, 9, 30),
       owner: 'Sarah Johnson',
-      message:
-          'Client Call - Q3 Strategy review and discussion about upcoming initiatives.',
+      message: 'Client Call - Q3 Strategy review and discussion about upcoming initiatives.',
       duration: const Duration(minutes: 12, seconds: 31),
       status: 'Processed',
       project: 'Project Phoenix',
@@ -60,8 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '5',
       date: DateTime(2023, 10, 26, 8, 55),
       owner: 'Mike Chen',
-      message:
-          'Daily Standup Recording - team updates and blockers discussion.',
+      message: 'Daily Standup Recording - team updates and blockers discussion.',
       duration: const Duration(minutes: 8, seconds: 55),
       status: 'New',
       project: 'Internal Sprint',
@@ -70,8 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '6',
       date: DateTime(2023, 10, 24, 16, 20),
       owner: 'Emily Parker',
-      message:
-          'Onboarding Interview #12 - discussing role expectations and team culture.',
+      message: 'Onboarding Interview #12 - discussing role expectations and team culture.',
       duration: const Duration(minutes: 45, seconds: 2),
       status: 'Archived',
       project: 'HR Initiatives',
@@ -89,8 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '8',
       date: DateTime(2023, 10, 22, 10, 45),
       owner: 'Lisa Wong',
-      message:
-          'Architecture review meeting - discussing microservices migration strategy.',
+      message: 'Architecture review meeting - discussing microservices migration strategy.',
       duration: const Duration(minutes: 32, seconds: 18),
       status: 'Processed',
       project: 'Tech Infrastructure',
@@ -99,8 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '9',
       date: DateTime(2023, 10, 21, 13, 30),
       owner: 'David Kim',
-      message:
-          'Customer feedback session - analyzing user pain points and feature requests.',
+      message: 'Customer feedback session - analyzing user pain points and feature requests.',
       duration: const Duration(minutes: 25, seconds: 10),
       status: 'New',
       project: 'Product Research',
@@ -109,8 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '10',
       date: DateTime(2023, 10, 20, 11, 0),
       owner: 'Amanda Torres',
-      message:
-          'Budget planning discussion - Q4 allocation and resource optimization.',
+      message: 'Budget planning discussion - Q4 allocation and resource optimization.',
       duration: const Duration(minutes: 28, seconds: 33),
       status: 'Processed',
       project: 'Finance Review',
@@ -119,8 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '11',
       date: DateTime(2023, 10, 19, 15, 15),
       owner: 'Robert Lee',
-      message:
-          'Security audit findings - critical vulnerabilities and remediation plan.',
+      message: 'Security audit findings - critical vulnerabilities and remediation plan.',
       duration: const Duration(minutes: 19, seconds: 47),
       status: 'Processed',
       project: 'Security Operations',
@@ -129,8 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       id: '12',
       date: DateTime(2023, 10, 18, 9, 20),
       owner: 'Jennifer Martinez',
-      message:
-          'Marketing campaign review - analyzing metrics and ROI for recent initiatives.',
+      message: 'Marketing campaign review - analyzing metrics and ROI for recent initiatives.',
       duration: const Duration(minutes: 22, seconds: 5),
       status: 'Archived',
       project: 'Marketing Strategy',
@@ -175,8 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               // App Bar
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
                   border: Border(
@@ -202,10 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.3),
+                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -246,19 +233,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.3),
+                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.3),
+                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                             ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -274,8 +255,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Conversation Name Display
                     Container(
                       constraints: const BoxConstraints(maxWidth: 300),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme
@@ -283,10 +263,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             .withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.3),
+                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -300,10 +277,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Flexible(
                             child: Text(
                               'Project Phoenix - Q4 Strategy Meeting',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.w500,
                                   ),
                               overflow: TextOverflow.ellipsis,
@@ -321,8 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 64.0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -355,10 +328,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Text(
                               'Date',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
@@ -373,10 +343,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 140,
                         child: Text(
                           'Owner',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -385,10 +354,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: Text(
                           'Message',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -404,10 +372,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Text(
                               'Dur',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
@@ -422,10 +387,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 90,
                         child: Text(
                           'Status',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
 
@@ -446,8 +410,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return MessageCard(
                         message: message,
                         isSelected: _selectedMessages.contains(message.id),
-                        onSelected: (value) =>
-                            _toggleMessageSelection(message.id, value),
+                        onSelected: (value) => _toggleMessageSelection(message.id, value),
                       );
                     },
                   ),
@@ -505,8 +468,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // TODO: Implement download
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            'Downloading ${_selectedMessages.length} messages...'),
+                        content: Text('Downloading ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -514,8 +476,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // TODO: Implement summarize
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            'Summarizing ${_selectedMessages.length} messages...'),
+                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
@@ -523,8 +484,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // TODO: Implement AI chat
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            'Opening AI chat for ${_selectedMessages.length} messages...'),
+                        content:
+                            Text('Opening AI chat for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },

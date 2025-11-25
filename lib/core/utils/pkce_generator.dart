@@ -7,8 +7,7 @@ class PKCEGenerator {
   /// Length between 43-128 characters (RFC 7636)
   static String generateCodeVerifier() {
     const length = 128;
-    const charset =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 
     final random = Random.secure();
     return List.generate(
@@ -33,8 +32,7 @@ class PKCEGenerator {
   /// Generate state parameter for CSRF protection
   static String generateState() {
     const length = 32;
-    const charset =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
     final random = Random.secure();
     return List.generate(

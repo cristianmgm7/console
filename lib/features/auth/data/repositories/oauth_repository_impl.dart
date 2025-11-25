@@ -30,17 +30,13 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       // Debug: Log client_id to verify it's set correctly
       _logger.w('OAuth Config - Client ID: ${OAuthConfig.clientId}');
-      _logger
-          .w('OAuth Config - Client ID length: ${OAuthConfig.clientId.length}');
-      _logger.w(
-          'OAuth Config - Client ID is default: ${OAuthConfig.clientId == "YOUR_CLIENT_ID"}');
-      _logger.w(
-          'OAuth Config - Authorization Endpoint: ${OAuthConfig.authorizationEndpoint}');
+      _logger.w('OAuth Config - Client ID length: ${OAuthConfig.clientId.length}');
+      _logger.w('OAuth Config - Client ID is default: ${OAuthConfig.clientId == "YOUR_CLIENT_ID"}');
+      _logger.w('OAuth Config - Authorization Endpoint: ${OAuthConfig.authorizationEndpoint}');
       _logger.w('OAuth Config - Redirect URI: ${OAuthConfig.redirectUrl}');
 
       // Validate client_id is not the default value
-      if (OAuthConfig.clientId == 'YOUR_CLIENT_ID' ||
-          OAuthConfig.clientId.isEmpty) {
+      if (OAuthConfig.clientId == 'YOUR_CLIENT_ID' || OAuthConfig.clientId.isEmpty) {
         _logger.e('Invalid client_id: ${OAuthConfig.clientId}');
         return failure(const ConfigurationFailure(
           details:
@@ -74,15 +70,13 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       return success(authUrl.toString());
     } catch (e, stack) {
-      _logger.e('Error creating authorization URL',
-          error: e, stackTrace: stack);
+      _logger.e('Error creating authorization URL', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
     }
   }
 
   @override
-  Future<Result<oauth2.Client>> handleAuthorizationResponse(
-      String responseUrl) async {
+  Future<Result<oauth2.Client>> handleAuthorizationResponse(String responseUrl) async {
     try {
       // Log directo a consola del navegador
 
@@ -106,8 +100,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       if (error != null) {
         return failure(AuthFailure(
           code: error,
-          details: responseUri.queryParameters['error_description'] ??
-              'Authorization failed',
+          details: responseUri.queryParameters['error_description'] ?? 'Authorization failed',
         ));
       }
 
@@ -167,12 +160,10 @@ class OAuthRepositoryImpl implements OAuthRepository {
         _logger.e('Token exchange failed', error: tokenResponse.body);
 
         try {
-          final errorJson =
-              jsonDecode(tokenResponse.body) as Map<String, dynamic>;
+          final errorJson = jsonDecode(tokenResponse.body) as Map<String, dynamic>;
           return failure(AuthFailure(
             code: errorJson['error']?.toString() ?? 'TOKEN_EXCHANGE_FAILED',
-            details: errorJson['error_description']?.toString() ??
-                'Token exchange failed',
+            details: errorJson['error_description']?.toString() ?? 'Token exchange failed',
           ));
         } catch (e) {
           return failure(AuthFailure(
@@ -188,8 +179,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       _logger.i('Token exchange successful!');
 
       // Transformar la respuesta del backend (snake_case) al formato esperado por oauth2 (camelCase)
-      final expiresIn = tokenJson['expires_in'] as int? ??
-          3600; // Default a 1 hora si no viene
+      final expiresIn = tokenJson['expires_in'] as int? ?? 3600; // Default a 1 hora si no viene
 
       final credentialsJson = <String, dynamic>{
         'accessToken': tokenJson['access_token'] as String,
@@ -202,16 +192,14 @@ class OAuthRepositoryImpl implements OAuthRepository {
       };
 
       // Agregar refresh token si existe
-      if (tokenJson.containsKey('refresh_token') &&
-          tokenJson['refresh_token'] != null) {
+      if (tokenJson.containsKey('refresh_token') && tokenJson['refresh_token'] != null) {
         credentialsJson['refreshToken'] = tokenJson['refresh_token'] as String;
       }
 
       // Calcular expiration - el paquete oauth2 espera expiration como timestamp Unix en milisegundos (int)
-      final expirationDateTime =
-          DateTime.now().add(Duration(seconds: expiresIn));
-      credentialsJson['expiration'] = expirationDateTime
-          .millisecondsSinceEpoch; // Timestamp en milisegundos
+      final expirationDateTime = DateTime.now().add(Duration(seconds: expiresIn));
+      credentialsJson['expiration'] =
+          expirationDateTime.millisecondsSinceEpoch; // Timestamp en milisegundos
 
       _logger.w('Transformed credentials JSON keys: ${credentialsJson.keys}');
 
@@ -230,8 +218,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         rethrow;
       }
 
-      _logger.w(
-          'Access token received: ${credentials.accessToken.substring(0, 20)}...');
+      _logger.w('Access token received: ${credentials.accessToken.substring(0, 20)}...');
       _logger.w('Token expires: ${credentials.expiration}');
 
       // Crear cliente OAuth2
@@ -261,8 +248,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         details: e.description ?? 'Authorization failed',
       ));
     } catch (e, stack) {
-      _logger.e('Error handling authorization response',
-          error: e, stackTrace: stack);
+      _logger.e('Error handling authorization response', error: e, stackTrace: stack);
       _logger.e('Error type: ${e.runtimeType}');
       _logger.e('Error message: ${e.toString()}');
       return failure(UnknownFailure(details: e.toString()));
@@ -305,8 +291,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       // Intentar cargar cliente guardado
       final result = await loadSavedClient();
       return result.fold(
-        onSuccess: (client) =>
-            success(client != null && !client.credentials.isExpired),
+        onSuccess: (client) => success(client != null && !client.credentials.isExpired),
         onFailure: (_) => success(false),
       );
     } catch (e) {

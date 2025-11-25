@@ -56,8 +56,7 @@ final class StorageFailure extends AppFailure {
 
 /// Configuration failures
 final class ConfigurationFailure extends AppFailure {
-  const ConfigurationFailure({super.details})
-      : super(code: 'CONFIGURATION_ERROR');
+  const ConfigurationFailure({super.details}) : super(code: 'CONFIGURATION_ERROR');
 }
 
 /// Unknown failures

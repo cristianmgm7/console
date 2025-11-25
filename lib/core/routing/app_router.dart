@@ -15,9 +15,8 @@ class AppRouter {
   late final GoRouter router;
   AppRouter() {
     // Usar la URL actual como initialLocation, o /login si no hay path
-    final initialPath = Uri.base.path.isEmpty || Uri.base.path == '/'
-        ? AppRoutes.login
-        : Uri.base.path;
+    final initialPath =
+        Uri.base.path.isEmpty || Uri.base.path == '/' ? AppRoutes.login : Uri.base.path;
     router = GoRouter(
       initialLocation: initialPath,
       debugLogDiagnostics: true,
