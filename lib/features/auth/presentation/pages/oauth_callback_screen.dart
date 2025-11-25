@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:html' as html;
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -20,16 +22,46 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
   @override
   void initState() {
     super.initState();
+    // Log para debugging en consola del navegador
+
+
+
+    
+    // En web, usar la URL completa del navegador para obtener los query params
+    String fullUrl;
+    if (kIsWeb) {
+      final currentUrl = html.window.location.href;
+
+      fullUrl = currentUrl;
+    } else {
+      // En otras plataformas, usar la URI del router
+      fullUrl = widget.callbackUri.toString();
+    }
+    
+
+
+    
     // Enviar la URL completa al BLoC
     context.read<AuthBloc>().add(
-      AuthorizationResponseReceived(widget.callbackUri.toString()),
+      AuthorizationResponseReceived(fullUrl),
     );
+
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
+        // Log del estado actual para debugging
+
+        if (state is AuthError) {
+
+        } else if (state is Authenticated) {
+
+        } else if (state is ProcessingCallback) {
+
+        }
+        
         if (state is ProcessingCallback) {
           return const Scaffold(
             body: Center(

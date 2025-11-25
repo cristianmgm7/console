@@ -10,6 +10,12 @@ void main() async {
 
   // Initialize dependency injection
   await configureDependencies();
+  
+  // Log para debugging - verificar que la app se inicializa
+
+
+
+
 
   runApp(const MyApp());
 }
