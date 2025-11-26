@@ -104,17 +104,4 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
     }
   }
 
-  @override
-  Future<List<MessageModel>> getRecentMessages({
-    required String conversationId,
-    int count = 50,
-  }) async {
-    // Use the channel-specific sequential endpoint for recent messages
-    // This corresponds to MessageController_getChannelIndexMessages
-    return getMessages(
-      conversationId: conversationId,
-      start: 0, // Start from 0 for most recent messages
-      count: count,
-    );
-  }
 }

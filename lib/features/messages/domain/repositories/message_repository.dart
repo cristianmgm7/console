@@ -16,13 +16,6 @@ abstract class MessageRepository {
   /// Fetches a single message by ID
   Future<Result<Message>> getMessage(String messageId);
 
-  /// Fetches recent messages for a conversation
-  /// [conversationId] - The conversation/channel ID
-  /// [count] - Number of recent messages to fetch (default: 50)
-  Future<Result<List<Message>>> getRecentMessages({
-    required String conversationId,
-    int count = 50,
-  });
 
   /// Fetches messages from multiple conversations, merged and sorted by date
   /// [conversationIds] - Set of conversation IDs to fetch from

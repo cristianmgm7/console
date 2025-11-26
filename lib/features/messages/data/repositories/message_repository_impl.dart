@@ -115,39 +115,6 @@ class MessageRepositoryImpl implements MessageRepository {
     }
   }
 
-  @override
-  Future<Result<List<Message>>> getRecentMessages({
-    required String conversationId,
-    int count = 50,
-  }) async {
-    try {
-      _logger.d('Fetching recent messages for conversation: $conversationId using sequential endpoint');
-      final messageModels = await _remoteDataSource.getMessages(
-        conversationId: conversationId,
-        start: 0, // Start from 0 for most recent messages
-        count: count,
-      );
-
-      final messages = messageModels.map((model) => model.toEntity()).toList();
-      _logger.d('Received ${messages.length} messages for conversation $conversationId');
-
-      // Replace cache with recent messages
-      messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      _cachedMessages[conversationId] = messages;
-      _loadedRanges.remove(conversationId); // Clear range tracking
-
-      return success(messages);
-    } on ServerException catch (e) {
-      _logger.e('Server error fetching recent messages', error: e);
-      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
-    } on NetworkException catch (e) {
-      _logger.e('Network error fetching recent messages', error: e);
-      return failure(NetworkFailure(details: e.message));
-    } on Exception catch (e, stack) {
-      _logger.e('Unknown error fetching recent messages', error: e, stackTrace: stack);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
 
   @override
   Future<Result<List<Message>>> getMessagesFromConversations({
@@ -172,22 +139,20 @@ class MessageRepositoryImpl implements MessageRepository {
       // Fetch messages from each conversation using sequential pagination
       for (final conversationId in conversationIds) {
         _logger.d('Fetching messages for conversation: $conversationId');
-        final result = await getMessages(
-          conversationId: conversationId,
-          start: 0, // Start from the beginning (most recent)
-          count: count,
-        );
+        try {
+          final messageModels = await _remoteDataSource.getMessages(
+            conversationId: conversationId,
+            start: 0, // Start from the beginning (most recent)
+            count: count,
+          );
 
-        result.fold(
-          onSuccess: (messages) {
-            allMessages.addAll(messages);
-            _logger.i('Added ${messages.length} messages from conversation $conversationId');
-          },
-          onFailure: (failure) {
-            // Log warning but continue with other conversations
-            _logger.e('Failed to fetch messages from $conversationId: ${failure.failure}');
-          },
-        );
+          final messages = messageModels.map((model) => model.toEntity()).toList();
+          allMessages.addAll(messages);
+          _logger.i('Added ${messages.length} messages from conversation $conversationId');
+        } on Exception catch (e) {
+          // Log warning but continue with other conversations
+          _logger.e('Failed to fetch messages from $conversationId: $e');
+        }
       }
 
       // Sort all messages by date (newest first)
