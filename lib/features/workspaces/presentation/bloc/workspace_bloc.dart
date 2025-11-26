@@ -36,8 +36,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         final selected = workspaces.first;
         _logger.i('Auto-selected workspace: ${selected.name}');
         emit(WorkspaceLoaded(workspaces, selected));
-        // Emit event for other blocs to react
-        add(WorkspaceSelectedEvent(selected.id));
+        // State change will trigger dashboard screen to notify ConversationBloc
       },
       onFailure: (failure) {
         emit(WorkspaceError(FailureMapper.mapToMessage(failure.failure)));
@@ -58,6 +57,6 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     );
 
     emit(WorkspaceLoaded(currentState.workspaces, selected));
-    add(WorkspaceSelectedEvent(event.workspaceId));
+    // State change will trigger dashboard screen to notify ConversationBloc
   }
 }

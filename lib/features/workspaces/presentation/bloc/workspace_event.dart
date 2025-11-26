@@ -18,12 +18,3 @@ class SelectWorkspace extends WorkspaceEvent {
   @override
   List<Object?> get props => [workspaceId];
 }
-
-// Internal event emitted by bloc to notify other blocs
-class WorkspaceSelectedEvent extends WorkspaceEvent {
-  const WorkspaceSelectedEvent(this.workspaceId);
-  final String workspaceId;
-
-  @override
-  List<Object?> get props => [workspaceId];
-}
