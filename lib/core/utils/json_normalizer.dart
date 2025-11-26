@@ -26,16 +26,29 @@ class JsonNormalizer {
 
   /// Normalizes message JSON from API format to our expected format
   static Map<String, dynamic> normalizeMessage(Map<String, dynamic> json) {
-    // Handle new API format where message data might be nested in 'text' field
-    final textData = json['text'];
-    final actualJson = (textData is Map<String, dynamic>) ? textData : json;
+    // Handle new API format where message data might be nested in various fields
+    final possibleContainers = ['text', 'message', 'data'];
+    Map<String, dynamic>? nestedData;
+
+    for (final field in possibleContainers) {
+      final data = json[field];
+      if (data is Map<String, dynamic>) {
+        nestedData = data;
+        break;
+      }
+    }
+
+    final actualJson = nestedData ?? json;
 
     // Handle new API format with message_id, creator_id, channel_ids array, etc.
     final messageId = actualJson['id'] ??
                      actualJson['_id'] ??
                      actualJson['messageId'] ??
                      actualJson['message_id'] ??
-                     json['id']; // fallback to original json
+                     json['id'] ??
+                     json['_id'] ??
+                     json['messageId'] ??
+                     json['message_id'];
 
     // channel_ids is an array, take the first one
     final channelIds = actualJson['channel_ids'] as List<dynamic>?;
@@ -127,4 +140,3 @@ class JsonNormalizer {
     };
   }
 }
-

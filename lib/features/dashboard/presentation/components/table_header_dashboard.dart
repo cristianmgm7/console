@@ -3,15 +3,12 @@ import 'package:flutter/material.dart';
 
 class DashboardTableHeader extends StatelessWidget {
   const DashboardTableHeader({
-    super.key,
-    required this.onToggleSelectAll,
-    required this.messageState,
-    required this.selectAll,
+    required this.onToggleSelectAll, required this.messageState, required this.selectAll, super.key,
   });
 
   final MessageLoaded messageState;
   final bool selectAll;
-  final void Function(bool?, int) onToggleSelectAll;
+  final void Function(int length, {bool? value}) onToggleSelectAll;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +32,7 @@ class DashboardTableHeader extends StatelessWidget {
             // Select All Checkbox
             Checkbox(
               value: selectAll,
-              onChanged: (value) => onToggleSelectAll(value, messageState.messages.length),
+              onChanged: (value) => onToggleSelectAll(messageState.messages.length, value: value),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
               ),

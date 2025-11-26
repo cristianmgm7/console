@@ -76,5 +76,3 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
     _cachedWorkspaces = null;
   }
 }
-
-

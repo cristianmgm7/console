@@ -1,20 +1,19 @@
 import 'dart:async';
 
+import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/table_header_dashboard.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
-import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -117,7 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _toggleSelectAll(bool? value, int messageCount) {
+  void _toggleSelectAll(int messageCount, {bool? value}) {
     setState(() {
       _selectAll = value ?? false;
       if (_selectAll) {
@@ -131,7 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _toggleMessageSelection(String messageId, bool? value) {
+  void _toggleMessageSelection(String messageId, {bool? value}) {
     setState(() {
       if (value ?? false) {
         _selectedMessages.add(messageId);
@@ -185,7 +184,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   scrollController: _scrollController,
                   selectedMessages: _selectedMessages,
                   onToggleMessageSelection: _toggleMessageSelection,
-                  convertToLegacyMessage: _convertToLegacyMessage,
                 ),
               ),
             ],
@@ -213,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     }
 
                     // Show download progress bottom sheet with fresh BLoC instance
-                    showModalBottomSheet(
+                    unawaited(showModalBottomSheet<void>(
                       context: context,
                       isDismissible: false,
                       enableDrag: false,
@@ -222,7 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ..add(StartDownload(_selectedMessages)),
                         child: const DownloadProgressSheet(),
                       ),
-                    );
+                    ),);
                   },
                   onSummarize: () {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -261,18 +259,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
            messageState is MessageLoading;
   }
 
-  // Temporary converter - should refactor MessageCard to use domain entities
-  AudioMessage _convertToLegacyMessage(dynamic message, dynamic user) {
-    // This is a hack to make the existing MessageCard work
-    // In a real refactor, MessageCard should accept Message and User entities
-    return AudioMessage(
-      id: message.id as String,
-      date: message.createdAt as DateTime,
-      owner: user?.name as String? ?? 'Unknown User',
-      message: message.text as String? ?? message.transcript as String? ?? 'No content',
-      duration: message.duration as Duration? ?? Duration.zero,
-      status: message.status as String? ?? 'Unknown',
-      project: '', // Not available in Message entity
-    );
-  }
 }

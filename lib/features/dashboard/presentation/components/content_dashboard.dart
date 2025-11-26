@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
@@ -9,19 +8,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardContent extends StatelessWidget {
   const DashboardContent({
-    required this.isAnyBlocLoading, 
-    required this.scrollController, 
-    required this.selectedMessages, 
-    required this.onToggleMessageSelection, 
-    required this.convertToLegacyMessage, 
+    required this.isAnyBlocLoading,
+    required this.scrollController,
+    required this.selectedMessages,
+    required this.onToggleMessageSelection,
     super.key,
   });
 
   final ScrollController scrollController;
   final Set<String> selectedMessages;
-  final void Function(String, bool?) onToggleMessageSelection;
-  final AudioMessage Function(dynamic, dynamic) convertToLegacyMessage;
-  final bool Function(BuildContext) isAnyBlocLoading;
+  final void Function(String, {bool? value}) onToggleMessageSelection;
+  final bool Function(BuildContext context) isAnyBlocLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -94,14 +91,11 @@ class DashboardContent extends StatelessWidget {
                 final message = messageState.messages[index];
                 final user = messageState.users[message.userId];
 
-                // Convert domain entities to legacy AudioMessage format for MessageCard
-                // TODO: Refactor MessageCard to accept domain entities directly
-                final legacyMessage = convertToLegacyMessage(message, user);
-
                 return MessageCard(
-                  message: legacyMessage,
+                  message: message,
+                  user: user,
                   isSelected: selectedMessages.contains(message.id),
-                  onSelected: (value) => onToggleMessageSelection(message.id, value),
+                  onSelected: (value) => onToggleMessageSelection(message.id, value: value),
                 );
               },
             ),

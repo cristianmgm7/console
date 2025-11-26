@@ -1,15 +1,18 @@
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
     required this.message,
+    required this.user,
     required this.isSelected,
     required this.onSelected,
     super.key,
   });
 
-  final AudioMessage message;
+  final Message message;
+  final User? user;
   final bool isSelected;
   final ValueChanged<bool?> onSelected;
 
@@ -43,11 +46,11 @@ class MessageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _formatDate(message.date),
+                    _formatDate(message.createdAt),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   Text(
-                    'Received: ${_formatFullDate(message.date)}',
+                    'Received: ${_formatFullDate(message.createdAt)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -62,7 +65,7 @@ class MessageCard extends StatelessWidget {
             SizedBox(
               width: 140,
               child: Text(
-                message.owner,
+                user?.name ?? 'Unknown User',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -77,14 +80,14 @@ class MessageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    message.message,
+                    message.text ?? message.transcript ?? 'No content',
                     style: Theme.of(context).textTheme.bodyMedium,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    message.project,
+                    '',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -130,7 +133,7 @@ class MessageCard extends StatelessWidget {
             SizedBox(
               width: 60,
               child: Text(
-                _formatDuration(message.duration),
+                _formatDuration(message.duration ?? Duration.zero),
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -141,22 +144,22 @@ class MessageCard extends StatelessWidget {
             // Status
             SizedBox(
               width: 90,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(message.status, context),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Center(
-                  child: Text(
-                    message.status,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(message.status ?? 'Unknown', context),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      message.status ?? 'Unknown',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
                   ),
                 ),
-              ),
             ),
 
             const SizedBox(width: 8),

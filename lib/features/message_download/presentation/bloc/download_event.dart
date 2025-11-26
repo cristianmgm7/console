@@ -21,19 +21,3 @@ class StartDownload extends DownloadEvent {
 class CancelDownload extends DownloadEvent {
   const CancelDownload();
 }
-
-/// Internal event to update progress after each file completes
-class _UpdateProgress extends DownloadEvent {
-  const _UpdateProgress({
-    required this.currentIndex,
-    required this.totalCount,
-    required this.result,
-  });
-
-  final int currentIndex;
-  final int totalCount;
-  final dynamic result; // DownloadResult
-
-  @override
-  List<Object?> get props => [currentIndex, totalCount, result];
-}

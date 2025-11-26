@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/errors/exceptions.dart' show NetworkException, ServerException;
 import 'package:carbon_voice_console/features/users/data/models/user_model.dart';
 
 /// Abstract interface for user remote data operations
@@ -17,5 +18,3 @@ abstract class UserRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<List<UserModel>> getWorkspaceUsers(String workspaceId);
 }
-
-

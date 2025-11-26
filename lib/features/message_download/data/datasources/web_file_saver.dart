@@ -1,7 +1,6 @@
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/message_download/data/datasources/file_saver.dart';
-import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:universal_html/html.dart' as html;
 
@@ -26,9 +25,6 @@ class WebFileSaver implements FileSaver {
     try {
       final blob = html.Blob([bytes]);
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
 
       html.Url.revokeObjectUrl(url);
 
@@ -49,9 +45,6 @@ class WebFileSaver implements FileSaver {
     try {
       final blob = html.Blob([content], 'text/plain');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
 
       html.Url.revokeObjectUrl(url);
 

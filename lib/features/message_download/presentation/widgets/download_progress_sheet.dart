@@ -20,7 +20,7 @@ class DownloadProgressSheet extends StatelessWidget {
                 '${state.failureCount} failed, '
                 '${state.skippedCount} skipped';
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
+              SnackBar(content: Text(message)),
             );
           } else if (state is DownloadCancelled) {
             ScaffoldMessenger.of(context).showSnackBar(

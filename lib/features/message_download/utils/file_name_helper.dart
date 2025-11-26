@@ -59,7 +59,7 @@ class FileNameHelper {
     final nameWithoutExtension = path.basenameWithoutExtension(baseFileName);
 
     // Try appending _1, _2, _3, etc.
-    int counter = 1;
+    var counter = 1;
     while (true) {
       final newFileName = '${nameWithoutExtension}_$counter$extension';
       final newPath = path.join(directoryPath, newFileName);

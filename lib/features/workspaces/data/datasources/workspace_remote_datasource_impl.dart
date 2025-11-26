@@ -31,13 +31,14 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         if (parsed is Map<String, dynamic>) {
           errorData = parsed;
         }
-      } catch (_) {
+      } on Exception catch (e) {
+        _logger.e('Failed to parse response body', error: e.toString());
         // If parsing fails, we'll use the raw body
       }
 
       if (response.statusCode != 200) {
         // Extract error message from JSON if available
-        String errorMessage = 'Failed to fetch workspaces';
+        var errorMessage = 'Failed to fetch workspaces';
         if (errorData != null) {
           final errmsg = errorData['errmsg'] as String?;
           if (errmsg != null) {

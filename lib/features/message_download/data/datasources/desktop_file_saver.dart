@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
@@ -56,14 +55,14 @@ class DesktopFileSaver implements FileSaver {
     try {
       // Ensure directory exists
       final directory = Directory(directoryPath);
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
       }
 
       // Write file
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
-      await file.writeAsBytes(bytes);
+      file.writeAsBytesSync(bytes);
 
       _logger.i('Saved file: $filePath (${bytes.length} bytes)');
       return success(filePath);
@@ -90,14 +89,14 @@ class DesktopFileSaver implements FileSaver {
     try {
       // Ensure directory exists
       final directory = Directory(directoryPath);
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
       }
 
       // Write file
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
-      await file.writeAsString(content, encoding: utf8);
+      file.writeAsStringSync(content);
 
       _logger.i('Saved text file: $filePath (${content.length} characters)');
       return success(filePath);

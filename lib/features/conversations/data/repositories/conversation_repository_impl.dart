@@ -87,5 +87,3 @@ class ConversationRepositoryImpl implements ConversationRepository {
     _cachedConversations.clear();
   }
 }
-
-

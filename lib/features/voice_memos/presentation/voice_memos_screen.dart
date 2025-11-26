@@ -1,6 +1,7 @@
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 
 class VoiceMemosScreen extends StatefulWidget {
@@ -14,79 +15,85 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
 
+  // Dummy user data
+  final User _dummyUser = const User(
+    id: 'user-1',
+    name: 'Travis Bogard',
+  );
+
   // Dummy data
-  final List<AudioMessage> _messages = [
-    AudioMessage(
+  final List<Message> _messages = [
+    Message(
       id: '1',
-      date: DateTime(2023, 10, 26, 15, 45),
-      owner: 'Travis Bogard',
-      message: 'Quick team standup notes and action items.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 15, 45),
+      text: 'Quick team standup notes and action items.',
       duration: const Duration(seconds: 18),
       status: 'Processed',
-      project: 'Team Updates',
     ),
-    AudioMessage(
+    Message(
       id: '2',
-      date: DateTime(2023, 10, 26, 14, 10),
-      owner: 'Travis Bogard',
-      message: 'Client feedback and feature requests discussion.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 14, 10),
+      text: 'Client feedback and feature requests discussion.',
       duration: const Duration(minutes: 1, seconds: 23),
       status: 'New',
-      project: 'Client Work',
     ),
-    AudioMessage(
+    Message(
       id: '3',
-      date: DateTime(2023, 10, 26, 11, 55),
-      owner: 'Travis Bogard',
-      message: 'Product roadmap planning for next quarter.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 11, 55),
+      text: 'Product roadmap planning for next quarter.',
       duration: const Duration(seconds: 42),
       status: 'Processed',
-      project: 'Planning',
     ),
-    AudioMessage(
+    Message(
       id: '4',
-      date: DateTime(2023, 10, 25, 9, 30),
-      owner: 'Travis Bogard',
-      message: 'Design review and UI/UX feedback session.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 25, 9, 30),
+      text: 'Design review and UI/UX feedback session.',
       duration: const Duration(minutes: 12, seconds: 31),
       status: 'Processed',
-      project: 'Design',
     ),
-    AudioMessage(
+    Message(
       id: '5',
-      date: DateTime(2023, 10, 26, 8, 55),
-      owner: 'Travis Bogard',
-      message: 'Bug triage and priority discussion.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 8, 55),
+      text: 'Bug triage and priority discussion.',
       duration: const Duration(minutes: 8, seconds: 55),
       status: 'New',
-      project: 'Development',
     ),
-    AudioMessage(
+    Message(
       id: '6',
-      date: DateTime(2023, 10, 24, 16, 20),
-      owner: 'Travis Bogard',
-      message: 'Interview notes and candidate evaluation.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 24, 16, 20),
+      text: 'Interview notes and candidate evaluation.',
       duration: const Duration(minutes: 45, seconds: 2),
       status: 'Archived',
-      project: 'HR',
     ),
-    AudioMessage(
+    Message(
       id: '7',
-      date: DateTime(2023, 10, 23, 14, 15),
-      owner: 'Travis Bogard',
-      message: 'Sprint retrospective and improvement ideas.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 23, 14, 15),
+      text: 'Sprint retrospective and improvement ideas.',
       duration: const Duration(minutes: 18, seconds: 42),
       status: 'Processed',
-      project: 'Agile Process',
     ),
-    AudioMessage(
+    Message(
       id: '8',
-      date: DateTime(2023, 10, 22, 10, 45),
-      owner: 'Travis Bogard',
-      message: 'Technical architecture discussion and decisions.',
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      createdAt: DateTime(2023, 10, 22, 10, 45),
+      text: 'Technical architecture discussion and decisions.',
       duration: const Duration(minutes: 32, seconds: 18),
       status: 'Processed',
-      project: 'Architecture',
     ),
   ];
 
@@ -242,6 +249,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       final message = _messages[index];
                       return MessageCard(
                         message: message,
+                        user: _dummyUser,
                         isSelected: _selectedMessages.contains(message.id),
                         onSelected: (value) => _toggleMessageSelection(message.id, value),
                       );

@@ -24,7 +24,5 @@ abstract class MessageRepository {
   Future<Result<List<Message>>> getMessagesFromConversations({
     required Set<String> conversationIds,
     int count = 50,
-  });
+  }); 
 }
-
-
