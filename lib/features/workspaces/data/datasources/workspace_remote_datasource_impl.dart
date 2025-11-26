@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/workspaces/data/datasources/workspace_remote_datasource.dart';
 import 'package:carbon_voice_console/features/workspaces/data/models/workspace_model.dart';
 import 'package:injectable/injectable.dart';
@@ -20,7 +21,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
       _logger.d('Fetching workspaces from API');
 
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/admin/workspaces',
+        '${OAuthConfig.apiBaseUrl}/workspaces',
       );
 
       if (response.statusCode == 200) {
@@ -37,7 +38,10 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         }
 
         final workspaces = workspacesJson
-            .map((json) => WorkspaceModel.fromJson(json as Map<String, dynamic>))
+            .map((json) {
+              final normalized = JsonNormalizer.normalizeWorkspace(json as Map<String, dynamic>);
+              return WorkspaceModel.fromJson(normalized);
+            })
             .toList();
 
         _logger.i('Fetched ${workspaces.length} workspaces');
@@ -63,12 +67,13 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
       _logger.d('Fetching workspace: $workspaceId');
 
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/admin/workspaces/$workspaceId',
+        '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId',
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final workspace = WorkspaceModel.fromJson(data);
+        final normalized = JsonNormalizer.normalizeWorkspace(data);
+        final workspace = WorkspaceModel.fromJson(normalized);
         _logger.i('Fetched workspace: ${workspace.name}');
         return workspace;
       } else {

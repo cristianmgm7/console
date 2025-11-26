@@ -12,3 +12,4 @@ abstract class WorkspaceRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<WorkspaceModel> getWorkspace(String workspaceId);
 }
+

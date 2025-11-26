@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/conversations/data/datasources/conversation_remote_datasource.dart';
 import 'package:carbon_voice_console/features/conversations/data/models/conversation_model.dart';
 import 'package:injectable/injectable.dart';
@@ -37,7 +38,10 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         }
 
         final conversations = conversationsJson
-            .map((json) => ConversationModel.fromJson(json as Map<String, dynamic>))
+            .map((json) {
+              final normalized = JsonNormalizer.normalizeConversation(json as Map<String, dynamic>);
+              return ConversationModel.fromJson(normalized);
+            })
             .toList();
 
         _logger.i('Fetched ${conversations.length} conversations');
@@ -68,7 +72,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final conversation = ConversationModel.fromJson(data);
+        final normalized = JsonNormalizer.normalizeConversation(data);
+        final conversation = ConversationModel.fromJson(normalized);
         _logger.i('Fetched conversation: ${conversation.name}');
         return conversation;
       } else {

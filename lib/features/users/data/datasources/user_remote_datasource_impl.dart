@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
 import 'package:carbon_voice_console/features/users/data/models/user_model.dart';
 import 'package:injectable/injectable.dart';
@@ -25,7 +26,8 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final user = UserModel.fromJson(data);
+        final normalized = JsonNormalizer.normalizeUser(data);
+        final user = UserModel.fromJson(normalized);
         _logger.i('Fetched user: ${user.name}');
         return user;
       } else {
@@ -75,7 +77,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       _logger.d('Fetching users for workspace: $workspaceId');
 
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/admin/workspace/$workspaceId/users',
+        '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId/users',
       );
 
       if (response.statusCode == 200) {
@@ -92,7 +94,10 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         }
 
         final users = usersJson
-            .map((json) => UserModel.fromJson(json as Map<String, dynamic>))
+            .map((json) {
+              final normalized = JsonNormalizer.normalizeUser(json as Map<String, dynamic>);
+              return UserModel.fromJson(normalized);
+            })
             .toList();
 
         _logger.i('Fetched ${users.length} workspace users');

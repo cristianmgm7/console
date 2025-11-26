@@ -17,3 +17,4 @@ abstract class UserRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<List<UserModel>> getWorkspaceUsers(String workspaceId);
 }
+

@@ -25,3 +25,4 @@ class Conversation extends Equatable {
   @override
   List<Object?> get props => [id, name, workspaceId, guid, description, createdAt, messageCount, colorIndex];
 }
+

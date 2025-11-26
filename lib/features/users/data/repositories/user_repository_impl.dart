@@ -116,3 +116,4 @@ class UserRepositoryImpl implements UserRepository {
     _cachedUsers.clear();
   }
 }
+

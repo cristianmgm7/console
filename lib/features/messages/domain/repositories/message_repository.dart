@@ -33,3 +33,4 @@ abstract class MessageRepository {
     int count = 50,
   });
 }
+

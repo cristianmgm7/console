@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 
 /// Data model for message with JSON serialization
@@ -16,34 +17,40 @@ class MessageModel extends Message {
   });
 
   /// Creates a MessageModel from JSON
+  /// Uses JsonNormalizer to handle API field name variations
   factory MessageModel.fromJson(Map<String, dynamic> json) {
+    final normalized = JsonNormalizer.normalizeMessage(json);
+    
+    final id = normalized['id'] as String?;
+    if (id == null) {
+      throw FormatException('Message JSON missing required id field: $json');
+    }
+
+    final conversationId = normalized['conversationId'] as String?;
+    if (conversationId == null) {
+      throw FormatException('Message JSON missing required conversationId field: $json');
+    }
+
+    final userId = normalized['userId'] as String?;
+    if (userId == null) {
+      throw FormatException('Message JSON missing required userId field: $json');
+    }
+
     return MessageModel(
-      id: json['id'] as String? ?? json['_id'] as String? ?? json['messageId'] as String,
-      conversationId: json['conversationId'] as String? ??
-                      json['conversation_id'] as String? ??
-                      json['channelId'] as String? ??
-                      json['channel_id'] as String,
-      userId: json['userId'] as String? ??
-              json['user_id'] as String? ??
-              json['ownerId'] as String? ??
-              json['owner_id'] as String,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : json['created_at'] != null
-              ? DateTime.parse(json['created_at'] as String)
-              : json['date'] != null
-                  ? DateTime.parse(json['date'] as String)
-                  : DateTime.now(),
-      text: json['text'] as String? ?? json['message'] as String?,
-      transcript: json['transcript'] as String?,
-      audioUrl: json['audioUrl'] as String? ?? json['audio_url'] as String?,
-      duration: json['duration'] != null
-          ? Duration(seconds: json['duration'] as int)
-          : json['durationSeconds'] != null
-              ? Duration(seconds: json['durationSeconds'] as int)
-              : null,
-      status: json['status'] as String?,
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      id: id,
+      conversationId: conversationId,
+      userId: userId,
+      createdAt: normalized['createdAt'] != null
+          ? DateTime.parse(normalized['createdAt'] as String)
+          : DateTime.now(),
+      text: normalized['text'] as String?,
+      transcript: normalized['transcript'] as String?,
+      audioUrl: normalized['audioUrl'] as String?,
+      duration: normalized['duration'] != null
+          ? Duration(seconds: normalized['duration'] as int)
+          : null,
+      status: normalized['status'] as String?,
+      metadata: normalized['metadata'] as Map<String, dynamic>?,
     );
   }
 

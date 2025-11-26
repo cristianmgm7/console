@@ -19,3 +19,4 @@ class User extends Equatable {
   @override
   List<Object?> get props => [id, name, email, avatarUrl, workspaceId];
 }
+

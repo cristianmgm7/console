@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
 import 'package:carbon_voice_console/features/messages/data/models/message_model.dart';
 import 'package:injectable/injectable.dart';
@@ -42,7 +43,10 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         }
 
         final messages = messagesJson
-            .map((json) => MessageModel.fromJson(json as Map<String, dynamic>))
+            .map((json) {
+              final normalized = JsonNormalizer.normalizeMessage(json as Map<String, dynamic>);
+              return MessageModel.fromJson(normalized);
+            })
             .toList();
 
         _logger.i('Fetched ${messages.length} messages');
@@ -81,7 +85,8 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final message = MessageModel.fromJson(data);
+        final normalized = JsonNormalizer.normalizeMessage(data);
+        final message = MessageModel.fromJson(normalized);
         _logger.i('Fetched message: ${message.id}');
         return message;
       } else {
@@ -107,15 +112,19 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
     try {
       _logger.d('Fetching $count recent messages for conversation: $conversationId');
 
+      // API expects channel_guid (snake_case) and direction parameter
+      // direction must be "older" or "newer" - using "newer" for recent messages
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
         body: {
-          'channelId': conversationId,
+          'channel_guid': conversationId,
           'count': count,
+          'direction': 'newer', // Required: "older" or "newer"
         },
       );
 
-      if (response.statusCode == 200) {
+      // API returns 201 (Created) for successful POST requests
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
 
         // API might return {messages: [...]} or just [...]
@@ -129,16 +138,22 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         }
 
         final messages = messagesJson
-            .map((json) => MessageModel.fromJson(json as Map<String, dynamic>))
+            .map((json) {
+              final normalized = JsonNormalizer.normalizeMessage(json as Map<String, dynamic>);
+              return MessageModel.fromJson(normalized);
+            })
             .toList();
 
         _logger.i('Fetched ${messages.length} recent messages');
         return messages;
       } else {
-        _logger.e('Failed to fetch recent messages: ${response.statusCode}');
+        _logger.e(
+          'Failed to fetch recent messages: ${response.statusCode}',
+          error: response.body,
+        );
         throw ServerException(
           statusCode: response.statusCode,
-          message: 'Failed to fetch recent messages',
+          message: 'Failed to fetch recent messages: ${response.body}',
         );
       }
     } on ServerException {

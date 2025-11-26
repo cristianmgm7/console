@@ -24,3 +24,4 @@ abstract class MessageRemoteDataSource {
     int count = 50,
   });
 }
+

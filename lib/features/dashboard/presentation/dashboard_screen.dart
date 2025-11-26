@@ -496,4 +496,3 @@ class _DashboardScreenContentState extends State<_DashboardScreenContent> {
     );
   }
 }
-

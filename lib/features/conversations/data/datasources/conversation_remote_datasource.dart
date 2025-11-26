@@ -12,3 +12,4 @@ abstract class ConversationRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<ConversationModel> getConversation(String conversationId);
 }
+

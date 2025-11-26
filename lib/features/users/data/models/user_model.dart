@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 
 /// Data model for user with JSON serialization
@@ -11,13 +12,21 @@ class UserModel extends User {
   });
 
   /// Creates a UserModel from JSON
+  /// Uses JsonNormalizer to handle API field name variations
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final normalized = JsonNormalizer.normalizeUser(json);
+    
+    final id = normalized['id'] as String?;
+    if (id == null) {
+      throw FormatException('User JSON missing required id field: $json');
+    }
+
     return UserModel(
-      id: json['id'] as String? ?? json['_id'] as String? ?? json['userId'] as String,
-      name: json['name'] as String? ?? json['username'] as String? ?? 'Unknown User',
-      email: json['email'] as String?,
-      avatarUrl: json['avatarUrl'] as String? ?? json['avatar_url'] as String?,
-      workspaceId: json['workspaceId'] as String? ?? json['workspace_id'] as String?,
+      id: id,
+      name: normalized['name'] as String? ?? 'Unknown User',
+      email: normalized['email'] as String?,
+      avatarUrl: normalized['avatarUrl'] as String?,
+      workspaceId: normalized['workspaceId'] as String?,
     );
   }
 

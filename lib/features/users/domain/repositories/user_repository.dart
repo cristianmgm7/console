@@ -12,3 +12,4 @@ abstract class UserRepository {
   /// Fetches all users in a workspace
   Future<Result<List<User>>> getWorkspaceUsers(String workspaceId);
 }
+

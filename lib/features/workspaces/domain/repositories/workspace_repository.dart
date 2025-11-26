@@ -9,3 +9,4 @@ abstract class WorkspaceRepository {
   /// Fetches a single workspace by ID
   Future<Result<Workspace>> getWorkspace(String workspaceId);
 }
+
