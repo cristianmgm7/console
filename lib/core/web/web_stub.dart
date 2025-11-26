@@ -1,5 +1,8 @@
 /// Stub implementation for web APIs when not running on web platform
 /// This file is used when `dart.library.html` is NOT available
+// ignore_for_file: library_private_types_in_public_api
+
+library;
 
 // Stub for web.Storage
 class _StorageStub {

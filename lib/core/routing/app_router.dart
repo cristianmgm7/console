@@ -161,8 +161,6 @@ class AppRouter {
         );
       },
     );
-
-    // Log cuando el router está listo
   }
   late final GoRouter router;
   GoRouter get instance => router;
