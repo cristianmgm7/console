@@ -79,81 +79,94 @@ class DashboardAppBar extends StatelessWidget {
 
           const SizedBox(width: 16),
 
-          // Search Field (Conversation ID search - not implemented yet)
-          Container(
-            constraints: const BoxConstraints(maxWidth: 250),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Conversation ID',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Conversation Name Display
-          BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
-            selector: (state) => state is ConversationLoaded ? state : null,
-            builder: (context, conversationState) {
-              if (conversationState == null || conversationState.selectedConversationIds.isEmpty) {
-                return const SizedBox.shrink();
-              }
-
-              return Container(
-                constraints: const BoxConstraints(maxWidth: 300),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        conversationState.conversations
-                            .where((c) => conversationState.selectedConversationIds.contains(c.id))
-                            .map((c) => c.name)
-                            .join(', '),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                        overflow: TextOverflow.ellipsis,
+          // Search Field and Conversation Display (Flexible)
+          Expanded(
+            child: Row(
+              children: [
+                // Search Field (Conversation ID search - not implemented yet)
+                Flexible(
+                  flex: 2,
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 250),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Conversation ID',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              );
-            },
+
+                const SizedBox(width: 16),
+
+                // Conversation Name Display
+                Flexible(
+                  flex: 3,
+                  child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+                    selector: (state) => state is ConversationLoaded ? state : null,
+                    builder: (context, conversationState) {
+                      if (conversationState == null || conversationState.selectedConversationIds.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Container(
+                        constraints: const BoxConstraints(maxWidth: 300),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                conversationState.conversations
+                                    .where((c) => conversationState.selectedConversationIds.contains(c.id))
+                                    .map((c) => c.name)
+                                    .join(', '),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const Spacer(),

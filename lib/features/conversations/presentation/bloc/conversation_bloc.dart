@@ -63,8 +63,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           selectedConversationIds: {selected.id},
           conversationColorMap: colorMap,
         ),);
-
-        add(ConversationSelectedEvent({selected.id}));
+        // State change will trigger dashboard screen to notify MessageBloc
       },
       onFailure: (failure) {
         emit(ConversationError(FailureMapper.mapToMessage(failure.failure)));
@@ -87,7 +86,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     }
 
     emit(currentState.copyWith(selectedConversationIds: newSelectedIds));
-    add(ConversationSelectedEvent(newSelectedIds));
+    // State change will trigger dashboard screen to notify MessageBloc
   }
 
   Future<void> _onSelectMultipleConversations(
@@ -98,7 +97,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     if (currentState is! ConversationLoaded) return;
 
     emit(currentState.copyWith(selectedConversationIds: event.conversationIds));
-    add(ConversationSelectedEvent(event.conversationIds));
+    // State change will trigger dashboard screen to notify MessageBloc
   }
 
   Future<void> _onClearConversationSelection(
@@ -109,6 +108,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     if (currentState is! ConversationLoaded) return;
 
     emit(currentState.copyWith(selectedConversationIds: const <String>{}));
-    add(const ConversationSelectedEvent({}));
+    // State change will trigger dashboard screen to notify MessageBloc
   }
 }
