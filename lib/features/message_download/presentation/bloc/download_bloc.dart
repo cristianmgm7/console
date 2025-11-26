@@ -70,32 +70,36 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         onSuccess: (message) {
           var hasDownloadableContent = false;
 
-          // Add audio download item if URL exists
-          if (message.audioUrl != null && message.audioUrl!.isNotEmpty) {
-            downloadItems.add(DownloadItem(
-              messageId: message.id,
-              type: DownloadItemType.audio,
-              url: message.audioUrl!,
-              fileName: '${message.id}.mp3', // Extension will be corrected based on Content-Type
-            ),);
-            hasDownloadableContent = true;
+          // Add audio download item if URL exists and audio is requested
+          if (event.downloadType == DownloadType.audio || event.downloadType == DownloadType.both) {
+            if (message.audioUrl != null && message.audioUrl!.isNotEmpty) {
+              downloadItems.add(DownloadItem(
+                messageId: message.id,
+                type: DownloadItemType.audio,
+                url: message.audioUrl!,
+                fileName: '${message.id}.mp3', // Extension will be corrected based on Content-Type
+              ),);
+              hasDownloadableContent = true;
+            }
           }
 
-          // Add transcript download item if content exists
-          final transcriptContent = message.transcript ?? message.text;
-          if (transcriptContent != null && transcriptContent.isNotEmpty) {
-            downloadItems.add(DownloadItem(
-              messageId: message.id,
-              type: DownloadItemType.transcript,
-              url: transcriptContent, // For transcripts, we store content in 'url' field
-              fileName: '${message.id}.txt',
-            ),);
-            hasDownloadableContent = true;
+          // Add transcript download item if content exists and transcript is requested
+          if (event.downloadType == DownloadType.transcript || event.downloadType == DownloadType.both) {
+            final transcriptContent = message.transcript ?? message.text;
+            if (transcriptContent != null && transcriptContent.isNotEmpty) {
+              downloadItems.add(DownloadItem(
+                messageId: message.id,
+                type: DownloadItemType.transcript,
+                url: transcriptContent, // For transcripts, we store content in 'url' field
+                fileName: '${message.id}.txt',
+              ),);
+              hasDownloadableContent = true;
+            }
           }
 
           // Track messages with no downloadable content
           if (!hasDownloadableContent) {
-            _logger.w('Message ${message.id} has no audio or transcript to download');
+            _logger.w('Message ${message.id} has no requested content to download (type: ${event.downloadType})');
             skippedMessages.add(message.id);
           }
         },

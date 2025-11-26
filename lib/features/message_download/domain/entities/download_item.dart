@@ -22,3 +22,9 @@ enum DownloadItemType {
   audio,
   transcript,
 }
+
+enum DownloadType {
+  audio,
+  transcript,
+  both,
+}

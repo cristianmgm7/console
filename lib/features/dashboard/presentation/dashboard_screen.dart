@@ -8,6 +8,7 @@ import 'package:carbon_voice_console/features/dashboard/presentation/components/
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/table_header_dashboard.dart';
+import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
@@ -198,7 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Center(
                 child: MessagesActionPanel(
                   selectedCount: _selectedMessages.length,
-                  onDownload: () {
+                  onDownloadAudio: () {
                     // Check for empty selection
                     if (_selectedMessages.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,10 +218,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       enableDrag: false,
                       builder: (sheetContext) => BlocProvider(
                         create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownload(_selectedMessages)),
+                          ..add(StartDownload(_selectedMessages, downloadType: DownloadType.audio)),
                         child: const DownloadProgressSheet(),
                       ),
                     ),);
+
+                    // Clear selection after starting download
+                    setState(() {
+                      _selectedMessages.clear();
+                      _selectAll = false;
+                    });
+                  },
+                  onDownloadTranscript: () {
+                    // Check for empty selection
+                    if (_selectedMessages.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No messages selected'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Show download progress bottom sheet with fresh BLoC instance
+                    unawaited(showModalBottomSheet<void>(
+                      context: context,
+                      isDismissible: false,
+                      enableDrag: false,
+                      builder: (sheetContext) => BlocProvider(
+                        create: (_) => getIt<DownloadBloc>()
+                          ..add(StartDownload(_selectedMessages, downloadType: DownloadType.transcript)),
+                        child: const DownloadProgressSheet(),
+                      ),
+                    ),);
+
+                    // Clear selection after starting download
+                    setState(() {
+                      _selectedMessages.clear();
+                      _selectAll = false;
+                    });
                   },
                   onSummarize: () {
                     ScaffoldMessenger.of(context).showSnackBar(

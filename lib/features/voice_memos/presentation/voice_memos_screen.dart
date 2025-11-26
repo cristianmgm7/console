@@ -269,11 +269,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               child: Center(
                 child: MessagesActionPanel(
                   selectedCount: _selectedMessages.length,
-                  onDownload: () {
-                    // TODO: Implement download
+                  onDownloadAudio: () {
+                    // TODO: Implement download audio
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                        content: Text('Downloading audio for ${_selectedMessages.length} messages...'),
+                      ),
+                    );
+                  },
+                  onDownloadTranscript: () {
+                    // TODO: Implement download transcript
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Downloading transcripts for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },

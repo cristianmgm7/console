@@ -4,13 +4,15 @@ class MessagesActionPanel extends StatelessWidget {
 
   const MessagesActionPanel({
     required this.selectedCount,
-    required this.onDownload,
+    required this.onDownloadAudio,
+    required this.onDownloadTranscript,
     required this.onSummarize,
     required this.onAIChat,
     super.key,
   });
   final int selectedCount;
-  final VoidCallback onDownload;
+  final VoidCallback onDownloadAudio;
+  final VoidCallback onDownloadTranscript;
   final VoidCallback onSummarize;
   final VoidCallback onAIChat;
 
@@ -48,11 +50,32 @@ class MessagesActionPanel extends StatelessWidget {
           ),
           const SizedBox(width: 24),
 
-          // Download Button
+          // Download Audio Button
           ElevatedButton.icon(
-            onPressed: onDownload,
-            icon: const Icon(Icons.download, size: 18),
-            label: const Text('Download'),
+            onPressed: onDownloadAudio,
+            icon: const Icon(Icons.audiotrack, size: 18),
+            label: const Text('Download Audio'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Download Transcript Button
+          ElevatedButton.icon(
+            onPressed: onDownloadTranscript,
+            icon: const Icon(Icons.description, size: 18),
+            label: const Text('Download Transcript'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Theme.of(context).colorScheme.onSurface,
@@ -69,11 +92,11 @@ class MessagesActionPanel extends StatelessWidget {
 
           const SizedBox(width: 12),
 
-          // Summarize Button
+          // Download Both Button
           ElevatedButton.icon(
             onPressed: onSummarize,
             icon: const Icon(Icons.summarize, size: 18),
-            label: const Text('Summarize'),
+            label: const Text('both'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Theme.of(context).colorScheme.onSurface,
