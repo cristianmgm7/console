@@ -49,19 +49,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _setupBlocCommunication() {
+    // Store bloc references to avoid using context in async callbacks
+    final workspaceBloc = context.read<WorkspaceBloc>();
+    final conversationBloc = context.read<ConversationBloc>();
+    final messageBloc = context.read<MessageBloc>();
+
     // WorkspaceBloc -> ConversationBloc
-    _workspaceSubscription = context.read<WorkspaceBloc>().stream.listen((state) {
+    _workspaceSubscription = workspaceBloc.stream.listen((state) {
       if (state is WorkspaceLoaded && state.selectedWorkspace != null) {
-        context.read<ConversationBloc>().add(
+        conversationBloc.add(
           conv_events.WorkspaceSelectedEvent(state.selectedWorkspace!.id),
         );
       }
     });
 
     // ConversationBloc -> MessageBloc
-    _conversationSubscription = context.read<ConversationBloc>().stream.listen((state) {
+    _conversationSubscription = conversationBloc.stream.listen((state) {
       if (state is ConversationLoaded) {
-        context.read<MessageBloc>().add(
+        messageBloc.add(
           msg_events.ConversationSelectedEvent(state.selectedConversationIds),
         );
       }

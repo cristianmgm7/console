@@ -72,7 +72,12 @@ class JsonNormalizer {
     }
     
     // Convert duration_ms to seconds
-    final durationMs = json['duration_ms'] as int?;
+    final durationMsValue = json['duration_ms'];
+    final durationMs = durationMsValue is int
+        ? durationMsValue
+        : durationMsValue is double
+            ? durationMsValue.toInt()
+            : null;
     final duration = durationMs != null ? durationMs ~/ 1000 : null;
     
     return {

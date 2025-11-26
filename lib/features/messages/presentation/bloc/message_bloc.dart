@@ -52,10 +52,11 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       count: _messagesPerPage,
     );
 
-    result.fold(
-      onSuccess: (messages) async => _loadUsersAndEmit(messages, emit),
-      onFailure: (failure) => emit(MessageError(FailureMapper.mapToMessage(failure.failure))),
-    );
+    if (result.isSuccess) {
+      await _loadUsersAndEmit(result.valueOrNull!, emit);
+    } else {
+      emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
+    }
   }
 
   Future<void> _loadUsersAndEmit(
@@ -100,51 +101,47 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       count: _messagesPerPage,
     );
 
-    result.fold(
-      onSuccess: (newMessages) async {
-        if (newMessages.isEmpty) {
-          emit(currentState.copyWith(
-            isLoadingMore: false,
-            hasMoreMessages: false,
-          ),);
-          return;
+    if (result.isSuccess) {
+      final newMessages = result.valueOrNull!;
+      if (newMessages.isEmpty) {
+        emit(currentState.copyWith(
+          isLoadingMore: false,
+          hasMoreMessages: false,
+        ),);
+        return;
+      }
+
+      // Merge with existing messages
+      final allMessages = [...currentState.messages, ...newMessages];
+
+      // Load new users
+      final newUserIds = newMessages.map((m) => m.userId).toSet().toList();
+      final usersResult = await _userRepository.getUsers(newUserIds);
+
+      if (usersResult.isSuccess) {
+        final newUsers = usersResult.valueOrNull!;
+        final userMap = Map<String, User>.from(currentState.users);
+        for (final user in newUsers) {
+          userMap[user.id] = user;
         }
 
-        // Merge with existing messages
-        final allMessages = [...currentState.messages, ...newMessages];
-
-        // Load new users
-        final newUserIds = newMessages.map((m) => m.userId).toSet().toList();
-        final usersResult = await _userRepository.getUsers(newUserIds);
-
-        usersResult.fold(
-          onSuccess: (newUsers) {
-            final userMap = Map<String, User>.from(currentState.users);
-            for (final user in newUsers) {
-              userMap[user.id] = user;
-            }
-
-            emit(currentState.copyWith(
-              messages: allMessages,
-              users: userMap,
-              isLoadingMore: false,
-              hasMoreMessages: newMessages.length == _messagesPerPage,
-            ),);
-          },
-          onFailure: (_) {
-            emit(currentState.copyWith(
-              messages: allMessages,
-              isLoadingMore: false,
-              hasMoreMessages: newMessages.length == _messagesPerPage,
-            ),  );
-          },
-        );
-      },
-      onFailure: (failure) {
-        emit(currentState.copyWith(isLoadingMore: false));
-        emit(MessageError(FailureMapper.mapToMessage(failure.failure)));
-      },
-    );
+        emit(currentState.copyWith(
+          messages: allMessages,
+          users: userMap,
+          isLoadingMore: false,
+          hasMoreMessages: newMessages.length == _messagesPerPage,
+        ),);
+      } else {
+        emit(currentState.copyWith(
+          messages: allMessages,
+          isLoadingMore: false,
+          hasMoreMessages: newMessages.length == _messagesPerPage,
+        ),);
+      }
+    } else {
+      emit(currentState.copyWith(isLoadingMore: false));
+      emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
+    }
   }
 
   Future<void> _onRefreshMessages(

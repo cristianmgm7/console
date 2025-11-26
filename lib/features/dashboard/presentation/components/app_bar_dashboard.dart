@@ -8,9 +8,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardAppBar extends StatelessWidget {
   const DashboardAppBar({
+    required this.onRefresh, 
+    required this.searchController, 
     super.key,
-    required this.onRefresh,
-    required this.searchController,
   });
 
   final TextEditingController searchController;
