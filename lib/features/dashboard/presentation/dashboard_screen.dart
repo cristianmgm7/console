@@ -11,6 +11,10 @@ import 'package:carbon_voice_console/features/dashboard/presentation/components/
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -197,9 +201,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: MessagesActionPanel(
                   selectedCount: _selectedMessages.length,
                   onDownload: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                    // Check for empty selection
+                    if (_selectedMessages.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No messages selected'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Show download progress bottom sheet with fresh BLoC instance
+                    showModalBottomSheet(
+                      context: context,
+                      isDismissible: false,
+                      enableDrag: false,
+                      builder: (sheetContext) => BlocProvider(
+                        create: (_) => getIt<DownloadBloc>()
+                          ..add(StartDownload(_selectedMessages)),
+                        child: const DownloadProgressSheet(),
                       ),
                     );
                   },
