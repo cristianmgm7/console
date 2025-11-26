@@ -211,6 +211,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return;
                     }
 
+                    // Create a copy of selected messages for the download
+                    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+                    // Clear selection after capturing the messages to download
+                    setState(() {
+                      _selectedMessages.clear();
+                      _selectAll = false;
+                    });
+
                     // Show download progress bottom sheet with fresh BLoC instance
                     unawaited(showModalBottomSheet<void>(
                       context: context,
@@ -218,16 +227,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       enableDrag: false,
                       builder: (sheetContext) => BlocProvider(
                         create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownload(_selectedMessages, downloadType: DownloadType.audio)),
+                          ..add(StartDownload(messagesToDownload, downloadType: DownloadType.audio)),
                         child: const DownloadProgressSheet(),
                       ),
                     ),);
-
-                    // Clear selection after starting download
-                    setState(() {
-                      _selectedMessages.clear();
-                      _selectAll = false;
-                    });
                   },
                   onDownloadTranscript: () {
                     // Check for empty selection
@@ -241,6 +244,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return;
                     }
 
+                    // Create a copy of selected messages for the download
+                    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+                    // Clear selection after capturing the messages to download
+                    setState(() {
+                      _selectedMessages.clear();
+                      _selectAll = false;
+                    });
+
                     // Show download progress bottom sheet with fresh BLoC instance
                     unawaited(showModalBottomSheet<void>(
                       context: context,
@@ -248,16 +260,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       enableDrag: false,
                       builder: (sheetContext) => BlocProvider(
                         create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownload(_selectedMessages, downloadType: DownloadType.transcript)),
+                          ..add(StartDownload(messagesToDownload, downloadType: DownloadType.transcript)),
                         child: const DownloadProgressSheet(),
                       ),
                     ),);
-
-                    // Clear selection after starting download
-                    setState(() {
-                      _selectedMessages.clear();
-                      _selectAll = false;
-                    });
                   },
                   onSummarize: () {
                     ScaffoldMessenger.of(context).showSnackBar(
