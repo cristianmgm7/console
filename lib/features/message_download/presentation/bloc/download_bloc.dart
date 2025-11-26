@@ -1,11 +1,6 @@
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
-import 'package:carbon_voice_console/features/message_download/domain/entities/download_result.dart';
-import 'package:carbon_voice_console/features/message_download/domain/repositories/download_repository.dart';
+import 'package:carbon_voice_console/features/message_download/domain/usecases/download_messages_usecase.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
-import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -13,16 +8,14 @@ import 'package:logger/logger.dart';
 @injectable
 class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   DownloadBloc(
-    this._downloadRepository,
-    this._messageRepository,
+    this._downloadMessagesUsecase,
     this._logger,
   ) : super(const DownloadInitial()) {
     on<StartDownload>(_onStartDownload);
     on<CancelDownload>(_onCancelDownload);
   }
 
-  final DownloadRepository _downloadRepository;
-  final MessageRepository _messageRepository;
+  final DownloadMessagesUsecase _downloadMessagesUsecase;
   final Logger _logger;
 
   bool _isCancelled = false;
@@ -31,171 +24,47 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     StartDownload event,
     Emitter<DownloadState> emit,
   ) async {
-    _logger.d('Starting download for ${event.messageIds.length} messages');
     _isCancelled = false;
 
-    // Validate non-empty selection
-    if (event.messageIds.isEmpty) {
-      _logger.w('Download started with empty message selection');
-      emit(const DownloadError('No messages selected'));
-      return;
-    }
-
-    // Collect all download items from all messages
-    final downloadItems = <DownloadItem>[];
-    final skippedMessages = <String>[];
-
-    // Fetch metadata for all messages in parallel
-    _logger.d('Fetching metadata for ${event.messageIds.length} messages');
-    final metadataFutures = event.messageIds.map(_messageRepository.getMessage);
-
-    // Wrap Future.wait in try-catch to handle any unexpected exceptions
-    late final List<Result<Message>> metadataResults;
-    try {
-      metadataResults = await Future.wait(metadataFutures);
-    } on Exception catch (e, stack) {
-      _logger.e('Unexpected error during parallel message fetching', error: e, stackTrace: stack);
-      // If Future.wait fails, treat all messages as failed/skipped
-      emit(DownloadError('Failed to fetch message metadata: $e'));
-      return;
-    }
-
-    // Process metadata and create download items
-    var messageIndex = 0;
-    for (final result in metadataResults) {
-      final messageId = event.messageIds.elementAt(messageIndex);
-      messageIndex++;
-
-      result.fold(
-        onSuccess: (message) {
-          var hasDownloadableContent = false;
-
-          // Add audio download item if URL exists and audio is requested
-          if (event.downloadType == DownloadType.audio || event.downloadType == DownloadType.both) {
-            if (message.audioUrl != null && message.audioUrl!.isNotEmpty) {
-              downloadItems.add(DownloadItem(
-                messageId: message.id,
-                type: DownloadItemType.audio,
-                url: message.audioUrl!,
-                fileName: '${message.id}.mp3', // Extension will be corrected based on Content-Type
-              ),);
-              hasDownloadableContent = true;
-            }
-          }
-
-          // Add transcript download item if content exists and transcript is requested
-          if (event.downloadType == DownloadType.transcript || event.downloadType == DownloadType.both) {
-            final transcriptContent = message.transcript ?? message.text;
-            if (transcriptContent != null && transcriptContent.isNotEmpty) {
-              downloadItems.add(DownloadItem(
-                messageId: message.id,
-                type: DownloadItemType.transcript,
-                url: transcriptContent, // For transcripts, we store content in 'url' field
-                fileName: '${message.id}.txt',
-              ),);
-              hasDownloadableContent = true;
-            }
-          }
-
-          // Track messages with no downloadable content
-          if (!hasDownloadableContent) {
-            _logger.w('Message ${message.id} has no requested content to download (type: ${event.downloadType})');
-            skippedMessages.add(message.id);
-          }
-        },
-        onFailure: (failure) {
-          _logger.e('Failed to fetch metadata for message $messageId: ${failure.failureOrNull}');
-          skippedMessages.add(messageId);
-        },
-      );
-    }
-
-    // Check if we have anything to download
-    if (downloadItems.isEmpty) {
-      _logger.w('No downloadable items found after metadata fetch');
-      emit(DownloadCompleted(
-        successCount: 0,
-        failureCount: 0,
-        skippedCount: skippedMessages.length,
-        results: skippedMessages.map((id) => DownloadResult(
-          messageId: id,
-          status: DownloadStatus.skipped,
-        ),).toList(),
-      ),);
-      return;
-    }
-
-    // Download each item sequentially
-    final results = <DownloadResult>[];
-    final totalItems = downloadItems.length;
-
-    try {
-      for (var i = 0; i < downloadItems.length; i++) {
-        // Check for cancellation
-        if (_isCancelled) {
-          _logger.i('Download cancelled by user at item ${i + 1}/$totalItems');
-          emit(DownloadCancelled(
-            completedCount: results.length,
-            totalCount: totalItems,
-          ),);
-          return;
-        }
-
-        final item = downloadItems[i];
-        final progressPercent = (i + 1) / totalItems * 100;
-
-        // Emit progress state
+    final result = await _downloadMessagesUsecase(
+      messageIds: event.messageIds.toList(),
+      downloadType: event.downloadType,
+      onProgress: (progress) {
         emit(DownloadInProgress(
-          current: i + 1,
-          total: totalItems,
-          progressPercent: progressPercent,
-          currentMessageId: item.messageId,
+          current: progress.current,
+          total: progress.total,
+          progressPercent: progress.progressPercent,
+          currentMessageId: progress.currentMessageId,
         ),);
+      },
+      isCancelled: () => _isCancelled,
+    );
 
-        // Download the item
-        final result = await _downloadRepository.downloadItem(item);
-
-        result.fold(
-        onSuccess: (downloadResult) {
-          results.add(downloadResult);
-          _logger.d('Downloaded item ${i + 1}/$totalItems: ${downloadResult.status}');
-        },
-        onFailure: (failure) {
-          // Treat repository failures as failed downloads
-          results.add(DownloadResult(
-            messageId: item.messageId,
-            status: DownloadStatus.failed,
-            errorMessage: failure.failureOrNull?.details ?? 'Unknown error',
+    result.fold(
+      onSuccess: (summary) {
+        emit(DownloadCompleted(
+          successCount: summary.successCount,
+          failureCount: summary.failureCount,
+          skippedCount: summary.skippedCount,
+          results: summary.results,
+        ),);
+      },
+      onFailure: (failure) {
+        // Check if it was a cancellation
+        if (failure.failure.code == 'UNKNOWN_ERROR' &&
+            (failure.failure.details?.contains('cancelled') ?? false)) {
+          // Extract item count from details if possible
+          emit(const DownloadCancelled(
+            completedCount: 0,
+            totalCount: 0,
           ),);
-          _logger.e('Failed to download item ${i + 1}/$totalItems');
-        },
-      );
-    }
-    } on Exception catch (e, stack) {
-      _logger.e('Unexpected error during download process', error: e, stackTrace: stack);
-      emit(DownloadError('Download failed unexpectedly: $e'));
-      return;
-    }
-
-    // Add skipped messages to results
-    results.addAll(skippedMessages.map((id) => DownloadResult(
-      messageId: id,
-      status: DownloadStatus.skipped,
-    ),),);
-
-    // Calculate final counts
-    final successCount = results.where((r) => r.status == DownloadStatus.success).length;
-    final failureCount = results.where((r) => r.status == DownloadStatus.failed).length;
-    final skippedCount = results.where((r) => r.status == DownloadStatus.skipped).length;
-
-    _logger.i('Download completed: $successCount success, $failureCount failed, $skippedCount skipped');
-
-    emit(DownloadCompleted(
-      successCount: successCount,
-      failureCount: failureCount,
-      skippedCount: skippedCount,
-      results: results,
-    ),);
+        } else {
+          emit(DownloadError(
+            failure.failure.details ?? 'Download failed',
+          ),);
+        }
+      },
+    );
   }
 
   Future<void> _onCancelDownload(
@@ -204,6 +73,6 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   ) async {
     _logger.i('Download cancellation requested');
     _isCancelled = true;
-    // The actual cancellation happens in the download loop
+    // The actual cancellation happens in the use case
   }
 }
