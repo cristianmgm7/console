@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/widgets/conversation_widget.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -181,40 +182,21 @@ class DashboardAppBar extends StatelessWidget {
                         return const SizedBox.shrink();
                       }
 
-                      return Container(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                          ),
-                        ),
+                      final selectedConversations = conversationState.conversations
+                          .where((c) => conversationState.selectedConversationIds.contains(c.id))
+                          .toList();
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_outline,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                conversationState.conversations
-                                    .where((c) => conversationState.selectedConversationIds.contains(c.id))
-                                    .map((c) => c.name)
-                                    .join(', '),
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                          children: selectedConversations.map((conversation) {
+                            return ConversationWidget(
+                              conversation: conversation,
+                              onRemove: () {
+                                context.read<ConversationBloc>().add(ToggleConversation(conversation.id));
+                              },
+                            );
+                          }).toList(),
                         ),
                       );
                     },
