@@ -18,3 +18,4 @@ class Workspace extends Equatable {
   List<Object?> get props => [id, name, guid, description];
 }
 
+

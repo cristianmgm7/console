@@ -93,3 +93,4 @@ class DashboardError extends DashboardState {
   List<Object?> get props => [message];
 }
 
+

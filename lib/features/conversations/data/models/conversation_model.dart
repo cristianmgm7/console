@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 
 /// Data model for conversation with JSON serialization
@@ -14,31 +13,29 @@ class ConversationModel extends Conversation {
     super.colorIndex, // Pass through color index
   });
 
-  /// Creates a ConversationModel from JSON
-  /// Uses JsonNormalizer to handle API field name variations
+  /// Creates a ConversationModel from normalized JSON
+  /// Expects JSON already normalized by JsonNormalizer at data source boundary
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
-    final normalized = JsonNormalizer.normalizeConversation(json);
-    
-    final id = normalized['id'] as String?;
+    final id = json['id'] as String?;
     if (id == null) {
       throw FormatException('Conversation JSON missing required id field: $json');
     }
 
-    final workspaceId = normalized['workspaceId'] as String?;
+    final workspaceId = json['workspaceId'] as String?;
     if (workspaceId == null) {
       throw FormatException('Conversation JSON missing required workspaceId field: $json');
     }
 
     return ConversationModel(
       id: id,
-      name: normalized['name'] as String? ?? 'Unknown Conversation',
+      name: json['name'] as String? ?? 'Unknown Conversation',
       workspaceId: workspaceId,
-      guid: normalized['guid'] as String?,
-      description: normalized['description'] as String?,
-      createdAt: normalized['createdAt'] != null
-          ? DateTime.parse(normalized['createdAt'] as String)
+      guid: json['guid'] as String?,
+      description: json['description'] as String?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
           : null,
-      messageCount: normalized['messageCount'] as int?,
+      messageCount: json['messageCount'] as int?,
     );
   }
 

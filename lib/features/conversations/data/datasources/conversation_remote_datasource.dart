@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/features/conversations/data/models/conversation_model.dart';
 
 /// Abstract interface for conversation remote data operations
@@ -12,4 +13,3 @@ abstract class ConversationRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<ConversationModel> getConversation(String conversationId);
 }
-

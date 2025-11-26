@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/features/workspaces/data/models/workspace_model.dart';
 
 /// Abstract interface for workspace remote data operations
@@ -12,4 +13,3 @@ abstract class WorkspaceRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<WorkspaceModel> getWorkspace(String workspaceId);
 }
-

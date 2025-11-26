@@ -18,43 +18,92 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   @override
   Future<List<WorkspaceModel>> getWorkspaces() async {
     try {
-      _logger.d('Fetching workspaces from API');
+      _logger.d('Fetching workspaces from /workspaces');
 
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces',
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      // Parse response body to check for error details
+      Map<String, dynamic>? errorData;
+      try {
+        final parsed = jsonDecode(response.body);
+        if (parsed is Map<String, dynamic>) {
+          errorData = parsed;
+        }
+      } catch (_) {
+        // If parsing fails, we'll use the raw body
+      }
 
-        // API might return {workspaces: [...]} or just [...]
-        final List<dynamic> workspacesJson;
-        if (data is List) {
-          workspacesJson = data;
-        } else if (data is Map<String, dynamic>) {
-          workspacesJson = data['workspaces'] as List<dynamic>? ?? data['data'] as List<dynamic>;
+      if (response.statusCode != 200) {
+        // Extract error message from JSON if available
+        String errorMessage = 'Failed to fetch workspaces';
+        if (errorData != null) {
+          final errmsg = errorData['errmsg'] as String?;
+          if (errmsg != null) {
+            errorMessage = errmsg;
+          } else if (errorData['message'] != null) {
+            errorMessage = errorData['message'].toString();
+          }
         } else {
-          throw const FormatException('Unexpected response format');
+          errorMessage = response.body;
         }
 
-        final workspaces = workspacesJson
-            .map((json) {
-              final normalized = JsonNormalizer.normalizeWorkspace(json as Map<String, dynamic>);
-              return WorkspaceModel.fromJson(normalized);
-            })
-            .toList();
-
-        _logger.i('Fetched ${workspaces.length} workspaces');
-        return workspaces;
-      } else {
-        _logger.e('Failed to fetch workspaces: ${response.statusCode}');
+        _logger.e(
+          'Failed to fetch workspaces: ${response.statusCode}',
+          error: errorMessage,
+        );
         throw ServerException(
           statusCode: response.statusCode,
-          message: 'Failed to fetch workspaces',
+          message: errorMessage,
         );
       }
+
+      final data = jsonDecode(response.body);
+
+      // API might return {workspaces: [...]}, {data: [...]}, or just [...]
+      final List<dynamic> workspacesJson;
+      if (data is List) {
+        workspacesJson = data;
+      } else if (data is Map<String, dynamic>) {
+        // Check success field if present
+        if (data.containsKey('success') && data['success'] != true) {
+          // Extract error message if available
+          final errmsg = data['errmsg'] as String?;
+          final errorMsg = errmsg ?? 'API returned success=false';
+          _logger.e('API returned success=false: $errorMsg');
+          throw ServerException(
+            statusCode: response.statusCode,
+            message: errorMsg,
+          );
+        }
+        
+        workspacesJson = (data['workspaces'] as List<dynamic>?) ??
+            (data['data'] as List<dynamic>?) ??
+            [];
+      } else {
+        throw const FormatException('Unexpected response format');
+      }
+
+      if (workspacesJson.isEmpty) {
+        _logger.w('No workspaces found in response');
+        return [];
+      }
+
+      final workspaces = workspacesJson
+          .map((json) {
+            final normalized = JsonNormalizer.normalizeWorkspace(json as Map<String, dynamic>);
+            return WorkspaceModel.fromJson(normalized);
+          })
+          .toList();
+
+      _logger.i('Fetched ${workspaces.length} workspaces');
+      return workspaces;
     } on ServerException {
       rethrow;
+    } on FormatException catch (e, stack) {
+      _logger.e('Format error parsing workspaces response', error: e, stackTrace: stack);
+      throw FormatException('Failed to parse workspaces response: $e');
     } on Exception catch (e, stack) {
       _logger.e('Network error fetching workspaces', error: e, stackTrace: stack);
       throw NetworkException(message: 'Failed to fetch workspaces: $e');

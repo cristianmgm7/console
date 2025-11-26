@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace.dart';
 
 /// Data model for workspace with JSON serialization
@@ -10,21 +9,19 @@ class WorkspaceModel extends Workspace {
     super.description,
   });
 
-  /// Creates a WorkspaceModel from JSON
-  /// Uses JsonNormalizer to handle API field name variations
+  /// Creates a WorkspaceModel from normalized JSON
+  /// Expects JSON already normalized by JsonNormalizer at data source boundary
   factory WorkspaceModel.fromJson(Map<String, dynamic> json) {
-    final normalized = JsonNormalizer.normalizeWorkspace(json);
-    
-    final id = normalized['id'] as String?;
+    final id = json['id'] as String?;
     if (id == null) {
       throw FormatException('Workspace JSON missing required id field: $json');
     }
 
     return WorkspaceModel(
       id: id,
-      name: normalized['name'] as String? ?? 'Unknown Workspace',
-      guid: normalized['guid'] as String?,
-      description: normalized['description'] as String?,
+      name: json['name'] as String? ?? 'Unknown Workspace',
+      guid: json['guid'] as String?,
+      description: json['description'] as String?,
     );
   }
 

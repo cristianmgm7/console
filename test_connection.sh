@@ -31,3 +31,4 @@ echo "   - If connection works but app doesn't: Firewall is blocking the app"
 echo "   - If connection fails: Check internet/VPN/proxy settings"
 
 
+

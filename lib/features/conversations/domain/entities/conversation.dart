@@ -26,3 +26,4 @@ class Conversation extends Equatable {
   List<Object?> get props => [id, name, workspaceId, guid, description, createdAt, messageCount, colorIndex];
 }
 
+

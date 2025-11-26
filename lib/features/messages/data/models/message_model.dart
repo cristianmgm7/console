@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 
 /// Data model for message with JSON serialization
@@ -16,22 +15,20 @@ class MessageModel extends Message {
     super.metadata,
   });
 
-  /// Creates a MessageModel from JSON
-  /// Uses JsonNormalizer to handle API field name variations
+  /// Creates a MessageModel from normalized JSON
+  /// Expects JSON already normalized by JsonNormalizer at data source boundary
   factory MessageModel.fromJson(Map<String, dynamic> json) {
-    final normalized = JsonNormalizer.normalizeMessage(json);
-    
-    final id = normalized['id'] as String?;
+    final id = json['id'] as String?;
     if (id == null) {
       throw FormatException('Message JSON missing required id field: $json');
     }
 
-    final conversationId = normalized['conversationId'] as String?;
+    final conversationId = json['conversationId'] as String?;
     if (conversationId == null) {
       throw FormatException('Message JSON missing required conversationId field: $json');
     }
 
-    final userId = normalized['userId'] as String?;
+    final userId = json['userId'] as String?;
     if (userId == null) {
       throw FormatException('Message JSON missing required userId field: $json');
     }
@@ -40,17 +37,17 @@ class MessageModel extends Message {
       id: id,
       conversationId: conversationId,
       userId: userId,
-      createdAt: normalized['createdAt'] != null
-          ? DateTime.parse(normalized['createdAt'] as String)
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
-      text: normalized['text'] as String?,
-      transcript: normalized['transcript'] as String?,
-      audioUrl: normalized['audioUrl'] as String?,
-      duration: normalized['duration'] != null
-          ? Duration(seconds: normalized['duration'] as int)
+      text: json['text'] as String?,
+      transcript: json['transcript'] as String?,
+      audioUrl: json['audioUrl'] as String?,
+      duration: json['duration'] != null
+          ? Duration(seconds: json['duration'] as int)
           : null,
-      status: normalized['status'] as String?,
-      metadata: normalized['metadata'] as Map<String, dynamic>?,
+      status: json['status'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
     );
   }
 
