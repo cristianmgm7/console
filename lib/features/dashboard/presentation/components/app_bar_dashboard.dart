@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
@@ -8,12 +9,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardAppBar extends StatelessWidget {
   const DashboardAppBar({
-    required this.onRefresh, 
-    required this.searchController, 
+    required this.onRefresh,
     super.key,
   });
 
-  final TextEditingController searchController;
   final VoidCallback onRefresh;
 
   @override
@@ -38,7 +37,7 @@ class DashboardAppBar extends StatelessWidget {
                 ),
           ),
 
-          const SizedBox(width: 32),
+          const SizedBox(width: 16),
 
           // Workspace Dropdown
           BlocSelector<WorkspaceBloc, WorkspaceState, WorkspaceLoaded?>(
@@ -69,7 +68,6 @@ class DashboardAppBar extends StatelessWidget {
                   onChanged: (String? newValue) {
                     if (newValue != null) {
                       context.read<WorkspaceBloc>().add(ws_events.SelectWorkspace(newValue));
-                      onRefresh();
                     }
                   },
                 ),
@@ -83,33 +81,90 @@ class DashboardAppBar extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                // Search Field (Conversation ID search - not implemented yet)
+                // Conversation Selector Dropdown
                 Flexible(
                   flex: 2,
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 250),
-                    child: TextField(
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Conversation ID',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+                      selector: (state) => state is ConversationLoaded ? state : null,
+                      builder: (context, conversationState) {
+                        if (conversationState == null || conversationState.conversations.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'No conversations',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          );
+                        }
+
+                        final selectedCount = conversationState.selectedConversationIds.length;
+                        final displayText = selectedCount == 0
+                            ? 'Select conversations'
+                            : '$selectedCount selected';
+
+                        return PopupMenuButton<String>(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    displayText,
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
+                          itemBuilder: (BuildContext context) {
+                            return conversationState.conversations.map((conversation) {
+                              final isSelected = conversationState.selectedConversationIds.contains(conversation.id);
+                              return PopupMenuItem<String>(
+                                value: conversation.id,
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: isSelected,
+                                      onChanged: null, // Handled by parent onSelected
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        conversation.name,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList();
+                          },
+                          onSelected: (String conversationId) {
+                            context.read<ConversationBloc>().add(ToggleConversation(conversationId));
+                          },
+                        );
+                      },
                     ),
                   ),
                 ),

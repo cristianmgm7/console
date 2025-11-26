@@ -25,7 +25,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
   final ScrollController _scrollController = ScrollController();
@@ -43,7 +42,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> dispose() async {
     await _workspaceSubscription.cancel();
     await _conversationSubscription.cancel();
-    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -159,7 +157,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // App Bar
               DashboardAppBar(
                 onRefresh: _onRefresh,
-                searchController: _searchController,
               ),
 
               // Table Header - only show when messages are loaded
