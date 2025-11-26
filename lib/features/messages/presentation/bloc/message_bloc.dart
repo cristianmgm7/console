@@ -7,14 +7,12 @@ import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
 
 @injectable
 class MessageBloc extends Bloc<MessageEvent, MessageState> {
   MessageBloc(
     this._messageRepository,
     this._userRepository,
-    this._logger,
     ) : super(const MessageInitial()) {
     on<LoadMessages>(_onLoadMessages);
     on<LoadMoreMessages>(_onLoadMoreMessages);
@@ -24,7 +22,6 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
 
   final MessageRepository _messageRepository;
   final UserRepository _userRepository;
-  final Logger _logger;
   final int _messagesPerPage = 50;
   Set<String> _currentConversationIds = {};
 

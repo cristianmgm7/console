@@ -9,12 +9,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardContent extends StatelessWidget {
   const DashboardContent({
+    required this.isAnyBlocLoading, 
+    required this.scrollController, 
+    required this.selectedMessages, 
+    required this.onToggleMessageSelection, 
+    required this.convertToLegacyMessage, 
     super.key,
-    required this.isAnyBlocLoading,
-    required this.scrollController,
-    required this.selectedMessages,
-    required this.onToggleMessageSelection,
-    required this.convertToLegacyMessage,
   });
 
   final ScrollController scrollController;
@@ -57,7 +57,7 @@ class DashboardContent extends StatelessWidget {
             ),
           );
         }
-
+        // empty state
         if (messageState is MessageLoaded) {
           if (messageState.messages.isEmpty) {
             return Center(
