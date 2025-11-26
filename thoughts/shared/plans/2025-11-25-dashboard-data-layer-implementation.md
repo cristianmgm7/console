@@ -46,20 +46,26 @@ After this plan is complete:
    - Auto-select first workspace
    - Auto-load conversations for selected workspace
    - Auto-select first conversation
-   - Display real paginated messages from CarbonVoice API
+   - **Support multi-conversation selection** (user can select 1 or more conversations)
+   - Display real paginated messages from CarbonVoice API (merged from selected conversations)
    - Allow manual workspace/conversation switching
+   - **Color-coded conversation indicators** (colored dots) to distinguish messages from different conversations
 
 3. **Data flows correctly**:
    - Workspaces → Conversations → Messages → Users
    - Pagination works using sequential endpoint
+   - **Multi-conversation message merging** with proper date sorting (newest first)
    - User profiles hydrate message owner information
    - All API errors handled gracefully with Result type
 
 ### Verification:
 - Dashboard loads real data from CarbonVoice API
 - Workspace dropdown shows actual user workspaces
-- Message list shows real messages from selected conversation
-- Pagination controls work (load more messages)
+- **Conversation multi-selector works** (FilterChip UI with toggle)
+- Message list shows real messages from **selected conversations** (1 or more)
+- **Colored dots** distinguish messages from different conversations
+- Messages sorted by date (newest first) regardless of conversation
+- Pagination controls work (load more messages from selected conversations)
 - No hardcoded dummy data remains
 
 ## What We're NOT Doing
@@ -448,6 +454,7 @@ class Conversation extends Equatable {
     this.description,
     this.createdAt,
     this.messageCount,
+    this.colorIndex, // NEW: For UI color assignment (0-based index)
   });
 
   final String id;
@@ -457,9 +464,10 @@ class Conversation extends Equatable {
   final String? description;
   final DateTime? createdAt;
   final int? messageCount;
+  final int? colorIndex; // NEW: Assigned by repository for consistent coloring
 
   @override
-  List<Object?> get props => [id, name, workspaceId, guid, description, createdAt, messageCount];
+  List<Object?> get props => [id, name, workspaceId, guid, description, createdAt, messageCount, colorIndex];
 }
 ```
 
@@ -480,6 +488,7 @@ class ConversationModel extends Conversation {
     super.description,
     super.createdAt,
     super.messageCount,
+    super.colorIndex, // NEW: Pass through color index
   });
 
   /// Creates a ConversationModel from JSON
@@ -513,7 +522,7 @@ class ConversationModel extends Conversation {
   }
 
   /// Converts to domain entity
-  Conversation toEntity() {
+  Conversation toEntity({int? assignedColorIndex}) {
     return Conversation(
       id: id,
       name: name,
@@ -522,6 +531,7 @@ class ConversationModel extends Conversation {
       description: description,
       createdAt: createdAt,
       messageCount: messageCount,
+      colorIndex: assignedColorIndex ?? colorIndex, // NEW: Use assigned color or existing
     );
   }
 }
@@ -672,7 +682,13 @@ class ConversationRepositoryImpl implements ConversationRepository {
       }
 
       final conversationModels = await _remoteDataSource.getConversations(workspaceId);
-      final conversations = conversationModels.map((model) => model.toEntity()).toList();
+
+      // NEW: Assign color indices to conversations (0-9 for 10 distinct colors)
+      final conversations = conversationModels
+          .asMap()
+          .entries
+          .map((entry) => entry.value.toEntity(assignedColorIndex: entry.key % 10))
+          .toList();
 
       // Cache the result
       _cachedConversations[workspaceId] = conversations;
@@ -1174,6 +1190,15 @@ abstract class MessageRepository {
     required String conversationId,
     int count = 50,
   });
+
+  /// NEW: Fetches messages from multiple conversations, merged and sorted by date
+  /// [conversationIds] - Set of conversation IDs to fetch from
+  /// [count] - Number of messages to fetch per conversation (default: 50)
+  /// Returns merged list sorted by createdAt (newest first)
+  Future<Result<List<Message>>> getMessagesFromConversations({
+    required Set<String> conversationIds,
+    int count = 50,
+  });
 }
 ```
 
@@ -1648,6 +1673,46 @@ class MessageRepositoryImpl implements MessageRepository {
     }
   }
 
+  @override
+  Future<Result<List<Message>>> getMessagesFromConversations({
+    required Set<String> conversationIds,
+    int count = 50,
+  }) async {
+    try {
+      _logger.d('Fetching messages from ${conversationIds.length} conversations');
+
+      final allMessages = <Message>[];
+
+      // Fetch messages from each conversation
+      for (final conversationId in conversationIds) {
+        final result = await getRecentMessages(
+          conversationId: conversationId,
+          count: count,
+        );
+
+        result.fold(
+          onSuccess: (messages) {
+            allMessages.addAll(messages);
+            _logger.d('Added ${messages.length} messages from conversation $conversationId');
+          },
+          onFailure: (failure) {
+            // Log warning but continue with other conversations
+            _logger.w('Failed to fetch messages from $conversationId: ${failure.failure}');
+          },
+        );
+      }
+
+      // Sort all messages by date (newest first)
+      allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      _logger.i('Merged ${allMessages.length} total messages from ${conversationIds.length} conversations');
+      return success(allMessages);
+    } on Exception catch (e, stack) {
+      _logger.e('Error fetching messages from multiple conversations', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: e.toString()));
+    }
+  }
+
   /// Clears message cache for a specific conversation
   void clearCacheForConversation(String conversationId) {
     _cachedMessages.remove(conversationId);
@@ -1715,14 +1780,29 @@ class WorkspaceSelected extends DashboardEvent {
   List<Object?> get props => [workspaceId];
 }
 
-/// Triggered when user selects a different conversation
-class ConversationSelected extends DashboardEvent {
-  const ConversationSelected(this.conversationId);
+/// NEW: Triggered when user toggles a conversation selection (multi-select)
+class ConversationToggled extends DashboardEvent {
+  const ConversationToggled(this.conversationId);
 
   final String conversationId;
 
   @override
   List<Object?> get props => [conversationId];
+}
+
+/// NEW: Triggered when user selects multiple conversations at once
+class MultipleConversationsSelected extends DashboardEvent {
+  const MultipleConversationsSelected(this.conversationIds);
+
+  final Set<String> conversationIds;
+
+  @override
+  List<Object?> get props => [conversationIds];
+}
+
+/// NEW: Triggered when user clears all conversation selections
+class ConversationSelectionCleared extends DashboardEvent {
+  const ConversationSelectionCleared();
 }
 
 /// Triggered when user wants to load more messages (pagination)
@@ -1770,9 +1850,10 @@ class DashboardLoaded extends DashboardState {
     required this.workspaces,
     required this.selectedWorkspace,
     required this.conversations,
-    required this.selectedConversation,
+    required this.selectedConversationIds, // CHANGED: Set instead of single conversation
     required this.messages,
     required this.users,
+    this.conversationColorMap = const {}, // NEW: Maps conversationId -> color
     this.isLoadingMore = false,
     this.hasMoreMessages = true,
   });
@@ -1780,9 +1861,10 @@ class DashboardLoaded extends DashboardState {
   final List<Workspace> workspaces;
   final Workspace? selectedWorkspace;
   final List<Conversation> conversations;
-  final Conversation? selectedConversation;
+  final Set<String> selectedConversationIds; // CHANGED: Multi-select support
   final List<Message> messages;
   final Map<String, User> users; // userId -> User
+  final Map<String, int> conversationColorMap; // NEW: conversationId -> colorIndex
   final bool isLoadingMore;
   final bool hasMoreMessages;
 
@@ -1791,9 +1873,10 @@ class DashboardLoaded extends DashboardState {
         workspaces,
         selectedWorkspace,
         conversations,
-        selectedConversation,
+        selectedConversationIds,
         messages,
         users,
+        conversationColorMap,
         isLoadingMore,
         hasMoreMessages,
       ];
@@ -1802,9 +1885,10 @@ class DashboardLoaded extends DashboardState {
     List<Workspace>? workspaces,
     Workspace? selectedWorkspace,
     List<Conversation>? conversations,
-    Conversation? selectedConversation,
+    Set<String>? selectedConversationIds, // CHANGED
     List<Message>? messages,
     Map<String, User>? users,
+    Map<String, int>? conversationColorMap, // NEW
     bool? isLoadingMore,
     bool? hasMoreMessages,
   }) {
@@ -1812,9 +1896,10 @@ class DashboardLoaded extends DashboardState {
       workspaces: workspaces ?? this.workspaces,
       selectedWorkspace: selectedWorkspace ?? this.selectedWorkspace,
       conversations: conversations ?? this.conversations,
-      selectedConversation: selectedConversation ?? this.selectedConversation,
+      selectedConversationIds: selectedConversationIds ?? this.selectedConversationIds, // CHANGED
       messages: messages ?? this.messages,
       users: users ?? this.users,
+      conversationColorMap: conversationColorMap ?? this.conversationColorMap, // NEW
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMoreMessages: hasMoreMessages ?? this.hasMoreMessages,
     );
