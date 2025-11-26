@@ -1,6 +1,4 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
-import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 import 'package:carbon_voice_console/features/conversations/domain/repositories/conversation_repository.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/bloc/dashboard_event.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/bloc/dashboard_state.dart';
@@ -8,6 +6,7 @@ import 'package:carbon_voice_console/features/messages/domain/repositories/messa
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/repositories/workspace_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -70,12 +69,12 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
                 emit(DashboardLoaded(
                   workspaces: workspaces,
                   selectedWorkspace: selectedWorkspace,
-                  conversations: [],
-                  selectedConversationIds: {},
-                  messages: [],
-                  users: {},
-                  conversationColorMap: {},
-                ));
+                  conversations: const [],
+                  selectedConversationIds: const {},
+                  messages: const [],
+                  users: const {},
+                  conversationColorMap: const {},
+                ),);
                 return;
               }
 
@@ -87,7 +86,6 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
               _currentMessageStart = 0;
               final messagesResult = await _messageRepository.getRecentMessages(
                 conversationId: selectedConversation.id,
-                count: _messagesPerPage,
               );
 
               await messagesResult.fold(
@@ -97,8 +95,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
                   final usersResult = await _userRepository.getUsers(userIds);
 
                   // Create color map for conversations
-                  final Map<String, int> colorMap = <String, int>{};
-                  for (final Conversation conversation in conversations) {
+                  final colorMap = <String, int>{};
+                  for (final conversation in conversations) {
                     if (conversation.colorIndex != null) {
                       colorMap[conversation.id] = conversation.colorIndex!;
                     }
@@ -106,7 +104,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
                   usersResult.fold(
                     onSuccess: (users) {
-                      final userMap = {for (var u in users) u.id: u};
+                      final userMap = {for (final u in users) u.id: u};
 
                       emit(DashboardLoaded(
                         workspaces: workspaces,
@@ -127,9 +125,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
                         conversations: conversations,
                         selectedConversationIds: {selectedConversation.id},
                         messages: messages,
-                        users: {},
+                        users: const {},
                         conversationColorMap: colorMap,
-                      ));
+                      ),);
                     },
                   );
                 },
@@ -149,7 +147,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       );
     } on Exception catch (e, stack) {
       _logger.e('Error loading dashboard', error: e, stackTrace: stack);
-      emit(DashboardError('Failed to load dashboard: ${e.toString()}'));
+      emit(DashboardError('Failed to load dashboard: $e'));
     }
   }
 
@@ -172,7 +170,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       selectedConversationIds: {},
       messages: [],
       users: {},
-    ));
+    ),);
 
     // Load conversations for new workspace
     final conversationsResult = await _conversationRepository.getConversations(
@@ -188,7 +186,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
             selectedConversationIds: {},
             messages: [],
             users: {},
-          ));
+          ),);
           return;
         }
 
@@ -198,7 +196,6 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         // Load messages for first conversation
         final messagesResult = await _messageRepository.getRecentMessages(
           conversationId: selectedConversation.id,
-          count: _messagesPerPage,
         );
 
         messagesResult.fold(
@@ -217,7 +214,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
             usersResult.fold(
               onSuccess: (users) {
-                final userMap = {for (var u in users) u.id: u};
+                final userMap = {for (final u in users) u.id: u};
                 emit(currentState.copyWith(
                   selectedWorkspace: selectedWorkspace,
                   conversations: conversations,
@@ -225,7 +222,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
                   messages: messages,
                   users: userMap,
                   conversationColorMap: colorMap,
-                ));
+                ),);
               },
               onFailure: (_) {
                 emit(currentState.copyWith(
@@ -235,7 +232,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
                   messages: messages,
                   users: {},
                   conversationColorMap: colorMap,
-                ));
+                ),);
               },
             );
           },
@@ -270,12 +267,12 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         selectedConversationIds: {},
         messages: [],
         users: {},
-      ));
+      ),);
       return;
     }
 
     // Load messages from selected conversations
-    _loadMessagesFromSelectedConversations(emit, currentState, newSelectedIds);
+    await _loadMessagesFromSelectedConversations(emit, currentState, newSelectedIds);
   }
 
   Future<void> _onMultipleConversationsSelected(
@@ -286,7 +283,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     if (currentState is! DashboardLoaded) return;
 
     // Load messages from selected conversations
-    _loadMessagesFromSelectedConversations(emit, currentState, event.conversationIds);
+    await _loadMessagesFromSelectedConversations(emit, currentState, event.conversationIds);
   }
 
   Future<void> _onConversationSelectionCleared(
@@ -300,7 +297,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       selectedConversationIds: {},
       messages: [],
       users: {},
-    ));
+    ),);
   }
 
   Future<void> _loadMessagesFromSelectedConversations(
@@ -312,12 +309,11 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       selectedConversationIds: conversationIds,
       messages: [],
       users: {},
-    ));
+    ),);
 
     // Load messages from multiple conversations
     final messagesResult = await _messageRepository.getMessagesFromConversations(
       conversationIds: conversationIds,
-      count: _messagesPerPage,
     );
 
     messagesResult.fold(
@@ -328,19 +324,19 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
         usersResult.fold(
           onSuccess: (users) {
-            final userMap = {for (var u in users) u.id: u};
+            final userMap = {for (final u in users) u.id: u};
             emit(currentState.copyWith(
               selectedConversationIds: conversationIds,
               messages: messages,
               users: userMap,
-            ));
+            ),);
           },
           onFailure: (_) {
             emit(currentState.copyWith(
               selectedConversationIds: conversationIds,
               messages: messages,
               users: {},
-            ));
+            ),);
           },
         );
       },
@@ -379,7 +375,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           emit(currentState.copyWith(
             isLoadingMore: false,
             hasMoreMessages: false,
-          ));
+          ),);
           return;
         }
 
@@ -402,14 +398,14 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
               users: userMap,
               isLoadingMore: false,
               hasMoreMessages: newMessages.length == _messagesPerPage,
-            ));
+            ),);
           },
           onFailure: (_) {
             emit(currentState.copyWith(
               messages: allMessages,
               isLoadingMore: false,
               hasMoreMessages: newMessages.length == _messagesPerPage,
-            ));
+            ),);
           },
         );
       },
