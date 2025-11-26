@@ -44,7 +44,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
             conversations: [],
             selectedConversationIds: {},
             conversationColorMap: {},
-          ));
+          ),);
           return;
         }
 
@@ -62,7 +62,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           conversations: conversations,
           selectedConversationIds: {selected.id},
           conversationColorMap: colorMap,
-        ));
+        ),);
 
         add(ConversationSelectedEvent({selected.id}));
       },
@@ -109,6 +109,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     if (currentState is! ConversationLoaded) return;
 
     emit(currentState.copyWith(selectedConversationIds: const <String>{}));
-    add(ConversationSelectedEvent({}));
+    add(const ConversationSelectedEvent({}));
   }
 }

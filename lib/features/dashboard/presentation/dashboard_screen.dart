@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
@@ -18,36 +17,14 @@ import 'package:carbon_voice_console/features/workspaces/presentation/bloc/works
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<WorkspaceBloc>(
-          create: (_) => getIt<WorkspaceBloc>()..add(const ws_events.LoadWorkspaces()),
-        ),
-        BlocProvider<ConversationBloc>(
-          create: (_) => getIt<ConversationBloc>(),
-        ),
-        BlocProvider<MessageBloc>(
-          create: (_) => getIt<MessageBloc>(),
-        ),
-      ],
-      child: const _DashboardScreenContent(),
-    );
-  }
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenContent extends StatefulWidget {
-  const _DashboardScreenContent();
-
-  @override
-  State<_DashboardScreenContent> createState() => _DashboardScreenContentState();
-}
-
-class _DashboardScreenContentState extends State<_DashboardScreenContent> {
+class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;

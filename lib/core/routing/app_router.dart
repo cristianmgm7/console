@@ -1,8 +1,8 @@
+import 'package:carbon_voice_console/core/providers/bloc_providers.dart';
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/core/routing/app_shell.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:carbon_voice_console/features/settings/presentation/settings_screen.dart';
 import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
@@ -33,9 +33,7 @@ class AppRouter {
       initialLocation: initialLoc,
       debugLogDiagnostics: true,
       redirect: (context, state) {
-        final path = state.uri.path;
-        debugPrint('🔀 GoRouter redirect check: $path');
-        
+        final path = state.uri.path;        
         // Detectar rutas del sistema de archivos y redirigir a login
         final isFileSystemPath = path.contains('/Users/') ||
             path.contains('/Library/') ||
@@ -53,7 +51,6 @@ class AppRouter {
         
         // Si la ruta está vacía o es solo "/", redirigir a login
         if (path.isEmpty || path == '/') {
-          debugPrint('🔀 Redirecting empty path to /login');
           return AppRoutes.login;
         }
         
@@ -69,12 +66,10 @@ class AppRouter {
         
         // Si no es una ruta válida y no es un callback, redirigir a login
         if (!validRoutes.contains(path) && !path.startsWith('/auth/callback')) {
-          debugPrint('🔀 Redirecting invalid path "$path" to /login');
           return AppRoutes.login;
         }
         
         // No redirigir si la ruta es válida
-        debugPrint('✅ GoRouter allowing path: $path');
         return null;
       },
       routes: [
@@ -112,8 +107,8 @@ class AppRouter {
             GoRoute(
               path: AppRoutes.dashboard,
               name: 'dashboard',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: DashboardScreen(),
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: BlocProviders.blocProvidersDashboard(),
               ),
             ),
             GoRoute(
