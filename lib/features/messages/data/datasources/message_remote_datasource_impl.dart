@@ -109,58 +109,12 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
     required String conversationId,
     int count = 50,
   }) async {
-    try {
-      _logger.d('Fetching $count recent messages for conversation: $conversationId');
-
-      // API expects channel_guid (snake_case) and direction parameter
-      // direction must be "older" or "newer" - using "newer" for recent messages
-      final response = await _httpService.post(
-        '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
-        body: {
-          'channel_guid': conversationId,
-          'count': count,
-          'direction': 'newer', // Required: "older" or "newer"
-        },
-      );
-
-      // API returns 201 (Created) for successful POST requests
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-
-        // API might return {messages: [...]} or just [...]
-        final List<dynamic> messagesJson;
-        if (data is List) {
-          messagesJson = data;
-        } else if (data is Map<String, dynamic>) {
-          messagesJson = data['messages'] as List<dynamic>? ?? data['data'] as List<dynamic>;
-        } else {
-          throw const FormatException('Unexpected response format');
-        }
-
-        final messages = messagesJson
-            .map((json) {
-              final normalized = JsonNormalizer.normalizeMessage(json as Map<String, dynamic>);
-              return MessageModel.fromJson(normalized);
-            })
-            .toList();
-
-        _logger.i('Fetched ${messages.length} recent messages');
-        return messages;
-      } else {
-        _logger.e(
-          'Failed to fetch recent messages: ${response.statusCode}',
-          error: response.body,
-        );
-        throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to fetch recent messages: ${response.body}',
-        );
-      }
-    } on ServerException {
-      rethrow;
-    } on Exception catch (e, stack) {
-      _logger.e('Network error fetching recent messages', error: e, stackTrace: stack);
-      throw NetworkException(message: 'Failed to fetch recent messages: $e');
-    }
+    // Use the channel-specific sequential endpoint for recent messages
+    // This corresponds to MessageController_getChannelIndexMessages
+    return getMessages(
+      conversationId: conversationId,
+      start: 0, // Start from 0 for most recent messages
+      count: count,
+    );
   }
 }

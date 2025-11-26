@@ -76,15 +76,22 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     Emitter<ConversationState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! ConversationLoaded) return;
-
-    final newSelectedIds = Set<String>.from(currentState.selectedConversationIds);
-    if (newSelectedIds.contains(event.conversationId)) {
-      newSelectedIds.remove(event.conversationId);
-    } else {
-      newSelectedIds.add(event.conversationId);
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot toggle conversation: current state is not ConversationLoaded');
+      return;
     }
 
+    final newSelectedIds = Set<String>.from(currentState.selectedConversationIds);
+    final wasSelected = newSelectedIds.contains(event.conversationId);
+    if (wasSelected) {
+      newSelectedIds.remove(event.conversationId);
+      _logger.i('Deselected conversation: ${event.conversationId}');
+    } else {
+      newSelectedIds.add(event.conversationId);
+      _logger.i('Selected conversation: ${event.conversationId}');
+    }
+
+    _logger.i('New selected conversation IDs: $newSelectedIds');
     emit(currentState.copyWith(selectedConversationIds: newSelectedIds));
     // State change will trigger dashboard screen to notify MessageBloc
   }

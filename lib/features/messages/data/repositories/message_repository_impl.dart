@@ -121,12 +121,15 @@ class MessageRepositoryImpl implements MessageRepository {
     int count = 50,
   }) async {
     try {
-      final messageModels = await _remoteDataSource.getRecentMessages(
+      _logger.d('Fetching recent messages for conversation: $conversationId using sequential endpoint');
+      final messageModels = await _remoteDataSource.getMessages(
         conversationId: conversationId,
+        start: 0, // Start from 0 for most recent messages
         count: count,
       );
 
       final messages = messageModels.map((model) => model.toEntity()).toList();
+      _logger.d('Received ${messages.length} messages for conversation $conversationId');
 
       // Replace cache with recent messages
       messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -152,25 +155,37 @@ class MessageRepositoryImpl implements MessageRepository {
     int count = 50,
   }) async {
     try {
-      _logger.d('Fetching messages from ${conversationIds.length} conversations');
+      _logger.i('Fetching messages from ${conversationIds.length} conversations: $conversationIds');
 
       final allMessages = <Message>[];
 
-      // Fetch messages from each conversation
+      // Clear cache for conversations that are no longer selected
+      // This ensures we don't show stale data when switching conversations
+      final cachedConversationIds = _cachedMessages.keys.toSet();
+      final removedConversations = cachedConversationIds.difference(conversationIds);
+      for (final removedId in removedConversations) {
+        _logger.d('Clearing cache for deselected conversation: $removedId');
+        _cachedMessages.remove(removedId);
+        _loadedRanges.remove(removedId);
+      }
+
+      // Fetch messages from each conversation using sequential pagination
       for (final conversationId in conversationIds) {
-        final result = await getRecentMessages(
+        _logger.d('Fetching messages for conversation: $conversationId');
+        final result = await getMessages(
           conversationId: conversationId,
+          start: 0, // Start from the beginning (most recent)
           count: count,
         );
 
         result.fold(
           onSuccess: (messages) {
             allMessages.addAll(messages);
-            _logger.d('Added ${messages.length} messages from conversation $conversationId');
+            _logger.i('Added ${messages.length} messages from conversation $conversationId');
           },
           onFailure: (failure) {
             // Log warning but continue with other conversations
-            _logger.w('Failed to fetch messages from $conversationId: ${failure.failure}');
+            _logger.e('Failed to fetch messages from $conversationId: ${failure.failure}');
           },
         );
       }
@@ -178,7 +193,7 @@ class MessageRepositoryImpl implements MessageRepository {
       // Sort all messages by date (newest first)
       allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      _logger.i('Merged ${allMessages.length} total messages from ${conversationIds.length} conversations');
+      _logger.i('Successfully fetched ${allMessages.length} total messages from ${conversationIds.length} conversations');
       return success(allMessages);
     } on Exception catch (e, stack) {
       _logger.e('Error fetching messages from multiple conversations', error: e, stackTrace: stack);

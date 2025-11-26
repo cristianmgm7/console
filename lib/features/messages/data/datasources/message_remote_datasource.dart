@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/features/messages/data/models/message_model.dart';
 
 /// Abstract interface for message remote data operations
@@ -24,5 +25,3 @@ abstract class MessageRemoteDataSource {
     int count = 50,
   });
 }
-
-

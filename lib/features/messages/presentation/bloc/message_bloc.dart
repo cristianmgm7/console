@@ -32,18 +32,31 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     ConversationSelectedEvent event,
     Emitter<MessageState> emit,
   ) async {
-    _currentConversationIds = event.conversationIds;
+    _logger.i('ConversationSelectedEvent received with conversationIds: ${event.conversationIds}');
+
+    // If no conversations are selected, clear the messages immediately
     if (event.conversationIds.isEmpty) {
+      _logger.i('No conversations selected, clearing messages');
+      _currentConversationIds = {};
       emit(const MessageLoaded(messages: [], users: {}));
       return;
     }
-    add(LoadMessages(event.conversationIds));
+
+    // Only load messages if the conversation selection has actually changed
+    if (_currentConversationIds != event.conversationIds) {
+      _logger.i('Conversation selection changed from $_currentConversationIds to ${event.conversationIds}, loading messages');
+      _currentConversationIds = event.conversationIds;
+      add(LoadMessages(event.conversationIds));
+    } else {
+      _logger.d('Conversation selection unchanged, skipping message reload');
+    }
   }
 
   Future<void> _onLoadMessages(
     LoadMessages event,
     Emitter<MessageState> emit,
   ) async {
+    _logger.d('Loading messages for conversations: ${event.conversationIds}');
     emit(const MessageLoading());
     _currentConversationIds = event.conversationIds;
 
@@ -53,8 +66,11 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     );
 
     if (result.isSuccess) {
-      await _loadUsersAndEmit(result.valueOrNull!, emit);
+      final messages = result.valueOrNull!;
+      _logger.i('Successfully loaded ${messages.length} messages from ${event.conversationIds.length} conversations');
+      await _loadUsersAndEmit(messages, emit);
     } else {
+      _logger.e('Failed to load messages: ${result.failureOrNull}');
       emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
     }
   }
