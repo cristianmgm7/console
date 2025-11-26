@@ -1,3 +1,5 @@
+import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_result.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
@@ -46,7 +48,17 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     // Fetch metadata for all messages in parallel
     _logger.d('Fetching metadata for ${event.messageIds.length} messages');
     final metadataFutures = event.messageIds.map((id) => _messageRepository.getMessage(id));
-    final metadataResults = await Future.wait(metadataFutures);
+
+    // Wrap Future.wait in try-catch to handle any unexpected exceptions
+    late final List<Result<Message>> metadataResults;
+    try {
+      metadataResults = await Future.wait(metadataFutures);
+    } catch (e, stack) {
+      _logger.e('Unexpected error during parallel message fetching', error: e, stackTrace: stack);
+      // If Future.wait fails, treat all messages as failed/skipped
+      emit(DownloadError('Failed to fetch message metadata: $e'));
+      return;
+    }
 
     // Process metadata and create download items
     int messageIndex = 0;
@@ -113,32 +125,33 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     final results = <DownloadResult>[];
     final totalItems = downloadItems.length;
 
-    for (int i = 0; i < downloadItems.length; i++) {
-      // Check for cancellation
-      if (_isCancelled) {
-        _logger.i('Download cancelled by user at item ${i + 1}/$totalItems');
-        emit(DownloadCancelled(
-          completedCount: results.length,
-          totalCount: totalItems,
+    try {
+      for (int i = 0; i < downloadItems.length; i++) {
+        // Check for cancellation
+        if (_isCancelled) {
+          _logger.i('Download cancelled by user at item ${i + 1}/$totalItems');
+          emit(DownloadCancelled(
+            completedCount: results.length,
+            totalCount: totalItems,
+          ));
+          return;
+        }
+
+        final item = downloadItems[i];
+        final progressPercent = ((i + 1) / totalItems * 100);
+
+        // Emit progress state
+        emit(DownloadInProgress(
+          current: i + 1,
+          total: totalItems,
+          progressPercent: progressPercent,
+          currentMessageId: item.messageId,
         ));
-        return;
-      }
 
-      final item = downloadItems[i];
-      final progressPercent = ((i + 1) / totalItems * 100);
+        // Download the item
+        final result = await _downloadRepository.downloadItem(item);
 
-      // Emit progress state
-      emit(DownloadInProgress(
-        current: i + 1,
-        total: totalItems,
-        progressPercent: progressPercent,
-        currentMessageId: item.messageId,
-      ));
-
-      // Download the item
-      final result = await _downloadRepository.downloadItem(item);
-
-      result.fold(
+        result.fold(
         onSuccess: (downloadResult) {
           results.add(downloadResult);
           _logger.d('Downloaded item ${i + 1}/$totalItems: ${downloadResult.status}');
@@ -153,6 +166,11 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
           _logger.e('Failed to download item ${i + 1}/$totalItems');
         },
       );
+    }
+    } catch (e, stack) {
+      _logger.e('Unexpected error during download process', error: e, stackTrace: stack);
+      emit(DownloadError('Download failed unexpectedly: $e'));
+      return;
     }
 
     // Add skipped messages to results

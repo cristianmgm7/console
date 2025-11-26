@@ -26,37 +26,48 @@ class JsonNormalizer {
 
   /// Normalizes message JSON from API format to our expected format
   static Map<String, dynamic> normalizeMessage(Map<String, dynamic> json) {
+    // Handle new API format where message data might be nested in 'text' field
+    final textData = json['text'];
+    final actualJson = (textData is Map<String, dynamic>) ? textData : json;
+
     // Handle new API format with message_id, creator_id, channel_ids array, etc.
-    final messageId = json['id'] ?? 
-                     json['_id'] ?? 
-                     json['messageId'] ?? 
-                     json['message_id'];
-    
+    final messageId = actualJson['id'] ??
+                     actualJson['_id'] ??
+                     actualJson['messageId'] ??
+                     actualJson['message_id'] ??
+                     json['id']; // fallback to original json
+
     // channel_ids is an array, take the first one
-    final channelIds = json['channel_ids'] as List<dynamic>?;
-    final conversationId = json['conversationId'] ??
-        json['conversation_id'] ??
-        json['channelId'] ??
-        json['channel_id'] ??
+    final channelIds = actualJson['channel_ids'] as List<dynamic>?;
+    final conversationId = actualJson['conversationId'] ??
+        actualJson['conversation_id'] ??
+        actualJson['channelId'] ??
+        actualJson['channel_id'] ??
         (channelIds != null && channelIds.isNotEmpty ? channelIds.first.toString() : null);
-    
-    final creatorId = json['creator_id'];
-    final userId = json['userId'] ??
-        json['user_id'] ??
-        json['ownerId'] ??
-        json['owner_id'] ??
+
+    final creatorId = actualJson['creator_id'];
+    final userId = actualJson['userId'] ??
+        actualJson['user_id'] ??
+        actualJson['ownerId'] ??
+        actualJson['owner_id'] ??
         creatorId;
     
-    // Extract audio URL from audio_models array
-    final audioModels = json['audio_models'] as List<dynamic>?;
+    // Extract audio URL from audio_models array or nested audio object
+    final audioModels = actualJson['audio_models'] as List<dynamic>?;
     String? audioUrl;
     if (audioModels != null && audioModels.isNotEmpty) {
       final firstAudio = audioModels.first as Map<String, dynamic>?;
       audioUrl = firstAudio?['url'] as String?;
     }
-    
+
+    // Check for nested audio object in the original json
+    final audioData = json['audio'] as Map<String, dynamic>?;
+    if (audioData != null && audioUrl == null) {
+      audioUrl = audioData['url'] as String?;
+    }
+
     // Extract transcript from text_models array
-    final textModels = json['text_models'] as List<dynamic>?;
+    final textModels = actualJson['text_models'] as List<dynamic>?;
     String? transcript;
     if (textModels != null) {
       // Look for transcript_with_timecode type
@@ -70,31 +81,38 @@ class JsonNormalizer {
         }
       }
     }
-    
+
+    // Check for transcript in the original json
+    final originalTranscript = json['transcript'];
+    if (originalTranscript != null && transcript == null) {
+      transcript = originalTranscript.toString();
+    }
+
     // Convert duration_ms to seconds
-    final durationMsValue = json['duration_ms'];
+    final durationMsValue = actualJson['duration_ms'] ?? audioData?['duration_ms'];
     final durationMs = durationMsValue is int
         ? durationMsValue
         : durationMsValue is double
             ? durationMsValue.toInt()
             : null;
     final duration = durationMs != null ? durationMs ~/ 1000 : null;
-    
+
     return {
       'id': messageId,
       'conversationId': conversationId,
       'userId': userId,
-      'createdAt': json['createdAt'] ?? 
-                   json['created_at'] ?? 
-                   json['date'],
-      'text': json['text'] ?? json['message'],
-      'transcript': transcript ?? json['transcript'],
-      'audioUrl': audioUrl ?? json['audioUrl'] ?? json['audio_url'],
-      'duration': json['duration'] ?? 
-                  json['durationSeconds'] ?? 
+      'createdAt': actualJson['createdAt'] ??
+                   actualJson['created_at'] ??
+                   actualJson['date'] ??
+                   json['createdAt'], // fallback to original
+      'text': actualJson['text'] ?? actualJson['message'] ?? json['text'],
+      'transcript': transcript,
+      'audioUrl': audioUrl,
+      'duration': actualJson['duration'] ??
+                  actualJson['durationSeconds'] ??
                   duration,
-      'status': json['status'],
-      'metadata': json['metadata'],
+      'status': actualJson['status'] ?? json['status'],
+      'metadata': actualJson['metadata'] ?? json['metadata'],
     };
   }
 

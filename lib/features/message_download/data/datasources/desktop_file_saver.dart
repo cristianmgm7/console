@@ -3,18 +3,30 @@ import 'dart:io';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/message_download/data/datasources/file_saver.dart';
+import 'package:carbon_voice_console/features/message_download/data/datasources/web_file_saver.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
-@LazySingleton(as: FileSaver, env: [Environment.prod, Environment.dev])
+@LazySingleton(as: FileSaver)
 class DesktopFileSaver implements FileSaver {
-  DesktopFileSaver(this._logger);
+  DesktopFileSaver(this._logger) {
+    // Delegate to WebFileSaver when running on web
+    if (kIsWeb) {
+      _delegate = WebFileSaver(_logger);
+    }
+  }
 
   final Logger _logger;
+  FileSaver? _delegate;
 
   @override
   Future<Result<String>> getDownloadsDirectory() async {
+    if (_delegate != null) {
+      return _delegate!.getDownloadsDirectory();
+    }
+
     try {
       final directory = await path_provider.getDownloadsDirectory();
       if (directory == null) {
@@ -33,6 +45,14 @@ class DesktopFileSaver implements FileSaver {
     required String fileName,
     required List<int> bytes,
   }) async {
+    if (_delegate != null) {
+      return _delegate!.saveFile(
+        directoryPath: directoryPath,
+        fileName: fileName,
+        bytes: bytes,
+      );
+    }
+
     try {
       // Ensure directory exists
       final directory = Directory(directoryPath);
@@ -59,6 +79,14 @@ class DesktopFileSaver implements FileSaver {
     required String fileName,
     required String content,
   }) async {
+    if (_delegate != null) {
+      return _delegate!.saveTextFile(
+        directoryPath: directoryPath,
+        fileName: fileName,
+        content: content,
+      );
+    }
+
     try {
       // Ensure directory exists
       final directory = Directory(directoryPath);

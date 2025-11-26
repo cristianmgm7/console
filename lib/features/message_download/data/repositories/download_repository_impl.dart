@@ -70,7 +70,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         messageId: item.messageId,
         status: DownloadStatus.failed,
         errorMessage: e.toString(),
-      ),);
+        ),);
     }
   }
 
@@ -108,7 +108,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         messageId: item.messageId,
         status: DownloadStatus.failed,
         errorMessage: e.toString(),
-      ),);
+        ),);
     }
   }
 
@@ -158,21 +158,21 @@ class DownloadRepositoryImpl implements DownloadRepository {
         messageId: item.messageId,
         status: DownloadStatus.failed,
         errorMessage: 'Network error: ${e.message}',
-      ),);
+        ),);
     } on ServerException catch (e) {
       _logger.e('Server error downloading audio', error: e);
       return success(DownloadResult(
         messageId: item.messageId,
         status: DownloadStatus.failed,
         errorMessage: 'Server error: ${e.message}',
-      ),);
+        ),);
     } on Exception catch (e, stack) {
       _logger.e('Error downloading audio', error: e, stackTrace: stack);
       return success(DownloadResult(
         messageId: item.messageId,
         status: DownloadStatus.failed,
         errorMessage: e.toString(),
-      ),);
+        ),);
     }
   }
 }

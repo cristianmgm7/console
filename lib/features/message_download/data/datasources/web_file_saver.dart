@@ -5,7 +5,6 @@ import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:universal_html/html.dart' as html;
 
-@LazySingleton(as: FileSaver, env: [Environment.test])
 class WebFileSaver implements FileSaver {
   WebFileSaver(this._logger);
 
