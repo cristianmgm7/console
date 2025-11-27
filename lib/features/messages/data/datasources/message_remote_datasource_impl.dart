@@ -29,9 +29,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        _logger.d('Messages API raw response: ${response.body}');
         final data = jsonDecode(response.body);
-        _logger.d('Parsed messages data type: ${data.runtimeType}');
 
         // API returns: [{message}, {message}, ...]
         if (data is! List) {
