@@ -88,37 +88,40 @@ class MessageDto {
           : null,
       parentMessageId: json['parent_message_id'] as String?,
       heardMs: json['heard_ms'] as int,
-      utmData: UtmDataDto.fromJson(json['utm_data'] as Map<String, dynamic>),
+      utmData: json['utm_data'] != null
+          ? UtmDataDto.fromJson(json['utm_data'] as Map<String, dynamic>)
+          : const UtmDataDto(),
       name: json['name'] as String?,
       sourceMessageId: json['source_message_id'] as String?,
       messageId: json['message_id'] as String,
       creatorId: json['creator_id'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       lastUpdatedAt: DateTime.parse(json['last_updated_at'] as String),
-      workspaceIds: (json['workspace_ids'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      channelIds: (json['channel_ids'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      workspaceIds: (json['workspace_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ?? [],
+      channelIds: (json['channel_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ?? [],
       durationMs: json['duration_ms'] as int,
       attachments: json['attachments'] as List<dynamic>? ?? [],
       notes: json['notes'] as String,
       notify: json['notify'] as bool,
       lastHeardUpdate: DateTime.parse(json['last_heard_update'] as String),
-      reactionSummary: ReactionSummaryDto.fromJson(
-          json['reaction_summary'] as Map<String, dynamic>),
+      reactionSummary: json['reaction_summary'] != null
+          ? ReactionSummaryDto.fromJson(json['reaction_summary'] as Map<String, dynamic>)
+          : const ReactionSummaryDto(reactionCounts: {}, topUserReactions: []),
       isTextMessage: json['is_text_message'] as bool,
       status: json['status'] as String,
       labelIds: (json['label_ids'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
-      audioModels: (json['audio_models'] as List<dynamic>)
-          .map((e) => AudioModelDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      textModels: (json['text_models'] as List<dynamic>)
-          .map((e) => TextModelDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      audioModels: (json['audio_models'] as List<dynamic>?)
+          ?.map((e) => AudioModelDto.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
+      textModels: (json['text_models'] as List<dynamic>?)
+          ?.map((e) => TextModelDto.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
       cacheKey: json['cache_key'] as String,
       audioDelivery: json['audio_delivery'] as String,
       notifiedUsers: json['notified_users'] as int,
