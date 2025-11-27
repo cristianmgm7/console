@@ -87,26 +87,57 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
+        _logger.d('API Response keys: ${data.keys.toList()}');
 
-        // Detail endpoint can return two formats:
-        // 1. Channel format: {"channel_id": "...", "messages": [{message1}, {message2}, ...]}
-        // 2. Direct format: {message object with all fields}
-        final messagesArray = data['messages'] as List<dynamic>?;
+        // Check if response has a 'message' key with the actual message data
+        if (data.containsKey('message') && data['message'] != null && data['message'] is Map<String, dynamic>) {
+          // Wrapped format: {"message": {...}, ...}
+          _logger.d('Using wrapped message format');
+          final messageData = data['message'] as Map<String, dynamic>;
+          _logger.d('messageData type: ${messageData.runtimeType}');
+          _logger.d('messageData keys: ${messageData.keys.toList()}');
+          _logger.d('messageData isEmpty: ${messageData.isEmpty}');
 
-        if (messagesArray != null && messagesArray.isNotEmpty) {
-          // Wrapped format - extract first message from messages array
-          final firstMessageJson = messagesArray.first as Map<String, dynamic>;
-          final messageDto = MessageDto.fromJson(firstMessageJson);
+          // Check if message data is not empty
+          if (messageData.isNotEmpty) {
+            try {
+              final messageDto = MessageDto.fromJson(messageData);
 
-          // Log channel info if available
-          final channelId = data['channel_id'] as String?;
-          _logger.i('Fetched message: ${messageDto.messageId}${channelId != null ? ' from channel: $channelId' : ''}');
-          return messageDto;
+              // Log channel info if available
+              final channelId = data['channel_id'] as String?;
+              _logger.i('Fetched message: ${messageDto.messageId ?? "null"}${channelId != null ? ' from channel: $channelId' : ''}');
+              return messageDto;
+            } catch (e, stack) {
+              _logger.e('Failed to parse message JSON: $e', error: e, stackTrace: stack);
+              _logger.d('Message data that failed parsing: $messageData');
+              throw ServerException(statusCode: 422, message: 'Invalid message JSON structure: $e');
+            }
+          } else {
+            _logger.w('Message data is empty');
+            throw ServerException(statusCode: 422, message: 'Message data is empty');
+          }
         } else {
-          // Direct format - parse the entire response as a message
-          final messageDto = MessageDto.fromJson(data);
-          _logger.i('Fetched message: ${messageDto.messageId}');
-          return messageDto;
+          // Direct format: {message object with all fields}
+          _logger.d('Using direct message format');
+
+          // Check if data contains message fields (not just wrapper fields)
+          final messageKeys = ['message_id', 'creator_id', 'created_at'];
+          final hasMessageFields = messageKeys.any((key) => data.containsKey(key));
+
+          if (hasMessageFields) {
+            try {
+              final messageDto = MessageDto.fromJson(data);
+              _logger.i('Fetched message: ${messageDto.messageId ?? "null"}');
+              return messageDto;
+            } catch (e, stack) {
+              _logger.e('Failed to parse direct message JSON: $e', error: e, stackTrace: stack);
+              _logger.d('Direct message data that failed parsing: $data');
+              throw ServerException(statusCode: 422, message: 'Invalid direct message JSON structure: $e');
+            }
+          } else {
+            _logger.w('Response does not contain message data');
+            throw ServerException(statusCode: 422, message: 'Response does not contain valid message data');
+          }
         }
       } else {
         _logger.e('Failed to fetch message: ${response.statusCode}');

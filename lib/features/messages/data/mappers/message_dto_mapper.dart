@@ -10,14 +10,8 @@ import 'package:carbon_voice_console/features/messages/domain/entities/text_mode
 /// Extension methods to convert DTOs to domain entities
 extension MessageDtoMapper on MessageDto {
   Message toDomain() {
-    if (messageId == null) {
-      throw FormatException('Message ID cannot be null');
-    }
-    if (creatorId == null) {
-      throw FormatException('Creator ID cannot be null');
-    }
-    if (createdAt == null) {
-      throw FormatException('Created at cannot be null');
+    if (messageId == null || creatorId == null || createdAt == null) {
+      throw FormatException('Required message fields are missing: id=${messageId == null}, creator=${creatorId == null}, created=${createdAt == null}');
     }
     return Message(
       id: messageId!,

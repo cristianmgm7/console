@@ -21,7 +21,7 @@ void main() {
   },
   "name": null,
   "source_message_id": null,
-  "message_id": "1e054a70-c736-11f0-bea8-25c1d20899c8",
+  "id": "1e054a70-c736-11f0-bea8-25c1d20899c8",
   "creator_id": "travis",
   "created_at": "2025-11-21T23:59:30.373Z",
   "last_updated_at": "2025-11-22T00:04:12.870Z",
