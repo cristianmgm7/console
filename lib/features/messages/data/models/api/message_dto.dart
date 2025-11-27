@@ -1,10 +1,38 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/audio_model_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/reaction_summary_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/text_model_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/utm_data_dto.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'message_dto.g.dart';
+
+// Custom converter for UtmDataDto that handles null values
+class UtmDataDtoConverter implements JsonConverter<UtmDataDto, Map<String, dynamic>?> {
+  const UtmDataDtoConverter();
+
+  @override
+  UtmDataDto fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const UtmDataDto();
+    return UtmDataDto.fromJson(json);
+  }
+
+  @override
+  Map<String, dynamic>? toJson(UtmDataDto object) => object.toJson();
+}
+
+// Custom converter for ReactionSummaryDto that handles null values
+class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, Map<String, dynamic>?> {
+  const ReactionSummaryDtoConverter();
+
+  @override
+  ReactionSummaryDto fromJson(Map<String, dynamic>? json) {
+    if (json == null) return const ReactionSummaryDto();
+    return ReactionSummaryDto.fromJson(json);
+  }
+
+  @override
+  Map<String, dynamic>? toJson(ReactionSummaryDto object) => object.toJson();
+}
 
 /// DTO for message from API response
 @JsonSerializable()
@@ -57,6 +85,7 @@ class MessageDto {
   @JsonKey(name: 'heard_ms')
   final int heardMs;
 
+  @UtmDataDtoConverter()
   @JsonKey(name: 'utm_data')
   final UtmDataDto utmData;
 
@@ -93,6 +122,7 @@ class MessageDto {
   @JsonKey(name: 'last_heard_update')
   final DateTime lastHeardUpdate;
 
+  @ReactionSummaryDtoConverter()
   @JsonKey(name: 'reaction_summary')
   final ReactionSummaryDto reactionSummary;
 

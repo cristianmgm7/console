@@ -2,7 +2,7 @@ import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
-import 'package:carbon_voice_console/features/messages/data/models/api/message_dto_mapper.dart';
+import 'package:carbon_voice_console/features/messages/data/mappers/message_dto_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:injectable/injectable.dart';

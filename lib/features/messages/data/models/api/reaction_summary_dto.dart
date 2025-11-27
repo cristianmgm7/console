@@ -6,14 +6,14 @@ part 'reaction_summary_dto.g.dart';
 @JsonSerializable()
 class ReactionSummaryDto {
   const ReactionSummaryDto({
-    required this.reactionCounts,
-    required this.topUserReactions,
+    this.reactionCounts = const {},
+    this.topUserReactions = const [],
   });
 
-  @JsonKey(name: 'reaction_counts')
+  @JsonKey(name: 'reaction_counts', defaultValue: {})
   final Map<String, dynamic> reactionCounts;
 
-  @JsonKey(name: 'top_user_reactions')
+  @JsonKey(name: 'top_user_reactions', defaultValue: [])
   final List<dynamic> topUserReactions;
 
   factory ReactionSummaryDto.fromJson(Map<String, dynamic> json) => _$ReactionSummaryDtoFromJson(json);
