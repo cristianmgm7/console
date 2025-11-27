@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
+import 'package:carbon_voice_console/features/messages/data/models/message_detail_response_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/message_model.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -32,24 +33,48 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // API might return {messages: [...]} or just [...]
+        // List endpoint returns: [{message}, {message}, ...]
+        // Detail endpoint returns: {"channel_id": "...", "messages": [{message}]}
         final List<dynamic> messagesJson;
+
         if (data is List) {
+          // Direct array format (list endpoint)
           messagesJson = data;
+          _logger.d('Received direct array with ${data.length} messages');
         } else if (data is Map<String, dynamic>) {
-          messagesJson = data['messages'] as List<dynamic>? ?? data['data'] as List<dynamic>;
+          // Wrapped format - try 'messages' field first, fallback to 'data'
+          final messages = data['messages'] as List<dynamic>?;
+          final dataField = data['data'] as List<dynamic>?;
+
+          if (messages != null) {
+            messagesJson = messages;
+            _logger.d('Received wrapped response with ${messages.length} messages');
+          } else if (dataField != null) {
+            messagesJson = dataField;
+            _logger.d('Received wrapped response (data field) with ${dataField.length} messages');
+          } else {
+            throw FormatException(
+              'Wrapped response missing messages/data array. Keys: ${data.keys.join(", ")}',
+            );
+          }
         } else {
-          throw const FormatException('Unexpected response format');
+          throw FormatException(
+            'Unexpected response type: ${data.runtimeType}. Expected List or Map.',
+          );
         }
 
+        // Normalize and convert each message
         final messages = messagesJson
             .map((json) {
-              final normalized = JsonNormalizer.normalizeMessage(json as Map<String, dynamic>);
+              if (json is! Map<String, dynamic>) {
+                throw FormatException('Message item is not a Map: ${json.runtimeType}');
+              }
+              final normalized = JsonNormalizer.normalizeMessage(json);
               return MessageModel.fromJson(normalized);
             })
             .toList();
 
-        _logger.i('Fetched ${messages.length} messages');
+        _logger.i('Successfully fetched and normalized ${messages.length} messages');
         return messages;
       } else {
         _logger.e('Failed to fetch messages: ${response.statusCode}');
@@ -85,10 +110,33 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final normalized = JsonNormalizer.normalizeMessage(data);
-        final message = MessageModel.fromJson(normalized);
-        _logger.i('Fetched message: ${message.id}');
-        return message;
+
+        // Detail endpoint can return two formats:
+        // 1. Wrapped: {"channel_id": "...", "messages": [{...}]}
+        // 2. Direct: {message object with all fields}
+        final messagesJson = data['messages'] as List<dynamic>?;
+
+        if (messagesJson != null && messagesJson.isNotEmpty) {
+          // Wrapped format - extract first message
+          final firstMessageJson = messagesJson.first as Map<String, dynamic>;
+          final normalized = JsonNormalizer.normalizeMessage(firstMessageJson);
+          final messageModel = MessageModel.fromJson(normalized);
+
+          // Create typed DTO (for validation) then extract the message
+          final detailResponse = MessageDetailResponseDto.fromJson(
+            data,
+            [messageModel],
+          );
+
+          _logger.i('Fetched message: ${detailResponse.firstMessage.id} from channel: ${detailResponse.channelId}');
+          return detailResponse.firstMessage;
+        } else {
+          // Direct format - normalize the entire response as a message
+          final normalized = JsonNormalizer.normalizeMessage(data);
+          final message = MessageModel.fromJson(normalized);
+          _logger.i('Fetched message: ${message.id}');
+          return message;
+        }
       } else {
         _logger.e('Failed to fetch message: ${response.statusCode}');
         throw ServerException(

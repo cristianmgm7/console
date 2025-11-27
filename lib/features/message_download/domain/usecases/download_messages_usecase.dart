@@ -43,7 +43,7 @@ class DownloadMessagesUsecase {
       _logger.w('Download started with empty message selection');
       return failure(const UnknownFailure(
         details: 'No messages selected',
-      ));
+      ),);
     }
 
     // Collect all download items from all messages
@@ -62,7 +62,7 @@ class DownloadMessagesUsecase {
       _logger.e('Unexpected error during parallel message fetching', error: e, stackTrace: stack);
       return failure(UnknownFailure(
         details: 'Failed to fetch message metadata: $e',
-      ));
+      ),);
     }
 
     // Process metadata and create download items
@@ -83,7 +83,7 @@ class DownloadMessagesUsecase {
                 type: DownloadItemType.audio,
                 url: message.audioUrl!,
                 fileName: '${message.id}.mp3', // Extension will be corrected based on Content-Type
-              ));
+              ),);
               hasDownloadableContent = true;
             }
           }
@@ -97,7 +97,7 @@ class DownloadMessagesUsecase {
                 type: DownloadItemType.transcript,
                 url: transcriptContent, // For transcripts, we store content in 'url' field
                 fileName: '${message.id}.txt',
-              ));
+              ),);
               hasDownloadableContent = true;
             }
           }
@@ -125,8 +125,8 @@ class DownloadMessagesUsecase {
         results: skippedMessages.map((id) => DownloadResult(
           messageId: id,
           status: DownloadStatus.skipped,
-        )).toList(),
-      ));
+        ),).toList(),
+      ),);
     }
 
     // Download each item sequentially
@@ -140,7 +140,7 @@ class DownloadMessagesUsecase {
           _logger.i('Download cancelled by user at item ${i + 1}/$totalItems');
           return failure(UnknownFailure(
             details: 'Download cancelled at item ${i + 1} of $totalItems',
-          ));
+          ),);
         }
 
         final item = downloadItems[i];
@@ -150,7 +150,7 @@ class DownloadMessagesUsecase {
           current: i + 1,
           total: totalItems,
           currentMessageId: item.messageId,
-        ));
+        ),);
 
         // Download the item
         final result = await _downloadRepository.downloadItem(item);
@@ -166,7 +166,7 @@ class DownloadMessagesUsecase {
               messageId: item.messageId,
               status: DownloadStatus.failed,
               errorMessage: failure.failureOrNull?.details ?? 'Unknown error',
-            ));
+            ),);
             _logger.e('Failed to download item ${i + 1}/$totalItems');
           },
         );
@@ -175,14 +175,14 @@ class DownloadMessagesUsecase {
       _logger.e('Unexpected error during download process', error: e, stackTrace: stack);
       return failure(UnknownFailure(
         details: 'Download failed unexpectedly: $e',
-      ));
+      ),);
     }
 
     // Add skipped messages to results
     results.addAll(skippedMessages.map((id) => DownloadResult(
       messageId: id,
       status: DownloadStatus.skipped,
-    )));
+    ),),);
 
     // Calculate final counts
     final successCount = results.where((r) => r.status == DownloadStatus.success).length;
@@ -196,6 +196,6 @@ class DownloadMessagesUsecase {
       failureCount: failureCount,
       skippedCount: skippedCount,
       results: results,
-    ));
+    ),);
   }
 }

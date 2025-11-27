@@ -41,14 +41,15 @@ class JsonNormalizer {
     final actualJson = nestedData ?? json;
 
     // Handle new API format with message_id, creator_id, channel_ids array, etc.
-    final messageId = actualJson['id'] ??
+    // API consistently uses message_id - check it first
+    final messageId = actualJson['message_id'] ??
+                     actualJson['id'] ??
                      actualJson['_id'] ??
                      actualJson['messageId'] ??
-                     actualJson['message_id'] ??
+                     json['message_id'] ??
                      json['id'] ??
                      json['_id'] ??
-                     json['messageId'] ??
-                     json['message_id'];
+                     json['messageId'];
 
     // channel_ids is an array, take the first one
     final channelIds = actualJson['channel_ids'] as List<dynamic>?;
@@ -73,8 +74,9 @@ class JsonNormalizer {
       audioUrl = firstAudio?['url'] as String?;
     }
 
-    // Check for nested audio object in the original json
-    final audioData = json['audio'] as Map<String, dynamic>?;
+    // Check for nested audio object - prioritize actualJson (unwrapped), fallback to original
+    final audioData = actualJson['audio'] as Map<String, dynamic>? ??
+                     json['audio'] as Map<String, dynamic>?;
     if (audioData != null && audioUrl == null) {
       audioUrl = audioData['url'] as String?;
     }
@@ -95,14 +97,18 @@ class JsonNormalizer {
       }
     }
 
-    // Check for transcript in the original json
-    final originalTranscript = json['transcript'];
-    if (originalTranscript != null && transcript == null) {
-      transcript = originalTranscript.toString();
+    // Check for transcript - prioritize actualJson (unwrapped), fallback to original
+    final transcriptValue = actualJson['transcript'] ?? json['transcript'];
+    if (transcriptValue != null && transcript == null) {
+      transcript = transcriptValue.toString();
     }
 
     // Convert duration_ms to seconds
-    final durationMsValue = actualJson['duration_ms'] ?? audioData?['duration_ms'];
+    // API provides duration_ms at root level - prioritize it first
+    // Check actualJson first (root message object), then fallback to nested audioData
+    final durationMsValue = actualJson['duration_ms'] ??
+                            json['duration_ms'] ??  // Also check original json
+                            audioData?['duration_ms'];
     final durationMs = durationMsValue is int
         ? durationMsValue
         : durationMsValue is double
@@ -121,9 +127,9 @@ class JsonNormalizer {
       'text': actualJson['text'] ?? actualJson['message'] ?? json['text'],
       'transcript': transcript,
       'audioUrl': audioUrl,
-      'duration': actualJson['duration'] ??
-                  actualJson['durationSeconds'] ??
-                  duration,
+      'duration': duration ?? // Use calculated duration from duration_ms first
+                  actualJson['duration'] ??
+                  actualJson['durationSeconds'],
       'status': actualJson['status'] ?? json['status'],
       'metadata': actualJson['metadata'] ?? json['metadata'],
     };
