@@ -61,9 +61,9 @@ extension TextModelDtoMapper on TextModelDto {
 extension TimecodeDtoMapper on TimecodeDto {
   Timecode toDomain() {
     return Timecode(
-      text: this.text,
-      startTime: Duration(milliseconds: this.start),
-      endTime: Duration(milliseconds: this.end),
+      text: text,
+      startTime: Duration(milliseconds: start),
+      endTime: Duration(milliseconds: end),
     );
   }
 }

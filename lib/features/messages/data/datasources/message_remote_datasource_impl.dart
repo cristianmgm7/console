@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
-import 'package:carbon_voice_console/features/messages/data/models/message_detail_response_dto.dart';
-import 'package:carbon_voice_console/features/messages/data/models/message_model.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -17,7 +15,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<List<MessageModel>> getMessages({
+  Future<List<MessageDto>> getMessages({
     required String conversationId,
     required int start,
     required int count,
@@ -64,14 +62,13 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
           );
         }
 
-        // Normalize and convert each message
+        // Convert each message JSON to DTO
         final messages = messagesJson
             .map((json) {
               if (json is! Map<String, dynamic>) {
                 throw FormatException('Message item is not a Map: ${json.runtimeType}');
               }
-              final normalized = JsonNormalizer.normalizeMessage(json);
-              return MessageModel.fromJson(normalized);
+              return MessageDto.fromJson(json);
             })
             .toList();
 
@@ -93,7 +90,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   }
 
   @override
-  Future<MessageModel> getMessage(String messageId) async {
+  Future<MessageDto> getMessage(String messageId) async {
     try {
       _logger.d('Fetching message: $messageId');
 
@@ -121,23 +118,17 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         if (messagesJson != null && messagesJson.isNotEmpty) {
           // Wrapped format - extract first message
           final firstMessageJson = messagesJson.first as Map<String, dynamic>;
-          final normalized = JsonNormalizer.normalizeMessage(firstMessageJson);
-          final messageModel = MessageModel.fromJson(normalized);
+          final messageDto = MessageDto.fromJson(firstMessageJson);
 
-          // Create typed DTO (for validation) then extract the message
-          final detailResponse = MessageDetailResponseDto.fromJson(
-            data,
-            [messageModel],
-          );
-
-          _logger.i('Fetched message: ${detailResponse.firstMessage.id} from channel: ${detailResponse.channelId}');
-          return detailResponse.firstMessage;
+          // Log channel info if available
+          final channelId = data['channel_id'] as String?;
+          _logger.i('Fetched message: ${messageDto.messageId}${channelId != null ? ' from channel: $channelId' : ''}');
+          return messageDto;
         } else {
-          // Direct format - normalize the entire response as a message
-          final normalized = JsonNormalizer.normalizeMessage(data);
-          final message = MessageModel.fromJson(normalized);
-          _logger.i('Fetched message: ${message.id}');
-          return message;
+          // Direct format - parse the entire response as a message
+          final messageDto = MessageDto.fromJson(data);
+          _logger.i('Fetched message: ${messageDto.messageId}');
+          return messageDto;
         }
       } else {
         _logger.e('Failed to fetch message: ${response.statusCode}');

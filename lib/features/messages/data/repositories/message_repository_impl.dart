@@ -2,6 +2,7 @@ import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/message_dto_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:injectable/injectable.dart';
@@ -41,13 +42,13 @@ class MessageRepositoryImpl implements MessageRepository {
         }).toList(),);
       }
 
-      final messageModels = await _remoteDataSource.getMessages(
+      final messageDtos = await _remoteDataSource.getMessages(
         conversationId: conversationId,
         start: start,
         count: count,
       );
 
-      final messages = messageModels.map((model) => model.toEntity()).toList();
+      final messages = messageDtos.map((dto) => dto.toDomain()).toList();
 
       // Merge with cache, removing duplicates
       final existingMessages = _cachedMessages[conversationId] ?? [];
@@ -91,8 +92,8 @@ class MessageRepositoryImpl implements MessageRepository {
         }
       }
 
-      final messageModel = await _remoteDataSource.getMessage(messageId);
-      final message = messageModel.toEntity();
+      final messageDto = await _remoteDataSource.getMessage(messageId);
+      final message = messageDto.toDomain();
 
       // Add to cache for the conversation
       final existingMessages = _cachedMessages[message.conversationId] ?? [];
@@ -140,13 +141,13 @@ class MessageRepositoryImpl implements MessageRepository {
       for (final conversationId in conversationIds) {
         _logger.d('Fetching messages for conversation: $conversationId');
         try {
-          final messageModels = await _remoteDataSource.getMessages(
+          final messageDtos = await _remoteDataSource.getMessages(
             conversationId: conversationId,
             start: 0, // Start from the beginning (most recent)
             count: count,
           );
 
-          final messages = messageModels.map((model) => model.toEntity()).toList();
+          final messages = messageDtos.map((dto) => dto.toDomain()).toList();
           allMessages.addAll(messages);
           _logger.i('Added ${messages.length} messages from conversation $conversationId');
         } on Exception catch (e) {
