@@ -1,7 +1,10 @@
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
@@ -106,6 +109,17 @@ class MessageCard extends StatelessWidget {
 
             const SizedBox(width: 16),
 
+            // Play button
+            IconButton(
+              icon: const Icon(Icons.play_circle_outline),
+              tooltip: 'Play audio',
+              onPressed: message.audioUrl != null && message.audioUrl!.isNotEmpty
+                  ? () => _handlePlayAudio(context, message)
+                  : null,
+            ),
+
+            const SizedBox(width: 8),
+
             // Menu
             PopupMenuButton(
               icon: const Icon(Icons.more_vert),
@@ -165,7 +179,6 @@ class MessageCard extends StatelessWidget {
                 switch (value) {
                   case 'view':
                     onViewDetail?.call(message.id);
-                    break;
                   // TODO: Implement other menu actions (edit, download, archive, delete)
                 }
               },
@@ -188,5 +201,32 @@ class MessageCard extends StatelessWidget {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _handlePlayAudio(BuildContext context, MessageUiModel message) {
+    if (message.audioUrl == null || message.audioUrl!.isEmpty) return;
+
+    // Get the audio player BLoC
+    final audioBloc = context.read<AudioPlayerBloc>();
+
+    // Load audio
+    audioBloc.add(LoadAudio(
+      messageId: message.id,
+      audioUrl: message.audioUrl!,
+      waveformData: message.audioModels.isNotEmpty
+          ? message.audioModels.first.waveformData
+          : [],
+    ),
+  );
+
+    // Auto-play after loading
+    audioBloc.add(const PlayAudio());
+
+    // Show player modal
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => const AudioPlayerSheet(),
+    );
   }
 }

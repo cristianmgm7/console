@@ -256,8 +256,8 @@ void main() {
     // Verify DTO parsing
     expect(dto.messageId, '1e054a70-c736-11f0-bea8-25c1d20899c8');
     expect(dto.creatorId, 'travis');
-    expect(dto.audioModels.length, 2);
-    expect(dto.textModels.length, 2);
+    expect(dto.audioModels?.length, 2);
+    expect(dto.textModels?.length, 2);
 
     // Convert to domain and verify
     final message = dto.toDomain();

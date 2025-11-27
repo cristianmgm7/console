@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
@@ -19,6 +20,9 @@ class BlocProviders {
         ),
         BlocProvider<MessageBloc>(
           create: (_) => getIt<MessageBloc>(),
+        ),
+        BlocProvider<AudioPlayerBloc>(
+          create: (_) => getIt<AudioPlayerBloc>(),
         ),
       ],
       child: const DashboardScreen(),

@@ -10,22 +10,31 @@ import 'package:carbon_voice_console/features/messages/domain/entities/text_mode
 /// Extension methods to convert DTOs to domain entities
 extension MessageDtoMapper on MessageDto {
   Message toDomain() {
+    if (messageId == null) {
+      throw FormatException('Message ID cannot be null');
+    }
+    if (creatorId == null) {
+      throw FormatException('Creator ID cannot be null');
+    }
+    if (createdAt == null) {
+      throw FormatException('Created at cannot be null');
+    }
     return Message(
-      id: messageId,
-      creatorId: creatorId,
-      createdAt: createdAt,
-      workspaceIds: workspaceIds,
-      channelIds: channelIds,
-      duration: Duration(milliseconds: durationMs),
-      audioModels: audioModels.map((dto) => dto.toDomain()).toList(),
-      textModels: textModels.map((dto) => dto.toDomain()).toList(),
-      status: status,
-      type: type,
+      id: messageId!,
+      creatorId: creatorId!,
+      createdAt: createdAt!,
+      workspaceIds: workspaceIds ?? [],
+      channelIds: channelIds ?? [],
+      duration: Duration(milliseconds: durationMs ?? 0),
+      audioModels: audioModels?.map((dto) => dto.toDomain()).toList() ?? [],
+      textModels: textModels?.map((dto) => dto.toDomain()).toList() ?? [],
+      status: status ?? 'unknown',
+      type: type ?? 'unknown',
       lastHeardAt: lastHeardAt,
-      heardDuration: Duration(milliseconds: heardMs),
-      totalHeardDuration: Duration(milliseconds: totalHeardMs),
-      isTextMessage: isTextMessage,
-      notes: notes,
+      heardDuration: heardMs != null ? Duration(milliseconds: heardMs!) : null,
+      totalHeardDuration: totalHeardMs != null ? Duration(milliseconds: totalHeardMs!) : null,
+      isTextMessage: isTextMessage ?? false,
+      notes: notes ?? '',
       lastUpdatedAt: lastUpdatedAt,
     );
   }

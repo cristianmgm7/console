@@ -110,8 +110,13 @@ class MessageRepositoryImpl implements MessageRepository {
     } on NetworkException catch (e) {
       _logger.e('Network error fetching message', error: e);
       return failure(NetworkFailure(details: e.message));
+    } on FormatException catch (e) {
+      _logger.e('Invalid message data from API - FormatException caught: ${e.message}');
+      final serverFailure = ServerFailure(statusCode: 422, details: 'Invalid message data received from server: ${e.message}');
+      _logger.d('Returning ServerFailure: $serverFailure');
+      return failure(serverFailure);
     } on Exception catch (e, stack) {
-      _logger.e('Unknown error fetching message', error: e, stackTrace: stack);
+      _logger.e('Unknown error fetching message - Exception caught: ${e.runtimeType}: $e', stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
     }
   }

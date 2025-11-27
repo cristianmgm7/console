@@ -89,14 +89,13 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
         // Detail endpoint can return two formats:
-        // 1. Wrapped: {"channel_id": "...", "messages": [{...}]}
-        // 2. Direct: {message object with all fields}
-        final messagesJson = data['messages'] as List<dynamic>?;
-        print (jsonEncode(data));
+        // 1. Channel format: {"channel_id": "...", "messages": [{message1}, {message2}, ...]}
+        // 2. Direct format: {message object with all fields}
+        final messagesArray = data['messages'] as List<dynamic>?;
 
-        if (messagesJson != null && messagesJson.isNotEmpty) {
-          // Wrapped format - extract first message
-          final firstMessageJson = messagesJson.first as Map<String, dynamic>;
+        if (messagesArray != null && messagesArray.isNotEmpty) {
+          // Wrapped format - extract first message from messages array
+          final firstMessageJson = messagesArray.first as Map<String, dynamic>;
           final messageDto = MessageDto.fromJson(firstMessageJson);
 
           // Log channel info if available

@@ -1264,9 +1264,9 @@ audioModels: audioModels,
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Code generation completes: `flutter pub run build_runner build`
-- [ ] No compilation errors: `flutter analyze`
-- [ ] Build succeeds: `flutter build web`
+- [x] Code generation completes: `flutter pub run build_runner build`
+- [x] No compilation errors: `flutter analyze`
+- [x] Build succeeds: `flutter build web`
 
 #### Manual Verification:
 - [ ] Play button appears on message cards with audio

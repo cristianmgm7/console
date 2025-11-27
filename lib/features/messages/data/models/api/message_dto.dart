@@ -38,34 +38,34 @@ class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, M
 @JsonSerializable()
 class MessageDto {
   const MessageDto({
-    required this.heardMs,
     required this.utmData,
-    required this.messageId,
+    this.messageId,
     required this.creatorId,
     required this.createdAt,
-    required this.lastUpdatedAt,
-    required this.workspaceIds,
-    required this.channelIds,
-    required this.durationMs,
-    required this.attachments,
-    required this.notes,
-    required this.notify,
-    required this.lastHeardUpdate,
+    this.lastUpdatedAt,
+    this.workspaceIds,
+    this.channelIds,
+    this.attachments,
+    this.notes,
+    this.notify,
+    this.lastHeardUpdate,
     required this.reactionSummary,
-    required this.isTextMessage,
-    required this.status,
-    required this.labelIds,
-    required this.audioModels,
-    required this.textModels,
-    required this.cacheKey,
-    required this.audioDelivery,
-    required this.notifiedUsers,
-    required this.totalHeardMs,
-    required this.usersCaughtUp,
-    required this.socketDisconnectsWhileStreaming,
-    required this.type,
-    required this.channelSequence,
-    required this.lastHeardAt,
+    this.isTextMessage,
+    this.status,
+    this.labelIds,
+    this.audioModels,
+    this.textModels,
+    this.cacheKey,
+    this.audioDelivery,
+    this.usersCaughtUp,
+    this.type,
+    this.lastHeardAt,
+    this.heardMs,
+    this.durationMs,
+    this.notifiedUsers,
+    this.totalHeardMs,
+    this.socketDisconnectsWhileStreaming,
+    this.channelSequence,
     this.deletedAt,
     this.parentMessageId,
     this.name,
@@ -83,7 +83,7 @@ class MessageDto {
   final String? parentMessageId;
 
   @JsonKey(name: 'heard_ms')
-  final int heardMs;
+  final int? heardMs;
 
   @UtmDataDtoConverter()
   @JsonKey(name: 'utm_data')
@@ -95,65 +95,65 @@ class MessageDto {
   final String? sourceMessageId;
 
   @JsonKey(name: 'message_id')
-  final String messageId;
+  final String? messageId;
 
   @JsonKey(name: 'creator_id')
-  final String creatorId;
+  final String? creatorId;
 
   @JsonKey(name: 'created_at')
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   @JsonKey(name: 'last_updated_at')
-  final DateTime lastUpdatedAt;
+  final DateTime? lastUpdatedAt;
 
   @JsonKey(name: 'workspace_ids')
-  final List<String> workspaceIds;
+  final List<String>? workspaceIds;
 
   @JsonKey(name: 'channel_ids')
-  final List<String> channelIds;
+  final List<String>? channelIds;
 
   @JsonKey(name: 'duration_ms')
-  final int durationMs;
+  final int? durationMs;
 
-  final List<dynamic> attachments;
-  final String notes;
-  final bool notify;
+  final List<dynamic>? attachments;
+  final String? notes;
+  final bool? notify;
 
   @JsonKey(name: 'last_heard_update')
-  final DateTime lastHeardUpdate;
+  final DateTime? lastHeardUpdate;
 
   @ReactionSummaryDtoConverter()
   @JsonKey(name: 'reaction_summary')
   final ReactionSummaryDto reactionSummary;
 
   @JsonKey(name: 'is_text_message')
-  final bool isTextMessage;
+  final bool? isTextMessage;
 
-  final String status;
+  final String? status;
 
   @JsonKey(name: 'label_ids')
-  final List<String> labelIds;
+  final List<String>? labelIds;
 
   @JsonKey(name: 'audio_models')
-  final List<AudioModelDto> audioModels;
+  final List<AudioModelDto>? audioModels;
 
   @JsonKey(name: 'text_models')
-  final List<TextModelDto> textModels;
+  final List<TextModelDto>? textModels;
 
   @JsonKey(name: 'cache_key')
-  final String cacheKey;
+  final String? cacheKey;
 
   @JsonKey(name: 'audio_delivery')
-  final String audioDelivery;
+  final String? audioDelivery;
 
   @JsonKey(name: 'notified_users')
-  final int notifiedUsers;
+  final int? notifiedUsers;
 
   @JsonKey(name: 'total_heard_ms')
-  final int totalHeardMs;
+  final int? totalHeardMs;
 
   @JsonKey(name: 'users_caught_up')
-  final String usersCaughtUp;
+  final String? usersCaughtUp;
 
   @JsonKey(name: 'forward_id')
   final String? forwardId;
@@ -162,18 +162,18 @@ class MessageDto {
   final String? shareLinkId;
 
   @JsonKey(name: 'socket_disconnects_while_streaming')
-  final int socketDisconnectsWhileStreaming;
+  final int? socketDisconnectsWhileStreaming;
 
   @JsonKey(name: 'stream_key')
   final String? streamKey;
 
-  final String type;
+  final String? type;
 
   @JsonKey(name: 'channel_sequence')
-  final int channelSequence;
+  final int? channelSequence;
 
   @JsonKey(name: 'last_heard_at')
-  final DateTime lastHeardAt;
+  final DateTime? lastHeardAt;
 
   @JsonKey(name: 'folder_id')
   final String? folderId;
