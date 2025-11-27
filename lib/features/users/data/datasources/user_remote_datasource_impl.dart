@@ -19,7 +19,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   Future<UserModel> getUser(String userId) async {
     try {
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/users/$userId',
+        '${OAuthConfig.apiBaseUrl}/user/profile/$userId',
       );
 
       if (response.statusCode == 200) {
