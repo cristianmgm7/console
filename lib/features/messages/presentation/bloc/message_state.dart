@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:equatable/equatable.dart';
 
@@ -24,7 +24,7 @@ class MessageLoaded extends MessageState {
     this.isLoadingMore = false,
     this.hasMoreMessages = true,
   });
-  final List<Message> messages;
+  final List<MessageUiModel> messages;
   final Map<String, User> users;
   final bool isLoadingMore;
   final bool hasMoreMessages;
@@ -33,7 +33,7 @@ class MessageLoaded extends MessageState {
   List<Object?> get props => [messages, users, isLoadingMore, hasMoreMessages];
 
   MessageLoaded copyWith({
-    List<Message>? messages,
+    List<MessageUiModel>? messages,
     Map<String, User>? users,
     bool? isLoadingMore,
     bool? hasMoreMessages,

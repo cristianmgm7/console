@@ -2,9 +2,10 @@ import 'package:carbon_voice_console/features/messages/domain/entities/audio_mod
 import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
 import 'package:equatable/equatable.dart';
 
-/// Domain entity representing a message
-class Message extends Equatable {
-  const Message({
+/// UI model for message presentation
+/// Contains computed properties for presentation layer
+class MessageUiModel extends Equatable {
+  const MessageUiModel({
     required this.id,
     required this.creatorId,
     required this.createdAt,
@@ -15,14 +16,21 @@ class Message extends Equatable {
     required this.textModels,
     required this.status,
     required this.type,
-    this.lastHeardAt,
-    this.heardDuration,
-    this.totalHeardDuration,
-    this.isTextMessage = false,
-    this.notes = '',
-    this.lastUpdatedAt,
+    required this.lastHeardAt,
+    required this.heardDuration,
+    required this.totalHeardDuration,
+    required this.isTextMessage,
+    required this.notes,
+    required this.lastUpdatedAt,
+    // Computed properties for UI
+    required this.conversationId,
+    required this.userId,
+    required this.text,
+    required this.transcriptText,
+    required this.audioUrl,
   });
 
+  // Original message properties
   final String id;
   final String creatorId;
   final DateTime createdAt;
@@ -40,9 +48,12 @@ class Message extends Equatable {
   final String notes;
   final DateTime? lastUpdatedAt;
 
-  // Domain-level computed properties (simple aliases)
-  String get conversationId => channelIds.isNotEmpty ? channelIds.first : '';
-  String get userId => creatorId;
+  // Computed UI properties
+  final String conversationId;
+  final String userId;
+  final String? text;
+  final String? transcriptText;
+  final String? audioUrl;
 
   @override
   List<Object?> get props => [
@@ -62,5 +73,10 @@ class Message extends Equatable {
         isTextMessage,
         notes,
         lastUpdatedAt,
+        conversationId,
+        userId,
+        text,
+        transcriptText,
+        audioUrl,
       ];
 }

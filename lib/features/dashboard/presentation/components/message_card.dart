@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 
@@ -11,7 +11,7 @@ class MessageCard extends StatelessWidget {
     super.key,
   });
 
-  final Message message;
+  final MessageUiModel message;
   final User? user;
   final bool isSelected;
   final ValueChanged<bool?> onSelected;

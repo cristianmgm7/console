@@ -6,6 +6,8 @@ import 'package:carbon_voice_console/features/message_download/domain/entities/d
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_summary.dart';
 import 'package:carbon_voice_console/features/message_download/domain/repositories/download_repository.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
+import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -72,17 +74,18 @@ class DownloadMessagesUsecase {
       messageIndex++;
 
       result.fold(
-        onSuccess: (message) {
+        onSuccess: (Message message) {
+          final uiMessage = message.toUiModel();
           var hasDownloadableContent = false;
 
           // Add audio download item if URL exists and audio is requested
           if (downloadType == DownloadType.audio || downloadType == DownloadType.both) {
-            if (message.audioUrl != null && message.audioUrl!.isNotEmpty) {
+            if (uiMessage.audioUrl != null && uiMessage.audioUrl!.isNotEmpty) {
               downloadItems.add(DownloadItem(
-                messageId: message.id,
+                messageId: uiMessage.id,
                 type: DownloadItemType.audio,
-                url: message.audioUrl!,
-                fileName: '${message.id}.mp3', // Extension will be corrected based on Content-Type
+                url: uiMessage.audioUrl!,
+                fileName: '${uiMessage.id}.mp3', // Extension will be corrected based on Content-Type
               ),);
               hasDownloadableContent = true;
             }
@@ -90,13 +93,13 @@ class DownloadMessagesUsecase {
 
           // Add transcript download item if content exists and transcript is requested
           if (downloadType == DownloadType.transcript || downloadType == DownloadType.both) {
-            final transcriptContent = message.transcriptText ?? message.text;
+            final transcriptContent = uiMessage.transcriptText ?? uiMessage.text;
             if (transcriptContent != null && transcriptContent.isNotEmpty) {
               downloadItems.add(DownloadItem(
-                messageId: message.id,
+                messageId: uiMessage.id,
                 type: DownloadItemType.transcript,
                 url: transcriptContent, // For transcripts, we store content in 'url' field
-                fileName: '${message.id}.txt',
+                fileName: '${uiMessage.id}.txt',
               ),);
               hasDownloadableContent = true;
             }
@@ -104,8 +107,8 @@ class DownloadMessagesUsecase {
 
           // Track messages with no downloadable content
           if (!hasDownloadableContent) {
-            _logger.w('Message ${message.id} has no requested content to download (type: $downloadType)');
-            skippedMessages.add(message.id);
+            _logger.w('Message ${uiMessage.id} has no requested content to download (type: $downloadType)');
+            skippedMessages.add(uiMessage.id);
           }
         },
         onFailure: (failure) {

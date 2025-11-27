@@ -1,6 +1,6 @@
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 
@@ -22,8 +22,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   );
 
   // Dummy data
-  final List<Message> _messages = [
-    Message(
+  final List<MessageUiModel> _messages = [
+    MessageUiModel(
       id: '1',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 26, 15, 45),
@@ -34,9 +34,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'Processed',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Quick team standup notes and action items.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Quick team standup notes and action items.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '2',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 26, 14, 10),
@@ -47,9 +57,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'New',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Client feedback and feature requests discussion.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Client feedback and feature requests discussion.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '3',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 26, 11, 55),
@@ -60,9 +80,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'Processed',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Product roadmap planning for next quarter.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Product roadmap planning for next quarter.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '4',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 25, 9, 30),
@@ -73,9 +103,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'Processed',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Design review and UI/UX feedback session.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Design review and UI/UX feedback session.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '5',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 26, 8, 55),
@@ -86,9 +126,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'New',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Bug triage and priority discussion.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Bug triage and priority discussion.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '6',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 24, 16, 20),
@@ -99,9 +149,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'Archived',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Interview notes and candidate evaluation.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Interview notes and candidate evaluation.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '7',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 23, 14, 15),
@@ -112,9 +172,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'Processed',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Sprint retrospective and improvement ideas.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Sprint retrospective and improvement ideas.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    Message(
+    MessageUiModel(
       id: '8',
       creatorId: 'user-1',
       createdAt: DateTime(2023, 10, 22, 10, 45),
@@ -125,7 +195,17 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       textModels: [],
       status: 'Processed',
       type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
       notes: 'Technical architecture discussion and decisions.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Technical architecture discussion and decisions.',
+      transcriptText: null,
+      audioUrl: null,
     ),
   ];
 

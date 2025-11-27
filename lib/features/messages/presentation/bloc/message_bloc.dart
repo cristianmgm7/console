@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
+import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
@@ -86,13 +87,13 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       onSuccess: (users) {
         final userMap = {for (final u in users) u.id: u};
         emit(MessageLoaded(
-          messages: messages,
+          messages: messages.map((message) => message.toUiModel()).toList(),
           users: userMap,
           hasMoreMessages: messages.length == _messagesPerPage,
         ),);
       },
       onFailure: (_) => emit(MessageLoaded(
-        messages: messages,
+        messages: messages.map((message) => message.toUiModel()).toList(),
         users: const {},
         hasMoreMessages: messages.length == _messagesPerPage,
       ),),
@@ -127,8 +128,9 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         return;
       }
 
-      // Merge with existing messages
-      final allMessages = [...currentState.messages, ...newMessages];
+      // Merge with existing messages (convert new messages to UI models)
+      final newUiMessages = newMessages.map((message) => message.toUiModel()).toList();
+      final allMessages = [...currentState.messages, ...newUiMessages];
 
       // Load new users
       final newUserIds = newMessages.map((m) => m.userId).toSet().toList();
