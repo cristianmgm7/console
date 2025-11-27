@@ -28,7 +28,6 @@ class MessageDetailPanel extends StatelessWidget {
             border: Border(
               left: BorderSide(
                 color: Theme.of(context).dividerColor,
-                width: 1,
               ),
             ),
           ),
