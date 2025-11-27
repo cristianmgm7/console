@@ -21,6 +21,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     on<LoadMoreMessages>(_onLoadMoreMessages);
     on<RefreshMessages>(_onRefreshMessages);
     on<ConversationSelectedEvent>(_onConversationSelected);
+    on<LoadMessageDetail>(_onLoadMessageDetail);
   }
 
   final MessageRepository _messageRepository;
@@ -169,5 +170,23 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     if (_currentConversationIds.isEmpty) return;
 
     add(LoadMessages(_currentConversationIds));
+  }
+
+  Future<void> _onLoadMessageDetail(
+    LoadMessageDetail event,
+    Emitter<MessageState> emit,
+  ) async {
+    emit(const MessageLoading());
+    final result = await _messageRepository.getMessage(event.messageId);
+
+    if (result.isSuccess) {
+      final message = result.valueOrNull!.toUiModel();
+      final userResult = await _userRepository.getUsers([message.userId]);
+      final user = userResult.valueOrNull?.firstOrNull;
+
+      emit(MessageDetailLoaded(message: message, user: user));
+    } else {
+      emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
+    }
   }
 }

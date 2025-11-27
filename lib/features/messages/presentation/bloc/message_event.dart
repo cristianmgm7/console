@@ -31,3 +31,11 @@ class ConversationSelectedEvent extends MessageEvent {
   @override
   List<Object?> get props => [conversationIds];
 }
+
+class LoadMessageDetail extends MessageEvent {
+  const LoadMessageDetail(this.messageId);
+  final String messageId;
+
+  @override
+  List<Object?> get props => [messageId];
+}

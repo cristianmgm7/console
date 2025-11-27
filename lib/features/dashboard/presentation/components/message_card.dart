@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
@@ -159,7 +160,12 @@ class MessageCard extends StatelessWidget {
                 ),
               ],
               onSelected: (value) {
-                // TODO: Implement menu actions
+                switch (value) {
+                  case 'view':
+                    context.go('/dashboard/messages/${message.id}');
+                    break;
+                  // TODO: Implement other menu actions (edit, download, archive, delete)
+                }
               },
             ),
           ],

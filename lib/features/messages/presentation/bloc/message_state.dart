@@ -54,3 +54,15 @@ class MessageError extends MessageState {
   @override
   List<Object?> get props => [message];
 }
+
+class MessageDetailLoaded extends MessageState {
+  const MessageDetailLoaded({
+    required this.message,
+    required this.user,
+  });
+  final MessageUiModel message;
+  final User? user;
+
+  @override
+  List<Object?> get props => [message, user];
+}
