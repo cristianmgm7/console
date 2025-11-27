@@ -3,6 +3,9 @@ import 'package:carbon_voice_console/features/messages/domain/entities/message.d
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart';
+
+// Remove LoadMessageDetail import - now handled by MessageDetailBloc
+// import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
@@ -16,12 +19,11 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     this._messageRepository,
     this._userRepository,
     this._logger,
-    ) : super(const MessageInitial()) {
+  ) : super(const MessageInitial()) {
     on<LoadMessages>(_onLoadMessages);
     on<LoadMoreMessages>(_onLoadMoreMessages);
     on<RefreshMessages>(_onRefreshMessages);
     on<ConversationSelectedEvent>(_onConversationSelected);
-    on<LoadMessageDetail>(_onLoadMessageDetail);
   }
 
   final MessageRepository _messageRepository;
@@ -172,21 +174,4 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     add(LoadMessages(_currentConversationIds));
   }
 
-  Future<void> _onLoadMessageDetail(
-    LoadMessageDetail event,
-    Emitter<MessageState> emit,
-  ) async {
-    emit(const MessageLoading());
-    final result = await _messageRepository.getMessage(event.messageId);
-
-    if (result.isSuccess) {
-      final message = result.valueOrNull!.toUiModel();
-      final userResult = await _userRepository.getUsers([message.userId]);
-      final user = userResult.valueOrNull?.firstOrNull;
-
-      emit(MessageDetailLoaded(message: message, user: user));
-    } else {
-      emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
-    }
-  }
 }

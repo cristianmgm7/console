@@ -94,7 +94,7 @@ class MessageDto {
   @JsonKey(name: 'source_message_id')
   final String? sourceMessageId;
 
-  @JsonKey(name: 'id')
+  @JsonKey(name: 'message_id')
   final String? messageId;
 
   @JsonKey(name: 'creator_id')

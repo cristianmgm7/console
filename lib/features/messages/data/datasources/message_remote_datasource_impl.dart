@@ -29,7 +29,9 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
+        _logger.d('Messages API raw response: ${response.body}');
         final data = jsonDecode(response.body);
+        _logger.d('Parsed messages data type: ${data.runtimeType}');
 
         // API returns: [{message}, {message}, ...]
         if (data is! List) {
@@ -39,17 +41,23 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         }
 
         final messagesJson = data;
-        _logger.d('Received ${messagesJson.length} messages');
+        _logger.d('Received ${messagesJson.length} messages from API');
 
         // Convert each message JSON to DTO
-        final messages = messagesJson
-            .map((json) {
-              if (json is! Map<String, dynamic>) {
-                throw FormatException('Message item is not a Map: ${json.runtimeType}');
-              }
-              return MessageDto.fromJson(json);
-            })
-            .toList();
+        final messages = <MessageDto>[];
+        for (final json in messagesJson) {
+          try {
+            if (json is! Map<String, dynamic>) {
+              throw FormatException('Message item is not a Map: ${json.runtimeType}');
+            }
+            final messageDto = MessageDto.fromJson(json);
+            messages.add(messageDto);
+          } catch (e, stack) {
+            _logger.e('Failed to parse message in list: $e', error: e, stackTrace: stack);
+            _logger.d('Failed message JSON: $json');
+            // Continue with other messages instead of failing completely
+          }
+        }
 
         _logger.i('Successfully fetched and normalized ${messages.length} messages');
         return messages;
@@ -101,7 +109,15 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
           // Check if message data is not empty
           if (messageData.isNotEmpty) {
             try {
-              final messageDto = MessageDto.fromJson(messageData);
+              // Handle field name differences between APIs
+              // Single message API uses 'id', list API uses 'message_id'
+              final normalizedData = Map<String, dynamic>.from(messageData);
+              if (normalizedData.containsKey('id') && !normalizedData.containsKey('message_id')) {
+                normalizedData['message_id'] = normalizedData['id'];
+                normalizedData.remove('id');
+              }
+
+              final messageDto = MessageDto.fromJson(normalizedData);
 
               // Log channel info if available
               final channelId = data['channel_id'] as String?;
@@ -126,7 +142,15 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
           if (hasMessageFields) {
             try {
-              final messageDto = MessageDto.fromJson(data);
+              // Handle field name differences between APIs
+              // Single message API uses 'id', list API uses 'message_id'
+              final normalizedData = Map<String, dynamic>.from(data);
+              if (normalizedData.containsKey('id') && !normalizedData.containsKey('message_id')) {
+                normalizedData['message_id'] = normalizedData['id'];
+                normalizedData.remove('id');
+              }
+
+              final messageDto = MessageDto.fromJson(normalizedData);
               _logger.i('Fetched message: ${messageDto.messageId ?? "null"}');
               return messageDto;
             } catch (e, stack) {
