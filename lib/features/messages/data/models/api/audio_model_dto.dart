@@ -1,4 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'audio_model_dto.g.dart';
+
 /// DTO for audio model in message
+@JsonSerializable()
 class AudioModelDto {
   const AudioModelDto({
     required this.id,
@@ -11,40 +16,25 @@ class AudioModelDto {
     required this.extension,
   });
 
+  @JsonKey(name: '_id')
   final String id;
+
   final String url;
   final bool streaming;
   final String language;
+
+  @JsonKey(name: 'duration_ms')
   final int durationMs;
+
+  @JsonKey(name: 'waveform_percentages')
   final List<double> waveformPercentages;
+
+  @JsonKey(name: 'is_original_audio')
   final bool isOriginalAudio;
+
   final String extension;
 
-  factory AudioModelDto.fromJson(Map<String, dynamic> json) {
-    return AudioModelDto(
-      id: json['_id'] as String,
-      url: json['url'] as String,
-      streaming: json['streaming'] as bool,
-      language: json['language'] as String,
-      durationMs: (json['duration_ms'] as num?)?.toInt() ?? 0,
-      waveformPercentages: (json['waveform_percentages'] as List<dynamic>)
-          .map((e) => (e as num).toDouble())
-          .toList(),
-      isOriginalAudio: json['is_original_audio'] as bool,
-      extension: json['extension'] as String,
-    );
-  }
+  factory AudioModelDto.fromJson(Map<String, dynamic> json) => _$AudioModelDtoFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      '_id': id,
-      'url': url,
-      'streaming': streaming,
-      'language': language,
-      'duration_ms': durationMs,
-      'waveform_percentages': waveformPercentages,
-      'is_original_audio': isOriginalAudio,
-      'extension': extension,
-    };
-  }
+  Map<String, dynamic> toJson() => _$AudioModelDtoToJson(this);
 }

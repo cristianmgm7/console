@@ -1,9 +1,13 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/audio_model_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/reaction_summary_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/text_model_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/utm_data_dto.dart';
 
+part 'message_dto.g.dart';
+
 /// DTO for message from API response
+@JsonSerializable()
 class MessageDto {
   const MessageDto({
     required this.heardMs,
@@ -44,139 +48,107 @@ class MessageDto {
     this.folderId,
   });
 
+  @JsonKey(name: 'deleted_at')
   final DateTime? deletedAt;
+
+  @JsonKey(name: 'parent_message_id')
   final String? parentMessageId;
+
+  @JsonKey(name: 'heard_ms')
   final int heardMs;
+
+  @JsonKey(name: 'utm_data')
   final UtmDataDto utmData;
+
   final String? name;
+
+  @JsonKey(name: 'source_message_id')
   final String? sourceMessageId;
+
+  @JsonKey(name: 'message_id')
   final String messageId;
+
+  @JsonKey(name: 'creator_id')
   final String creatorId;
+
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+
+  @JsonKey(name: 'last_updated_at')
   final DateTime lastUpdatedAt;
+
+  @JsonKey(name: 'workspace_ids')
   final List<String> workspaceIds;
+
+  @JsonKey(name: 'channel_ids')
   final List<String> channelIds;
+
+  @JsonKey(name: 'duration_ms')
   final int durationMs;
+
   final List<dynamic> attachments;
   final String notes;
   final bool notify;
+
+  @JsonKey(name: 'last_heard_update')
   final DateTime lastHeardUpdate;
+
+  @JsonKey(name: 'reaction_summary')
   final ReactionSummaryDto reactionSummary;
+
+  @JsonKey(name: 'is_text_message')
   final bool isTextMessage;
+
   final String status;
+
+  @JsonKey(name: 'label_ids')
   final List<String> labelIds;
+
+  @JsonKey(name: 'audio_models')
   final List<AudioModelDto> audioModels;
+
+  @JsonKey(name: 'text_models')
   final List<TextModelDto> textModels;
+
+  @JsonKey(name: 'cache_key')
   final String cacheKey;
+
+  @JsonKey(name: 'audio_delivery')
   final String audioDelivery;
+
+  @JsonKey(name: 'notified_users')
   final int notifiedUsers;
+
+  @JsonKey(name: 'total_heard_ms')
   final int totalHeardMs;
+
+  @JsonKey(name: 'users_caught_up')
   final String usersCaughtUp;
+
+  @JsonKey(name: 'forward_id')
   final String? forwardId;
+
+  @JsonKey(name: 'share_link_id')
   final String? shareLinkId;
+
+  @JsonKey(name: 'socket_disconnects_while_streaming')
   final int socketDisconnectsWhileStreaming;
+
+  @JsonKey(name: 'stream_key')
   final String? streamKey;
+
   final String type;
+
+  @JsonKey(name: 'channel_sequence')
   final int channelSequence;
+
+  @JsonKey(name: 'last_heard_at')
   final DateTime lastHeardAt;
+
+  @JsonKey(name: 'folder_id')
   final String? folderId;
 
-  factory MessageDto.fromJson(Map<String, dynamic> json) {
-    return MessageDto(
-      deletedAt: json['deleted_at'] != null
-          ? DateTime.parse(json['deleted_at'] as String)
-          : null,
-      parentMessageId: json['parent_message_id'] as String?,
-      heardMs: (json['heard_ms'] as num?)?.toInt() ?? 0,
-      utmData: json['utm_data'] != null
-          ? UtmDataDto.fromJson(json['utm_data'] as Map<String, dynamic>)
-          : const UtmDataDto(),
-      name: json['name'] as String?,
-      sourceMessageId: json['source_message_id'] as String?,
-      messageId: json['message_id'] as String,
-      creatorId: json['creator_id'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      lastUpdatedAt: DateTime.parse(json['last_updated_at'] as String),
-      workspaceIds: (json['workspace_ids'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ?? [],
-      channelIds: (json['channel_ids'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ?? [],
-      durationMs: (json['duration_ms'] as num?)?.toInt() ?? 0,
-      attachments: json['attachments'] as List<dynamic>? ?? [],
-      notes: json['notes'] as String,
-      notify: json['notify'] as bool,
-      lastHeardUpdate: DateTime.parse(json['last_heard_update'] as String),
-      reactionSummary: json['reaction_summary'] != null
-          ? ReactionSummaryDto.fromJson(json['reaction_summary'] as Map<String, dynamic>)
-          : const ReactionSummaryDto(reactionCounts: {}, topUserReactions: []),
-      isTextMessage: json['is_text_message'] as bool,
-      status: json['status'] as String,
-      labelIds: (json['label_ids'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      audioModels: (json['audio_models'] as List<dynamic>?)
-          ?.map((e) => AudioModelDto.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
-      textModels: (json['text_models'] as List<dynamic>?)
-          ?.map((e) => TextModelDto.fromJson(e as Map<String, dynamic>))
-          .toList() ?? [],
-      cacheKey: json['cache_key'] as String,
-      audioDelivery: json['audio_delivery'] as String,
-      notifiedUsers: (json['notified_users'] as num?)?.toInt() ?? 0,
-      totalHeardMs: (json['total_heard_ms'] as num?)?.toInt() ?? 0,
-      usersCaughtUp: json['users_caught_up'] as String,
-      forwardId: json['forward_id'] as String?,
-      shareLinkId: json['share_link_id'] as String?,
-      socketDisconnectsWhileStreaming:
-          (json['socket_disconnects_while_streaming'] as num?)?.toInt() ?? 0,
-      streamKey: json['stream_key'] as String?,
-      type: json['type'] as String,
-      channelSequence: (json['channel_sequence'] as num?)?.toInt() ?? 0,
-      lastHeardAt: DateTime.parse(json['last_heard_at'] as String),
-      folderId: json['folder_id'] as String?,
-    );
-  }
+  factory MessageDto.fromJson(Map<String, dynamic> json) => _$MessageDtoFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      if (deletedAt != null) 'deleted_at': deletedAt!.toIso8601String(),
-      if (parentMessageId != null) 'parent_message_id': parentMessageId,
-      'heard_ms': heardMs,
-      'utm_data': utmData.toJson(),
-      if (name != null) 'name': name,
-      if (sourceMessageId != null) 'source_message_id': sourceMessageId,
-      'message_id': messageId,
-      'creator_id': creatorId,
-      'created_at': createdAt.toIso8601String(),
-      'last_updated_at': lastUpdatedAt.toIso8601String(),
-      'workspace_ids': workspaceIds,
-      'channel_ids': channelIds,
-      'duration_ms': durationMs,
-      'attachments': attachments,
-      'notes': notes,
-      'notify': notify,
-      'last_heard_update': lastHeardUpdate.toIso8601String(),
-      'reaction_summary': reactionSummary.toJson(),
-      'is_text_message': isTextMessage,
-      'status': status,
-      'label_ids': labelIds,
-      'audio_models': audioModels.map((e) => e.toJson()).toList(),
-      'text_models': textModels.map((e) => e.toJson()).toList(),
-      'cache_key': cacheKey,
-      'audio_delivery': audioDelivery,
-      'notified_users': notifiedUsers,
-      'total_heard_ms': totalHeardMs,
-      'users_caught_up': usersCaughtUp,
-      if (forwardId != null) 'forward_id': forwardId,
-      if (shareLinkId != null) 'share_link_id': shareLinkId,
-      'socket_disconnects_while_streaming': socketDisconnectsWhileStreaming,
-      if (streamKey != null) 'stream_key': streamKey,
-      'type': type,
-      'channel_sequence': channelSequence,
-      'last_heard_at': lastHeardAt.toIso8601String(),
-      if (folderId != null) 'folder_id': folderId,
-    };
-  }
+  Map<String, dynamic> toJson() => _$MessageDtoToJson(this);
 }

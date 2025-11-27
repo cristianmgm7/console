@@ -1,6 +1,10 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/timecode_dto.dart';
 
+part 'text_model_dto.g.dart';
+
 /// DTO for text model in message
+@JsonSerializable()
 class TextModelDto {
   const TextModelDto({
     required this.type,
@@ -10,31 +14,18 @@ class TextModelDto {
     required this.timecodes,
   });
 
-  factory TextModelDto.fromJson(Map<String, dynamic> json) {
-    return TextModelDto(
-      type: json['type'] as String,
-      audioId: json['audio_id'] as String,
-      languageId: json['language_id'] as String,
-      value: json['value'] as String,
-      timecodes: (json['timecodes'] as List<dynamic>)
-          .map((e) => TimecodeDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-  }
-
   final String type;
+
+  @JsonKey(name: 'audio_id')
   final String audioId;
+
+  @JsonKey(name: 'language_id')
   final String languageId;
+
   final String value;
   final List<TimecodeDto> timecodes;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'audio_id': audioId,
-      'language_id': languageId,
-      'value': value,
-      'timecodes': timecodes.map((e) => e.toJson()).toList(),
-    };
-  }
+  factory TextModelDto.fromJson(Map<String, dynamic> json) => _$TextModelDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TextModelDtoToJson(this);
 }

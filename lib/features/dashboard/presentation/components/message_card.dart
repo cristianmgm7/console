@@ -133,7 +133,7 @@ class MessageCard extends StatelessWidget {
             SizedBox(
               width: 60,
               child: Text(
-                _formatDuration(message.duration ?? Duration.zero),
+                _formatDuration(message.duration),
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -147,12 +147,12 @@ class MessageCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(message.status ?? 'Unknown', context),
+                    color: _getStatusColor(message.status, context),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Center(
                     child: Text(
-                      message.status ?? 'Unknown',
+                      message.status,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,

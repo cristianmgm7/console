@@ -1,4 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'utm_data_dto.g.dart';
+
 /// DTO for UTM data in message
+@JsonSerializable()
 class UtmDataDto {
   const UtmDataDto({
     this.utmSource,
@@ -8,29 +13,22 @@ class UtmDataDto {
     this.utmContent,
   });
 
+  @JsonKey(name: 'utm_source')
   final String? utmSource;
+
+  @JsonKey(name: 'utm_medium')
   final String? utmMedium;
+
+  @JsonKey(name: 'utm_campaign')
   final String? utmCampaign;
+
+  @JsonKey(name: 'utm_term')
   final String? utmTerm;
+
+  @JsonKey(name: 'utm_content')
   final String? utmContent;
 
-  factory UtmDataDto.fromJson(Map<String, dynamic> json) {
-    return UtmDataDto(
-      utmSource: json['utm_source'] as String?,
-      utmMedium: json['utm_medium'] as String?,
-      utmCampaign: json['utm_campaign'] as String?,
-      utmTerm: json['utm_term'] as String?,
-      utmContent: json['utm_content'] as String?,
-    );
-  }
+  factory UtmDataDto.fromJson(Map<String, dynamic> json) => _$UtmDataDtoFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      if (utmSource != null) 'utm_source': utmSource,
-      if (utmMedium != null) 'utm_medium': utmMedium,
-      if (utmCampaign != null) 'utm_campaign': utmCampaign,
-      if (utmTerm != null) 'utm_term': utmTerm,
-      if (utmContent != null) 'utm_content': utmContent,
-    };
-  }
+  Map<String, dynamic> toJson() => _$UtmDataDtoToJson(this);
 }
