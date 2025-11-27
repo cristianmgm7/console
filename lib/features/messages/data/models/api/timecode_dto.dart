@@ -15,8 +15,8 @@ class TimecodeDto {
   factory TimecodeDto.fromJson(Map<String, dynamic> json) {
     return TimecodeDto(
       text: json['t'] as String,
-      start: json['s'] as int,
-      end: json['e'] as int,
+      start: (json['s'] as num?)?.toInt() ?? 0,
+      end: (json['e'] as num?)?.toInt() ?? 0,
     );
   }
 

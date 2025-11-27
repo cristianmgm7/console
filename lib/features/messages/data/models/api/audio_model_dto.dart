@@ -26,7 +26,7 @@ class AudioModelDto {
       url: json['url'] as String,
       streaming: json['streaming'] as bool,
       language: json['language'] as String,
-      durationMs: json['duration_ms'] as int,
+      durationMs: (json['duration_ms'] as num?)?.toInt() ?? 0,
       waveformPercentages: (json['waveform_percentages'] as List<dynamic>)
           .map((e) => (e as num).toDouble())
           .toList(),

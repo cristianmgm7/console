@@ -87,7 +87,7 @@ class MessageDto {
           ? DateTime.parse(json['deleted_at'] as String)
           : null,
       parentMessageId: json['parent_message_id'] as String?,
-      heardMs: json['heard_ms'] as int,
+      heardMs: (json['heard_ms'] as num?)?.toInt() ?? 0,
       utmData: json['utm_data'] != null
           ? UtmDataDto.fromJson(json['utm_data'] as Map<String, dynamic>)
           : const UtmDataDto(),
@@ -103,7 +103,7 @@ class MessageDto {
       channelIds: (json['channel_ids'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList() ?? [],
-      durationMs: json['duration_ms'] as int,
+      durationMs: (json['duration_ms'] as num?)?.toInt() ?? 0,
       attachments: json['attachments'] as List<dynamic>? ?? [],
       notes: json['notes'] as String,
       notify: json['notify'] as bool,
@@ -124,16 +124,16 @@ class MessageDto {
           .toList() ?? [],
       cacheKey: json['cache_key'] as String,
       audioDelivery: json['audio_delivery'] as String,
-      notifiedUsers: json['notified_users'] as int,
-      totalHeardMs: json['total_heard_ms'] as int,
+      notifiedUsers: (json['notified_users'] as num?)?.toInt() ?? 0,
+      totalHeardMs: (json['total_heard_ms'] as num?)?.toInt() ?? 0,
       usersCaughtUp: json['users_caught_up'] as String,
       forwardId: json['forward_id'] as String?,
       shareLinkId: json['share_link_id'] as String?,
       socketDisconnectsWhileStreaming:
-          json['socket_disconnects_while_streaming'] as int,
+          (json['socket_disconnects_while_streaming'] as num?)?.toInt() ?? 0,
       streamKey: json['stream_key'] as String?,
       type: json['type'] as String,
-      channelSequence: json['channel_sequence'] as int,
+      channelSequence: (json['channel_sequence'] as num?)?.toInt() ?? 0,
       lastHeardAt: DateTime.parse(json['last_heard_at'] as String),
       folderId: json['folder_id'] as String?,
     );
