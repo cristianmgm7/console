@@ -11,14 +11,14 @@ Implement a complete audio playback system for message MP3 files using Flutter's
 - **AudioModel Entity** ([audio_model.dart:1](lib/features/messages/domain/entities/audio_model.dart#L1)): Has `url`, `duration`, `waveformData`, `format`, `isOriginal`
 - **MessageUiModel** ([message_ui_model.dart:56](lib/features/messages/presentation/models/message_ui_model.dart#L56)): Has computed `audioUrl` property
 - **Authenticated HTTP Service** ([download_http_service.dart:16](lib/features/message_download/data/datasources/download_http_service.dart#L16)): Already handles OAuth-authenticated requests
-- **Architecture Pattern**: Clean architecture with domain/data/presentation layers, BLoC state management, injectable DI
+- **Architecture Pattern**: BLoC state management with injectable DI
 
 ### Key Discoveries
 - Audio URLs require OAuth authentication headers
 - Messages already contain complete audio metadata including waveform data
 - Existing download feature demonstrates authenticated file access pattern
 - Dashboard uses MessageCard widgets that can trigger playback
-- BLoC pattern used consistently: sealed events/states with Equatable, Result type for error handling
+- BLoC pattern used consistently: sealed events/states with Equatable
 
 ### Dependencies Available
 - `flutter_bloc: ^8.1.6` - State management
@@ -61,11 +61,11 @@ A fully functional audio player system where:
 
 ## Implementation Approach
 
-### Architecture Strategy
-Create a new `audio_player` feature following clean architecture:
-- **Domain**: Player entities, repository interface, use cases for play/pause/seek
-- **Data**: just_audio implementation with authenticated audio source
+### Architecture Strategy (Simplified)
+Create a new `audio_player` feature with simplified architecture:
+- **Service Layer**: Abstract `AudioPlayerService` with concrete implementation using just_audio
 - **Presentation**: BLoC for state management, modal player widget
+- **No domain/use case layers**: BLoC directly calls service methods
 
 ### Authentication Strategy
 Use `AudioSource.uri` with headers parameter to pass OAuth token. The just_audio package supports this natively via its localhost proxy server.
@@ -78,19 +78,18 @@ Use `AudioSource.uri` with headers parameter to pass OAuth token. The just_audio
 
 ### Technical Approach
 1. Add `just_audio` dependency
-2. Create authenticated audio source wrapper using existing AuthenticatedHttpService
-3. Build domain layer with player entities and use cases
-4. Implement data layer with just_audio player service
-5. Create BLoC with events/states for all player operations
-6. Build modal player UI with waveform visualization
-7. Integrate play button into MessageCard
+2. Create abstract AudioPlayerService interface
+3. Implement service with just_audio and authenticated audio source
+4. Create BLoC with events/states, inject service directly
+5. Build modal player UI with waveform visualization
+6. Integrate play button into MessageCard
 
 ---
 
-## Phase 1: Dependencies and Domain Layer
+## Phase 1: Dependencies and Service Layer
 
 ### Overview
-Set up project dependencies and create the domain layer with entities, repository interface, and core business logic.
+Set up project dependencies and create the audio player service layer.
 
 ### Changes Required
 
@@ -110,375 +109,80 @@ dependencies:
 - Run: `flutter pub get`
 - Verify package resolves without conflicts
 
-#### 2. Domain Entities
+#### 2. Abstract Service Interface
 
-**File**: `lib/features/audio_player/domain/entities/player_state.dart`
+**File**: `lib/features/audio_player/services/audio_player_service.dart`
 
-Create player state entity:
 ```dart
-import 'package:equatable/equatable.dart';
+import 'dart:async';
 
-/// Domain entity representing audio player state
-class PlayerState extends Equatable {
-  const PlayerState({
-    required this.messageId,
-    required this.audioUrl,
-    required this.duration,
-    required this.position,
-    required this.isPlaying,
-    required this.isPaused,
-    required this.isLoading,
-    required this.speed,
-    required this.waveformData,
-  });
-
-  final String messageId;
-  final String audioUrl;
-  final Duration duration;
-  final Duration position;
-  final bool isPlaying;
-  final bool isPaused;
-  final bool isLoading;
-  final double speed; // 1.0, 1.5, 2.0, etc.
-  final List<double> waveformData;
-
-  /// Progress percentage (0.0 to 1.0)
-  double get progress => duration.inMilliseconds > 0
-      ? position.inMilliseconds / duration.inMilliseconds
-      : 0.0;
-
-  /// Remaining time
-  Duration get remaining => duration - position;
-
-  @override
-  List<Object?> get props => [
-        messageId,
-        audioUrl,
-        duration,
-        position,
-        isPlaying,
-        isPaused,
-        isLoading,
-        speed,
-        waveformData,
-      ];
-}
-```
-
-**File**: `lib/features/audio_player/domain/entities/playback_error.dart`
-
-Create error entity:
-```dart
-import 'package:equatable/equatable.dart';
-
-/// Domain entity representing playback errors
-class PlaybackError extends Equatable {
-  const PlaybackError({
-    required this.code,
-    required this.message,
-    this.details,
-  });
-
-  final String code;
-  final String message;
-  final String? details;
-
-  @override
-  List<Object?> get props => [code, message, details];
-}
-```
-
-#### 3. Domain Repository Interface
-
-**File**: `lib/features/audio_player/domain/repositories/audio_player_repository.dart`
-
-Define repository contract:
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/entities/player_state.dart';
-
-/// Repository interface for audio player operations
-abstract class AudioPlayerRepository {
-  /// Initialize and load audio source
-  /// Returns initial player state or error
-  Future<Result<PlayerState>> loadAudio({
-    required String messageId,
-    required String audioUrl,
-    required List<double> waveformData,
-    required Map<String, String> headers,
-  });
+/// Abstract service for audio playback operations
+abstract class AudioPlayerService {
+  /// Load audio from URL with authentication headers
+  Future<void> loadAudio(String url, Map<String, String> headers);
 
   /// Start or resume playback
-  Future<Result<void>> play();
+  Future<void> play();
 
   /// Pause playback
-  Future<Result<void>> pause();
+  Future<void> pause();
 
-  /// Stop playback and release resources
-  Future<Result<void>> stop();
+  /// Stop playback
+  Future<void> stop();
 
-  /// Seek to specific position
-  Future<Result<void>> seek(Duration position);
+  /// Seek to position
+  Future<void> seek(Duration position);
 
   /// Set playback speed
-  Future<Result<void>> setSpeed(double speed);
+  Future<void> setSpeed(double speed);
 
-  /// Get current player state
-  Future<Result<PlayerState>> getPlayerState();
+  /// Get current duration
+  Duration? get duration;
 
-  /// Stream of player state changes
-  Stream<PlayerState> get playerStateStream;
+  /// Get current position
+  Duration get position;
 
-  /// Dispose player resources
+  /// Get playing state
+  bool get isPlaying;
+
+  /// Get current speed
+  double get speed;
+
+  /// Stream of duration changes
+  Stream<Duration> get durationStream;
+
+  /// Stream of position changes
+  Stream<Duration> get positionStream;
+
+  /// Stream of playing state changes
+  Stream<bool> get isPlayingStream;
+
+  /// Stream of loading state changes
+  Stream<bool> get isLoadingStream;
+
+  /// Dispose resources
   Future<void> dispose();
 }
 ```
 
-#### 4. Domain Use Cases
+#### 3. Service Implementation
 
-**File**: `lib/features/audio_player/domain/usecases/load_audio_usecase.dart`
+**File**: `lib/features/audio_player/services/audio_player_service_impl.dart`
 
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/entities/player_state.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class LoadAudioUsecase {
-  const LoadAudioUsecase(this._repository, this._logger);
-
-  final AudioPlayerRepository _repository;
-  final Logger _logger;
-
-  Future<Result<PlayerState>> call({
-    required String messageId,
-    required String audioUrl,
-    required List<double> waveformData,
-    required Map<String, String> authHeaders,
-  }) async {
-    _logger.d('Loading audio for message: $messageId');
-
-    if (audioUrl.isEmpty) {
-      _logger.w('Cannot load audio: URL is empty');
-      return failure(const AppFailure(
-        code: 'INVALID_URL',
-        details: 'Audio URL is empty',
-      ));
-    }
-
-    final result = await _repository.loadAudio(
-      messageId: messageId,
-      audioUrl: audioUrl,
-      waveformData: waveformData,
-      headers: authHeaders,
-    );
-
-    result.fold(
-      onSuccess: (state) => _logger.i('Audio loaded successfully: $messageId'),
-      onFailure: (failure) => _logger.e('Failed to load audio: ${failure.failure.details}'),
-    );
-
-    return result;
-  }
-}
-```
-
-**File**: `lib/features/audio_player/domain/usecases/play_audio_usecase.dart`
-
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class PlayAudioUsecase {
-  const PlayAudioUsecase(this._repository, this._logger);
-
-  final AudioPlayerRepository _repository;
-  final Logger _logger;
-
-  Future<Result<void>> call() async {
-    _logger.d('Starting audio playback');
-    return await _repository.play();
-  }
-}
-```
-
-**File**: `lib/features/audio_player/domain/usecases/pause_audio_usecase.dart`
-
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class PauseAudioUsecase {
-  const PauseAudioUsecase(this._repository, this._logger);
-
-  final AudioPlayerRepository _repository;
-  final Logger _logger;
-
-  Future<Result<void>> call() async {
-    _logger.d('Pausing audio playback');
-    return await _repository.pause();
-  }
-}
-```
-
-**File**: `lib/features/audio_player/domain/usecases/seek_audio_usecase.dart`
-
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class SeekAudioUsecase {
-  const SeekAudioUsecase(this._repository, this._logger);
-
-  final AudioPlayerRepository _repository;
-  final Logger _logger;
-
-  Future<Result<void>> call(Duration position) async {
-    _logger.d('Seeking to position: ${position.inSeconds}s');
-    return await _repository.seek(position);
-  }
-}
-```
-
-**File**: `lib/features/audio_player/domain/usecases/set_speed_usecase.dart`
-
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class SetSpeedUsecase {
-  const SetSpeedUsecase(this._repository, this._logger);
-
-  final AudioPlayerRepository _repository;
-  final Logger _logger;
-
-  Future<Result<void>> call(double speed) async {
-    _logger.d('Setting playback speed to ${speed}x');
-
-    if (speed <= 0 || speed > 3.0) {
-      _logger.w('Invalid speed value: $speed');
-      return failure(const AppFailure(
-        code: 'INVALID_SPEED',
-        details: 'Speed must be between 0 and 3.0',
-      ));
-    }
-
-    return await _repository.setSpeed(speed);
-  }
-}
-```
-
-**File**: `lib/features/audio_player/domain/usecases/stop_audio_usecase.dart`
-
-```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class StopAudioUsecase {
-  const StopAudioUsecase(this._repository, this._logger);
-
-  final AudioPlayerRepository _repository;
-  final Logger _logger;
-
-  Future<Result<void>> call() async {
-    _logger.d('Stopping audio playback');
-    return await _repository.stop();
-  }
-}
-```
-
-### Success Criteria
-
-#### Automated Verification:
-- [ ] Dependencies install successfully: `flutter pub get`
-- [ ] No compilation errors: `flutter analyze`
-- [ ] Code generation completes: `flutter pub run build_runner build`
-- [ ] All files created in correct directory structure
-
-#### Manual Verification:
-- [ ] Domain entities have proper Equatable implementation
-- [ ] Repository interface defines all needed operations
-- [ ] Use cases follow existing patterns from message_download feature
-- [ ] All imports reference correct paths
-- [ ] Logger integration matches existing patterns
-
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 2.
-
----
-
-## Phase 2: Data Layer - Audio Player Service
-
-### Overview
-Implement the data layer with just_audio integration, authenticated audio source, and repository implementation.
-
-### Changes Required
-
-#### 1. Authenticated Audio Source
-
-**File**: `lib/features/audio_player/data/datasources/authenticated_audio_source.dart`
-
-Create custom audio source that wraps AudioSource.uri with auth headers:
-```dart
-import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
-
-/// Wrapper for creating authenticated audio sources
-class AuthenticatedAudioSource {
-  const AuthenticatedAudioSource(this._logger);
-
-  final Logger _logger;
-
-  /// Creates an audio source with authentication headers
-  AudioSource createSource(String url, Map<String, String> headers) {
-    _logger.d('Creating authenticated audio source for URL: $url');
-    _logger.d('Headers: ${headers.keys.toList()}');
-
-    return AudioSource.uri(
-      Uri.parse(url),
-      headers: headers,
-    );
-  }
-}
-```
-
-#### 2. Audio Player Service
-
-**File**: `lib/features/audio_player/data/datasources/audio_player_service.dart`
-
-Create service that wraps just_audio player:
 ```dart
 import 'dart:async';
 import 'package:just_audio/just_audio.dart';
-import 'package:carbon_voice_console/features/audio_player/data/datasources/authenticated_audio_source.dart';
+import 'package:carbon_voice_console/features/audio_player/services/audio_player_service.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
-/// Service for managing audio playback using just_audio
-@LazySingleton()
-class AudioPlayerService {
-  AudioPlayerService(this._audioSourceFactory, this._logger) {
+@LazySingleton(as: AudioPlayerService)
+class AudioPlayerServiceImpl implements AudioPlayerService {
+  AudioPlayerServiceImpl(this._logger) {
     _player = AudioPlayer();
     _initializeStreamSubscriptions();
   }
 
-  final AuthenticatedAudioSource _audioSourceFactory;
   final Logger _logger;
   late final AudioPlayer _player;
 
@@ -492,9 +196,16 @@ class AudioPlayerService {
   final _isPlayingController = StreamController<bool>.broadcast();
   final _isLoadingController = StreamController<bool>.broadcast();
 
+  @override
   Stream<Duration> get durationStream => _durationController.stream;
+
+  @override
   Stream<Duration> get positionStream => _positionController.stream;
+
+  @override
   Stream<bool> get isPlayingStream => _isPlayingController.stream;
+
+  @override
   Stream<bool> get isLoadingStream => _isLoadingController.stream;
 
   void _initializeStreamSubscriptions() {
@@ -517,12 +228,16 @@ class AudioPlayerService {
     });
   }
 
-  /// Load audio from URL with authentication headers
+  @override
   Future<void> loadAudio(String url, Map<String, String> headers) async {
     try {
       _logger.i('Loading audio from: $url');
+      _logger.d('Headers: ${headers.keys.toList()}');
 
-      final audioSource = _audioSourceFactory.createSource(url, headers);
+      final audioSource = AudioSource.uri(
+        Uri.parse(url),
+        headers: headers,
+      );
 
       await _player.setAudioSource(audioSource);
 
@@ -533,7 +248,7 @@ class AudioPlayerService {
     }
   }
 
-  /// Start or resume playback
+  @override
   Future<void> play() async {
     try {
       await _player.play();
@@ -544,7 +259,7 @@ class AudioPlayerService {
     }
   }
 
-  /// Pause playback
+  @override
   Future<void> pause() async {
     try {
       await _player.pause();
@@ -555,7 +270,7 @@ class AudioPlayerService {
     }
   }
 
-  /// Stop playback
+  @override
   Future<void> stop() async {
     try {
       await _player.stop();
@@ -566,7 +281,7 @@ class AudioPlayerService {
     }
   }
 
-  /// Seek to position
+  @override
   Future<void> seek(Duration position) async {
     try {
       await _player.seek(position);
@@ -577,7 +292,7 @@ class AudioPlayerService {
     }
   }
 
-  /// Set playback speed
+  @override
   Future<void> setSpeed(double speed) async {
     try {
       await _player.setSpeed(speed);
@@ -588,19 +303,19 @@ class AudioPlayerService {
     }
   }
 
-  /// Get current duration
+  @override
   Duration? get duration => _player.duration;
 
-  /// Get current position
+  @override
   Duration get position => _player.position;
 
-  /// Get playing state
+  @override
   bool get isPlaying => _player.playing;
 
-  /// Get current speed
+  @override
   double get speed => _player.speed;
 
-  /// Dispose resources
+  @override
   Future<void> dispose() async {
     await _durationSubscription?.cancel();
     await _positionSubscription?.cancel();
@@ -615,216 +330,28 @@ class AudioPlayerService {
 }
 ```
 
-#### 3. Repository Implementation
-
-**File**: `lib/features/audio_player/data/repositories/audio_player_repository_impl.dart`
-
-```dart
-import 'dart:async';
-import 'package:carbon_voice_console/core/errors/failures.dart';
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/audio_player/data/datasources/audio_player_service.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/entities/player_state.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
-import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
-
-@LazySingleton(as: AudioPlayerRepository)
-class AudioPlayerRepositoryImpl implements AudioPlayerRepository {
-  AudioPlayerRepositoryImpl(this._playerService, this._logger);
-
-  final AudioPlayerService _playerService;
-  final Logger _logger;
-
-  // Current state tracking
-  String? _currentMessageId;
-  String? _currentAudioUrl;
-  List<double> _currentWaveformData = [];
-  double _currentSpeed = 1.0;
-
-  // State stream controller
-  final _stateController = StreamController<PlayerState>.broadcast();
-
-  @override
-  Stream<PlayerState> get playerStateStream => _stateController.stream;
-
-  @override
-  Future<Result<PlayerState>> loadAudio({
-    required String messageId,
-    required String audioUrl,
-    required List<double> waveformData,
-    required Map<String, String> headers,
-  }) async {
-    try {
-      _logger.i('Loading audio for message: $messageId');
-
-      // Stop current playback if different message
-      if (_currentMessageId != null && _currentMessageId != messageId) {
-        await _playerService.stop();
-      }
-
-      _currentMessageId = messageId;
-      _currentAudioUrl = audioUrl;
-      _currentWaveformData = waveformData;
-
-      await _playerService.loadAudio(audioUrl, headers);
-
-      final state = _createCurrentState();
-      _stateController.add(state);
-
-      return success(state);
-    } on Exception catch (e) {
-      _logger.e('Failed to load audio', error: e);
-      return failure(NetworkFailure(details: e.toString()));
-    }
-  }
-
-  @override
-  Future<Result<void>> play() async {
-    try {
-      await _playerService.play();
-      _emitCurrentState();
-      return success(null);
-    } on Exception catch (e) {
-      _logger.e('Failed to play audio', error: e);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
-
-  @override
-  Future<Result<void>> pause() async {
-    try {
-      await _playerService.pause();
-      _emitCurrentState();
-      return success(null);
-    } on Exception catch (e) {
-      _logger.e('Failed to pause audio', error: e);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
-
-  @override
-  Future<Result<void>> stop() async {
-    try {
-      await _playerService.stop();
-      _currentMessageId = null;
-      _currentAudioUrl = null;
-      _currentWaveformData = [];
-      _emitCurrentState();
-      return success(null);
-    } on Exception catch (e) {
-      _logger.e('Failed to stop audio', error: e);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
-
-  @override
-  Future<Result<void>> seek(Duration position) async {
-    try {
-      await _playerService.seek(position);
-      _emitCurrentState();
-      return success(null);
-    } on Exception catch (e) {
-      _logger.e('Failed to seek', error: e);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
-
-  @override
-  Future<Result<void>> setSpeed(double speed) async {
-    try {
-      await _playerService.setSpeed(speed);
-      _currentSpeed = speed;
-      _emitCurrentState();
-      return success(null);
-    } on Exception catch (e) {
-      _logger.e('Failed to set speed', error: e);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
-
-  @override
-  Future<Result<PlayerState>> getPlayerState() async {
-    return success(_createCurrentState());
-  }
-
-  PlayerState _createCurrentState() {
-    return PlayerState(
-      messageId: _currentMessageId ?? '',
-      audioUrl: _currentAudioUrl ?? '',
-      duration: _playerService.duration ?? Duration.zero,
-      position: _playerService.position,
-      isPlaying: _playerService.isPlaying,
-      isPaused: !_playerService.isPlaying && _currentMessageId != null,
-      isLoading: false,
-      speed: _currentSpeed,
-      waveformData: _currentWaveformData,
-    );
-  }
-
-  void _emitCurrentState() {
-    _stateController.add(_createCurrentState());
-  }
-
-  @override
-  Future<void> dispose() async {
-    await _stateController.close();
-    await _playerService.dispose();
-  }
-}
-```
-
-#### 4. Register AuthenticatedAudioSource
-
-**File**: `lib/features/audio_player/data/datasources/authenticated_audio_source.dart`
-
-Update to add injectable annotation:
-```dart
-import 'package:injectable/injectable.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:logger/logger.dart';
-
-@injectable
-class AuthenticatedAudioSource {
-  const AuthenticatedAudioSource(this._logger);
-
-  final Logger _logger;
-
-  AudioSource createSource(String url, Map<String, String> headers) {
-    _logger.d('Creating authenticated audio source for URL: $url');
-    _logger.d('Headers: ${headers.keys.toList()}');
-
-    return AudioSource.uri(
-      Uri.parse(url),
-      headers: headers,
-    );
-  }
-}
-```
-
 ### Success Criteria
 
 #### Automated Verification:
+- [ ] Dependencies install successfully: `flutter pub get`
 - [ ] Code generation completes: `flutter pub run build_runner build`
 - [ ] No compilation errors: `flutter analyze`
-- [ ] Type checking passes: `flutter analyze --no-fatal-infos`
 
 #### Manual Verification:
-- [ ] AudioPlayerService initializes just_audio player correctly
-- [ ] Authenticated headers are passed to AudioSource.uri
-- [ ] Repository implements all interface methods
+- [ ] Service interface defines all needed operations
+- [ ] Implementation uses just_audio correctly
 - [ ] Stream subscriptions are properly managed
-- [ ] Error handling follows existing patterns
-- [ ] Dependency injection annotations are correct
+- [ ] Dependency injection annotation is correct (@LazySingleton)
+- [ ] Logger integration matches existing patterns
 
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 3.
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 2.
 
 ---
 
-## Phase 3: Presentation Layer - BLoC
+## Phase 2: Presentation Layer - BLoC
 
 ### Overview
-Create BLoC components for audio player state management with events and states following existing patterns.
+Create BLoC components for audio player state management with events and states, directly injecting the service.
 
 ### Changes Required
 
@@ -893,14 +420,20 @@ class SetPlaybackSpeed extends AudioPlayerEvent {
   List<Object?> get props => [speed];
 }
 
-/// Internal event for player state updates from repository stream
+/// Internal event for player state updates from service streams
 class PlayerStateUpdated extends AudioPlayerEvent {
-  const PlayerStateUpdated(this.state);
+  const PlayerStateUpdated({
+    required this.duration,
+    required this.position,
+    required this.isPlaying,
+  });
 
-  final dynamic state; // PlayerState from domain
+  final Duration duration;
+  final Duration position;
+  final bool isPlaying;
 
   @override
-  List<Object?> get props => [state];
+  List<Object?> get props => [duration, position, isPlaying];
 }
 ```
 
@@ -1021,14 +554,7 @@ class AudioPlayerError extends AudioPlayerState {
 ```dart
 import 'dart:async';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/usecases/load_audio_usecase.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/usecases/pause_audio_usecase.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/usecases/play_audio_usecase.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/usecases/seek_audio_usecase.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/usecases/set_speed_usecase.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/usecases/stop_audio_usecase.dart';
-import 'package:carbon_voice_console/features/audio_player/domain/repositories/audio_player_repository.dart';
+import 'package:carbon_voice_console/features/audio_player/services/audio_player_service.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1038,13 +564,7 @@ import 'package:logger/logger.dart';
 @LazySingleton()
 class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   AudioPlayerBloc(
-    this._loadAudioUsecase,
-    this._playAudioUsecase,
-    this._pauseAudioUsecase,
-    this._stopAudioUsecase,
-    this._seekAudioUsecase,
-    this._setSpeedUsecase,
-    this._repository,
+    this._playerService,
     this._authService,
     this._logger,
   ) : super(const AudioPlayerInitial()) {
@@ -1056,57 +576,86 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     on<SetPlaybackSpeed>(_onSetPlaybackSpeed);
     on<PlayerStateUpdated>(_onPlayerStateUpdated);
 
-    // Subscribe to repository state stream
-    _stateSubscription = _repository.playerStateStream.listen((playerState) {
-      add(PlayerStateUpdated(playerState));
-    });
+    // Subscribe to service state streams
+    _subscribeToServiceStreams();
   }
 
-  final LoadAudioUsecase _loadAudioUsecase;
-  final PlayAudioUsecase _playAudioUsecase;
-  final PauseAudioUsecase _pauseAudioUsecase;
-  final StopAudioUsecase _stopAudioUsecase;
-  final SeekAudioUsecase _seekAudioUsecase;
-  final SetSpeedUsecase _setSpeedUsecase;
-  final AudioPlayerRepository _repository;
+  final AudioPlayerService _playerService;
   final AuthenticatedHttpService _authService;
   final Logger _logger;
 
-  StreamSubscription? _stateSubscription;
+  // Current state tracking
+  String? _currentMessageId;
+  String? _currentAudioUrl;
+  List<double> _currentWaveformData = [];
+  double _currentSpeed = 1.0;
+
+  StreamSubscription<Duration>? _durationSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<bool>? _isPlayingSubscription;
+
+  void _subscribeToServiceStreams() {
+    // Combine stream updates into single event
+    _durationSubscription = _playerService.durationStream.listen((_) {
+      _emitPlayerStateUpdate();
+    });
+
+    _positionSubscription = _playerService.positionStream.listen((_) {
+      _emitPlayerStateUpdate();
+    });
+
+    _isPlayingSubscription = _playerService.isPlayingStream.listen((_) {
+      _emitPlayerStateUpdate();
+    });
+  }
+
+  void _emitPlayerStateUpdate() {
+    if (_currentMessageId != null && _playerService.duration != null) {
+      add(PlayerStateUpdated(
+        duration: _playerService.duration!,
+        position: _playerService.position,
+        isPlaying: _playerService.isPlaying,
+      ));
+    }
+  }
 
   Future<void> _onLoadAudio(
     LoadAudio event,
     Emitter<AudioPlayerState> emit,
   ) async {
-    _logger.d('Loading audio for message: ${event.messageId}');
-    emit(const AudioPlayerLoading());
+    try {
+      _logger.d('Loading audio for message: ${event.messageId}');
+      emit(const AudioPlayerLoading());
 
-    // Get auth headers from authenticated service
-    final authHeaders = await _authService.getAuthHeaders();
+      // Stop current playback if different message
+      if (_currentMessageId != null && _currentMessageId != event.messageId) {
+        await _playerService.stop();
+      }
 
-    final result = await _loadAudioUsecase(
-      messageId: event.messageId,
-      audioUrl: event.audioUrl,
-      waveformData: event.waveformData,
-      authHeaders: authHeaders,
-    );
+      _currentMessageId = event.messageId;
+      _currentAudioUrl = event.audioUrl;
+      _currentWaveformData = event.waveformData;
 
-    result.fold(
-      onSuccess: (playerState) {
-        emit(AudioPlayerReady(
-          messageId: playerState.messageId,
-          audioUrl: playerState.audioUrl,
-          duration: playerState.duration,
-          position: playerState.position,
-          isPlaying: playerState.isPlaying,
-          speed: playerState.speed,
-          waveformData: playerState.waveformData,
-        ));
-      },
-      onFailure: (failure) {
-        emit(AudioPlayerError(FailureMapper.mapToMessage(failure.failure)));
-      },
-    );
+      // Get auth headers
+      final authHeaders = await _authService.getAuthHeaders();
+
+      // Load audio
+      await _playerService.loadAudio(event.audioUrl, authHeaders);
+
+      // Emit ready state
+      emit(AudioPlayerReady(
+        messageId: _currentMessageId!,
+        audioUrl: _currentAudioUrl!,
+        duration: _playerService.duration ?? Duration.zero,
+        position: _playerService.position,
+        isPlaying: _playerService.isPlaying,
+        speed: _currentSpeed,
+        waveformData: _currentWaveformData,
+      ));
+    } catch (e) {
+      _logger.e('Failed to load audio', error: e);
+      emit(AudioPlayerError('Failed to load audio: $e'));
+    }
   }
 
   Future<void> _onPlayAudio(
@@ -1115,11 +664,12 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) async {
     if (state is! AudioPlayerReady) return;
 
-    _logger.d('Playing audio');
-    final result = await _playAudioUsecase();
-
-    if (result.isFailure) {
-      emit(AudioPlayerError(FailureMapper.mapToMessage(result.failureOrNull!.failure)));
+    try {
+      _logger.d('Playing audio');
+      await _playerService.play();
+    } catch (e) {
+      _logger.e('Failed to play audio', error: e);
+      emit(AudioPlayerError('Failed to play audio: $e'));
     }
   }
 
@@ -1129,11 +679,12 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) async {
     if (state is! AudioPlayerReady) return;
 
-    _logger.d('Pausing audio');
-    final result = await _pauseAudioUsecase();
-
-    if (result.isFailure) {
-      emit(AudioPlayerError(FailureMapper.mapToMessage(result.failureOrNull!.failure)));
+    try {
+      _logger.d('Pausing audio');
+      await _playerService.pause();
+    } catch (e) {
+      _logger.e('Failed to pause audio', error: e);
+      emit(AudioPlayerError('Failed to pause audio: $e'));
     }
   }
 
@@ -1141,15 +692,17 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     StopAudio event,
     Emitter<AudioPlayerState> emit,
   ) async {
-    _logger.d('Stopping audio');
-    final result = await _stopAudioUsecase();
-
-    result.fold(
-      onSuccess: (_) => emit(const AudioPlayerInitial()),
-      onFailure: (failure) {
-        emit(AudioPlayerError(FailureMapper.mapToMessage(failure.failure)));
-      },
-    );
+    try {
+      _logger.d('Stopping audio');
+      await _playerService.stop();
+      _currentMessageId = null;
+      _currentAudioUrl = null;
+      _currentWaveformData = [];
+      emit(const AudioPlayerInitial());
+    } catch (e) {
+      _logger.e('Failed to stop audio', error: e);
+      emit(AudioPlayerError('Failed to stop audio: $e'));
+    }
   }
 
   Future<void> _onSeekAudio(
@@ -1158,11 +711,12 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) async {
     if (state is! AudioPlayerReady) return;
 
-    _logger.d('Seeking to: ${event.position.inSeconds}s');
-    final result = await _seekAudioUsecase(event.position);
-
-    if (result.isFailure) {
-      emit(AudioPlayerError(FailureMapper.mapToMessage(result.failureOrNull!.failure)));
+    try {
+      _logger.d('Seeking to: ${event.position.inSeconds}s');
+      await _playerService.seek(event.position);
+    } catch (e) {
+      _logger.e('Failed to seek', error: e);
+      emit(AudioPlayerError('Failed to seek: $e'));
     }
   }
 
@@ -1172,11 +726,22 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) async {
     if (state is! AudioPlayerReady) return;
 
-    _logger.d('Setting speed to: ${event.speed}x');
-    final result = await _setSpeedUsecase(event.speed);
+    try {
+      if (event.speed <= 0 || event.speed > 3.0) {
+        emit(const AudioPlayerError('Speed must be between 0 and 3.0'));
+        return;
+      }
 
-    if (result.isFailure) {
-      emit(AudioPlayerError(FailureMapper.mapToMessage(result.failureOrNull!.failure)));
+      _logger.d('Setting speed to: ${event.speed}x');
+      await _playerService.setSpeed(event.speed);
+      _currentSpeed = event.speed;
+
+      // Update state with new speed
+      final currentState = state as AudioPlayerReady;
+      emit(currentState.copyWith(speed: event.speed));
+    } catch (e) {
+      _logger.e('Failed to set speed', error: e);
+      emit(AudioPlayerError('Failed to set speed: $e'));
     }
   }
 
@@ -1186,19 +751,19 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) {
     final currentState = state;
     if (currentState is AudioPlayerReady) {
-      final playerState = event.state;
       emit(currentState.copyWith(
-        duration: playerState.duration,
-        position: playerState.position,
-        isPlaying: playerState.isPlaying,
-        speed: playerState.speed,
+        duration: event.duration,
+        position: event.position,
+        isPlaying: event.isPlaying,
       ));
     }
   }
 
   @override
   Future<void> close() {
-    _stateSubscription?.cancel();
+    _durationSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _isPlayingSubscription?.cancel();
     return super.close();
   }
 }
@@ -1229,21 +794,20 @@ Future<Map<String, String>> getAuthHeaders() async {
 #### Automated Verification:
 - [ ] Code generation completes: `flutter pub run build_runner build`
 - [ ] No compilation errors: `flutter analyze`
-- [ ] BLoC follows existing patterns from other features
 
 #### Manual Verification:
 - [ ] Events are properly sealed with Equatable
 - [ ] States include all necessary player information
 - [ ] BLoC is registered as LazySingleton
-- [ ] Stream subscription is properly managed in close()
-- [ ] Error handling uses FailureMapper consistently
+- [ ] Stream subscriptions are properly managed in close()
+- [ ] Service is injected directly into BLoC
 - [ ] Auth headers are obtained from AuthenticatedHttpService
 
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 4.
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 3.
 
 ---
 
-## Phase 4: UI - Player Modal Widget
+## Phase 3: UI - Player Modal Widget
 
 ### Overview
 Create the persistent modal bottom sheet player UI with controls and waveform visualization.
@@ -1599,11 +1163,11 @@ class _SpeedButton extends StatelessWidget {
 - [ ] Play/pause button toggles icon appropriately
 - [ ] Modal has proper styling and spacing
 
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 5.
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 4.
 
 ---
 
-## Phase 5: Integration - Connect UI to Messages
+## Phase 4: Integration - Connect UI to Messages
 
 ### Overview
 Integrate the audio player with existing message UI by adding play buttons to MessageCard and managing the player modal.
@@ -1713,11 +1277,11 @@ audioModels: audioModels,
 - [ ] Player state persists when modal is closed/reopened
 - [ ] Starting playback on a different message stops current playback
 
-**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 6.
+**Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation before proceeding to Phase 5.
 
 ---
 
-## Phase 6: Platform Configuration and Testing
+## Phase 5: Platform Configuration and Testing
 
 ### Overview
 Configure platform-specific settings for just_audio and perform comprehensive testing.
@@ -1756,41 +1320,11 @@ Add background audio modes if needed (though we're not implementing background p
 
 Verify CORS settings on audio server if needed. just_audio on web has limitations with custom headers, but should work with cookie-based auth.
 
-#### 4. Integration Test
-
-**File**: `test/features/audio_player/audio_player_integration_test.dart`
-
-Create basic integration test:
-
-```dart
-import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
-import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
-import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-
-// Basic test to verify BLoC structure
-void main() {
-  group('AudioPlayerBloc', () {
-    test('initial state is AudioPlayerInitial', () {
-      // This test verifies the BLoC can be instantiated
-      // Full implementation requires mock setup
-    });
-
-    test('LoadAudio event transitions to AudioPlayerLoading then AudioPlayerReady', () async {
-      // This test verifies the load flow
-      // Full implementation requires mock setup
-    });
-  });
-}
-```
-
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] Android build succeeds: `flutter build apk`
 - [ ] Web build succeeds: `flutter build web`
-- [ ] Tests run: `flutter test`
 - [ ] No analyzer warnings: `flutter analyze`
 
 #### Manual Verification:
@@ -1849,63 +1383,6 @@ void main() {
 
 ---
 
-## Testing Strategy
-
-### Unit Tests
-- **Domain Layer**:
-  - PlayerState entity computed properties (progress, remaining)
-  - Use case input validation (speed limits, empty URLs)
-
-- **Data Layer**:
-  - Repository state transformations
-  - Error handling in service methods
-
-- **Presentation Layer**:
-  - BLoC event handlers
-  - State transitions
-  - Error state mapping
-
-### Integration Tests
-- Load audio flow: Event → UseCase → Repository → Service
-- Playback controls: Play, pause, seek, speed
-- State stream updates
-- Error propagation
-
-### Manual Testing Steps
-1. **Basic Playback**:
-   - Click play on message
-   - Verify audio plays
-   - Verify waveform animates
-   - Verify time updates
-
-2. **Seek Testing**:
-   - Drag slider to middle
-   - Tap waveform at 25% mark
-   - Use skip buttons
-   - Verify position changes correctly
-
-3. **Speed Testing**:
-   - Change to 1.5x speed
-   - Verify audio plays faster
-   - Change to 0.5x speed
-   - Verify audio plays slower
-
-4. **Multi-Message Testing**:
-   - Play message 1
-   - Play message 2 while 1 is playing
-   - Verify only message 2 plays
-
-5. **Error Testing**:
-   - Try message with no audio URL
-   - Try invalid URL
-   - Verify error states display
-
-6. **State Persistence**:
-   - Play audio
-   - Close modal
-   - Reopen modal
-   - Verify playback continues
-
 ## Performance Considerations
 
 ### Streaming Optimization
@@ -1940,10 +1417,8 @@ Not applicable - this is a new feature with no existing data or state to migrate
 - Flutter BLoC: https://bloclibrary.dev/
 
 ### Codebase Patterns
-- Message Download Feature: `lib/features/message_download/`
-- BLoC Pattern Example: `lib/features/message_download/presentation/bloc/download_bloc.dart`
-- Repository Pattern: `lib/features/message_download/data/repositories/download_repository_impl.dart`
-- Use Case Pattern: `lib/features/message_download/domain/usecases/download_messages_usecase.dart`
+- Message BLoC: `lib/features/messages/presentation/bloc/message_bloc.dart`
+- Download BLoC: `lib/features/message_download/presentation/bloc/download_bloc.dart`
 
 ### Related Issues
 - Adding Headers to setUrl: https://github.com/ryanheise/just_audio/issues/99

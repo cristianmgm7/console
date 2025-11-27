@@ -3,7 +3,6 @@ import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/core/routing/app_shell.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
-import 'package:carbon_voice_console/features/messages/presentation/pages/message_detail_screen.dart';
 import 'package:carbon_voice_console/features/settings/presentation/settings_screen.dart';
 import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
@@ -63,7 +62,6 @@ class AppRouter {
           AppRoutes.users,
           AppRoutes.voiceMemos,
           AppRoutes.settings,
-          AppRoutes.messageDetail,
         ];
         
         // Si no es una ruta válida y no es un callback, redirigir a login
@@ -132,15 +130,6 @@ class AppRouter {
               name: 'settings',
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: SettingsScreen(),
-              ),
-            ),
-            GoRoute(
-              path: AppRoutes.messageDetail,
-              name: 'messageDetail',
-              pageBuilder: (context, state) => NoTransitionPage(
-                child: MessageDetailScreen(
-                  messageId: state.pathParameters['messageId']!,
-                ),
               ),
             ),
           ],

@@ -8,6 +8,7 @@ import 'package:carbon_voice_console/features/dashboard/presentation/components/
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/table_header_dashboard.dart';
+import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
@@ -34,6 +35,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ScrollController _scrollController = ScrollController();
   late final StreamSubscription<WorkspaceState> _workspaceSubscription;
   late final StreamSubscription<ConversationState> _conversationSubscription;
+
+  // Message detail panel state
+  String? _selectedMessageForDetail;
 
   @override
   void initState() {
@@ -156,39 +160,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: Theme.of(context).colorScheme.surface,
       child: Stack(
         children: [
-          Column(
-            children: [
-              // App Bar
-              DashboardAppBar(
-                onRefresh: _onRefresh,
-              ),
+          _selectedMessageForDetail == null
+              ? _buildFullDashboard()
+              : _buildDashboardWithDetail(),
 
-              // Table Header - only show when messages are loaded
-              BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-                selector: (state) => state is MessageLoaded ? state : null,
-                builder: (context, messageState) {
-                  if (messageState == null || messageState.messages.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return DashboardTableHeader(
-                    onToggleSelectAll: _toggleSelectAll,
-                    messageState: messageState,
-                    selectAll: _selectAll,
-                  );
-                },
-              ),
-
-              // Content
-              Expanded(
-                child: DashboardContent(
-                  isAnyBlocLoading: _isAnyBlocLoading,
-                  scrollController: _scrollController,
-                  selectedMessages: _selectedMessages,
-                  onToggleMessageSelection: _toggleMessageSelection,
-                ),
-              ),
-            ],
-          ),
+          // Floating Action Panel - only show when no detail is selected
+          if (_selectedMessages.isNotEmpty && _selectedMessageForDetail == null)
 
           // Floating Action Panel
           if (_selectedMessages.isNotEmpty)
@@ -300,6 +277,106 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return workspaceState is WorkspaceLoading ||
            conversationState is ConversationLoading ||
            messageState is MessageLoading;
+  }
+
+  Widget _buildFullDashboard() {
+    return Column(
+      children: [
+        // App Bar
+        DashboardAppBar(
+          onRefresh: _onRefresh,
+        ),
+
+        // Table Header - only show when messages are loaded
+        BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+          selector: (state) => state is MessageLoaded ? state : null,
+          builder: (context, messageState) {
+            if (messageState == null || messageState.messages.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return DashboardTableHeader(
+              onToggleSelectAll: _toggleSelectAll,
+              messageState: messageState,
+              selectAll: _selectAll,
+            );
+          },
+        ),
+
+        // Content
+        Expanded(
+          child: DashboardContent(
+            isAnyBlocLoading: _isAnyBlocLoading,
+            scrollController: _scrollController,
+            selectedMessages: _selectedMessages,
+            onToggleMessageSelection: _toggleMessageSelection,
+            onViewDetail: _onViewDetail,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardWithDetail() {
+    return Row(
+      children: [
+        // Main dashboard area (takes remaining space)
+        Expanded(
+          child: Column(
+            children: [
+              // App Bar
+              DashboardAppBar(
+                onRefresh: _onRefresh,
+              ),
+
+              // Table Header - only show when messages are loaded
+              BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+                selector: (state) => state is MessageLoaded ? state : null,
+                builder: (context, messageState) {
+                  if (messageState == null || messageState.messages.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return DashboardTableHeader(
+                    onToggleSelectAll: _toggleSelectAll,
+                    messageState: messageState,
+                    selectAll: _selectAll,
+                  );
+                },
+              ),
+
+              // Content
+              Expanded(
+                child: DashboardContent(
+                  isAnyBlocLoading: _isAnyBlocLoading,
+                  scrollController: _scrollController,
+                  selectedMessages: _selectedMessages,
+                  onToggleMessageSelection: _toggleMessageSelection,
+                  onViewDetail: _onViewDetail,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Detail panel
+        if (_selectedMessageForDetail != null)
+          MessageDetailPanel(
+            messageId: _selectedMessageForDetail!,
+            onClose: _onCloseDetail,
+          ),
+      ],
+    );
+  }
+
+  void _onViewDetail(String messageId) {
+    setState(() {
+      _selectedMessageForDetail = messageId;
+    });
+  }
+
+  void _onCloseDetail() {
+    setState(() {
+      _selectedMessageForDetail = null;
+    });
   }
 
 }

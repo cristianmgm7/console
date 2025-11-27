@@ -9,6 +9,7 @@ class MessageCard extends StatelessWidget {
     required this.user,
     required this.isSelected,
     required this.onSelected,
+    this.onViewDetail,
     super.key,
   });
 
@@ -16,6 +17,7 @@ class MessageCard extends StatelessWidget {
   final User? user;
   final bool isSelected;
   final ValueChanged<bool?> onSelected;
+  final ValueChanged<String>? onViewDetail;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +164,7 @@ class MessageCard extends StatelessWidget {
               onSelected: (value) {
                 switch (value) {
                   case 'view':
-                    context.go('/dashboard/messages/${message.id}');
+                    onViewDetail?.call(message.id);
                     break;
                   // TODO: Implement other menu actions (edit, download, archive, delete)
                 }

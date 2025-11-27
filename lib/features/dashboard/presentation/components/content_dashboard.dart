@@ -12,6 +12,7 @@ class DashboardContent extends StatelessWidget {
     required this.scrollController,
     required this.selectedMessages,
     required this.onToggleMessageSelection,
+    this.onViewDetail,
     super.key,
   });
 
@@ -19,6 +20,7 @@ class DashboardContent extends StatelessWidget {
   final Set<String> selectedMessages;
   final void Function(String, {bool? value}) onToggleMessageSelection;
   final bool Function(BuildContext context) isAnyBlocLoading;
+  final ValueChanged<String>? onViewDetail;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +98,7 @@ class DashboardContent extends StatelessWidget {
                   user: user,
                   isSelected: selectedMessages.contains(message.id),
                   onSelected: (value) => onToggleMessageSelection(message.id, value: value),
+                  onViewDetail: onViewDetail,
                 );
               },
             ),

@@ -9,5 +9,4 @@ class AppRoutes {
   static const String users = '/dashboard/users';
   static const String voiceMemos = '/dashboard/voice-memos';
   static const String settings = '/dashboard/settings';
-  static const String messageDetail = '/dashboard/messages/:messageId';
 }

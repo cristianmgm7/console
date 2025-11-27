@@ -43,48 +43,67 @@ The detail screen displays message information in logical sections with proper f
 ## Implementation Approach
 
 Use existing patterns and infrastructure:
-- Follow BLoC pattern for state management
-- Use GoRouter for navigation with parameterized routes
+- Follow BLoC pattern for state management (MessageBloc already provided at dashboard level)
+- Use dashboard state to show/hide detail panel instead of navigation
 - Follow existing UI component patterns and theming
 - Leverage existing `getMessage` API endpoint
 
-## Phase 1: Add Message Detail Route and Navigation
+## Phase 1: Add Message Detail Panel to Dashboard
 
 ### Overview
-Add routing infrastructure and basic navigation from MessageCard to detail screen.
+Add a detail panel/section to the dashboard that shows when a message is selected, instead of navigating to a separate screen.
 
 ### Changes Required:
 
-#### 1. Add Message Detail Route
-**File**: `lib/core/routing/app_routes.dart`
-**Changes**: Add new route constant for message details
+#### 1. Add Selected Message State to Dashboard
+**File**: `lib/features/dashboard/presentation/dashboard_screen.dart`
+**Changes**: Add state to track selected message for detail view
 ```dart
-static const String messageDetail = '/dashboard/messages/:messageId';
+class _DashboardScreenState extends State<DashboardScreen> {
+  final Set<String> _selectedMessages = {};
+  bool _selectAll = false;
+  final ScrollController _scrollController = ScrollController();
+  late final StreamSubscription<WorkspaceState> _workspaceSubscription;
+  late final StreamSubscription<ConversationState> _conversationSubscription;
+
+  // Add selected message for detail view
+  String? _selectedMessageForDetail;
 ```
 
-#### 2. Add Route to Router
-**File**: `lib/core/routing/app_router.dart`
-**Changes**: Add GoRoute for message detail screen
+#### 2. Update Dashboard Layout for Detail Panel
+**File**: `lib/features/dashboard/presentation/dashboard_screen.dart`
+**Changes**: Modify build method to show detail panel when message is selected
 ```dart
-GoRoute(
-  path: AppRoutes.messageDetail,
-  name: 'messageDetail',
-  pageBuilder: (context, state) => const NoTransitionPage(
-    child: MessageDetailScreen(
-      messageId: state.pathParameters['messageId']!,
+@override
+Widget build(BuildContext context) {
+  return ColoredBox(
+    color: Theme.of(context).colorScheme.surface,
+    child: Stack(
+      children: [
+        // Main dashboard content
+        if (_selectedMessageForDetail == null)
+          _buildFullDashboard()
+        else
+          _buildDashboardWithDetail(),
+
+        // Floating Action Panel (existing)
+        // ...
+      ],
     ),
-  ),
-),
+  );
+}
 ```
 
-#### 3. Implement Navigation in MessageCard
+#### 3. Implement Message Selection in MessageCard
 **File**: `lib/features/dashboard/presentation/components/message_card.dart`
-**Changes**: Replace TODO in popup menu handler with navigation logic
+**Changes**: Update popup menu to trigger detail panel instead of navigation
 ```dart
 onSelected: (value) {
   switch (value) {
     case 'view':
-      context.go('/dashboard/messages/${message.id}');
+      // Trigger showing detail panel in dashboard
+      // This will be passed as callback from dashboard
+      onViewDetail?.call(message.id);
       break;
     // ... other cases
   }
@@ -95,19 +114,19 @@ onSelected: (value) {
 
 #### Automated Verification:
 - [x] App builds without errors
-- [x] New route is registered in router
-- [x] Navigation from MessageCard triggers route change
-- [x] Route parameters are correctly passed
+- [x] Dashboard state tracks selected message for detail
+- [x] MessageCard triggers detail panel callback
+- [x] Dashboard layout adapts when detail is shown
 
 #### Manual Verification:
-- [ ] Tapping "View Details" on a message navigates to detail screen
-- [ ] URL shows correct message ID parameter
-- [ ] Back navigation works correctly
+- [ ] Tapping "View Details" shows detail panel in dashboard
+- [ ] Dashboard layout changes to accommodate detail panel
+- [ ] Detail panel can be closed to return to full dashboard
 
-## Phase 2: Create Message Detail Screen and BLoC
+## Phase 2: Implement Message Detail Panel in Dashboard
 
 ### Overview
-Create the message detail screen with basic structure and implement data fetching using existing patterns.
+Create the message detail panel component that integrates with the existing dashboard and MessageBloc.
 
 ### Changes Required:
 
@@ -166,86 +185,128 @@ Future<void> _onLoadMessageDetail(
 }
 ```
 
-#### 4. Create Message Detail Screen
-**File**: `lib/features/messages/presentation/pages/message_detail_screen.dart`
-**Changes**: Create new screen component
+#### 4. Create Message Detail Panel Component
+**File**: `lib/features/messages/presentation/components/message_detail_panel.dart`
+**Changes**: Create panel component that works with dashboard's MessageBloc
 ```dart
-class MessageDetailScreen extends StatelessWidget {
-  const MessageDetailScreen({required this.messageId, super.key});
+class MessageDetailPanel extends StatelessWidget {
+  const MessageDetailPanel({
+    required this.messageId,
+    required this.onClose,
+    super.key
+  });
   final String messageId;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<MessageBloc>()..add(LoadMessageDetail(messageId)),
-      child: const Scaffold(
-        appBar: AppBar(title: Text('Message Details')),
-        body: MessageDetailView(),
-      ),
-    );
-  }
-}
-```
+    // Trigger loading the message detail when panel is shown
+    context.read<MessageBloc>().add(LoadMessageDetail(messageId));
 
-#### 5. Create Message Detail View
-**File**: `lib/features/messages/presentation/components/message_detail_view.dart`
-**Changes**: Create main content widget with basic structure
-```dart
-class MessageDetailView extends StatelessWidget {
-  const MessageDetailView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
     return BlocBuilder<MessageBloc, MessageState>(
       builder: (context, state) {
-        if (state is MessageLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is MessageDetailLoaded) {
-          return _buildDetailContent(context, state);
-        }
-        if (state is MessageError) {
-          return Center(child: Text('Error: ${state.message}'));
-        }
-        return const SizedBox.shrink();
+        return Container(
+          width: 400, // Fixed width panel
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1,
+              ),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Header with close button
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Theme.of(context).dividerColor),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Message Details',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: onClose,
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Expanded(
+                child: _buildContent(state),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
 
-  Widget _buildDetailContent(BuildContext context, MessageDetailLoaded state) {
+  Widget _buildContent(MessageState state) {
+    if (state is MessageLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state is MessageDetailLoaded) {
+      return MessageDetailContent(state: state);
+    }
+    if (state is MessageError) {
+      return Center(child: Text('Error: ${state.message}'));
+    }
+    return const SizedBox.shrink();
+  }
+}
+```
+
+#### 5. Create Message Detail Content Component
+**File**: `lib/features/messages/presentation/components/message_detail_content.dart`
+**Changes**: Extract content sections from previous implementation
+```dart
+class MessageDetailContent extends StatelessWidget {
+  const MessageDetailContent({required this.state, super.key});
+  final MessageDetailLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Basic info section
-          _buildBasicInfoSection(state),
+          _buildBasicInfoSection(),
           const SizedBox(height: 24),
-          // Content section
-          _buildContentSection(state),
+          _buildContentSection(),
           const SizedBox(height: 24),
-          // Metadata section
-          _buildMetadataSection(state),
+          _buildMetadataSection(),
         ],
       ),
     );
   }
+
+  // ... section building methods (same as before)
 }
 ```
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] App builds without errors
-- [x] BLoC handles new event correctly
-- [x] Screen renders without crashes
-- [x] Navigation to detail screen works
+- [ ] App builds without errors
+- [ ] BLoC handles new event correctly
+- [ ] Panel renders within dashboard layout
+- [ ] Close functionality works
 
 #### Manual Verification:
-- [ ] Detail screen shows loading state initially
+- [ ] Detail panel shows loading state initially
 - [ ] Message data loads and displays correctly
-- [ ] Error state shows appropriate message
-- [ ] Screen is scrollable and responsive
+- [ ] Panel can be closed to return to full dashboard
+- [ ] Panel layout works well with dashboard
 
 ## Phase 3: Implement Message Detail UI Components
 
