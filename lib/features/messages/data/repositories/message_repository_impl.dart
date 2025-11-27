@@ -33,7 +33,6 @@ class MessageRepositoryImpl implements MessageRepository {
 
       // Check if we already loaded this range
       if (_loadedRanges[conversationId]?.contains(rangeKey) ?? false) {
-        _logger.d('Returning cached messages for range $rangeKey');
         final cached = _cachedMessages[conversationId] ?? [];
         return success(cached.where((m) {
           // Filter messages in the requested range
@@ -87,7 +86,6 @@ class MessageRepositoryImpl implements MessageRepository {
       for (final messages in _cachedMessages.values) {
         final cached = messages.where((m) => m.id == messageId).firstOrNull;
         if (cached != null) {
-          _logger.d('Returning cached message: $messageId');
           return success(cached);
         }
       }
@@ -113,16 +111,12 @@ class MessageRepositoryImpl implements MessageRepository {
     } on FormatException catch (e) {
       _logger.w('Invalid message data from API: ${e.message}');
       final serverFailure = ServerFailure(statusCode: 422, details: 'Invalid message data received from server: ${e.message}');
-      _logger.d('Created ServerFailure: $serverFailure');
-      final result = failure<Message>(serverFailure);
-      _logger.d('Returning failure result: $result');
-      return result;
+      return failure<Message>(serverFailure);
     } on Exception catch (e, stack) {
       _logger.e('Unknown error fetching message - Exception caught: ${e.runtimeType}: $e', stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
     }
   }
-
 
   @override
   Future<Result<List<Message>>> getMessagesFromConversations({
@@ -130,8 +124,6 @@ class MessageRepositoryImpl implements MessageRepository {
     int count = 50,
   }) async {
     try {
-      _logger.i('Fetching messages from ${conversationIds.length} conversations: $conversationIds');
-
       final allMessages = <Message>[];
 
       // Clear cache for conversations that are no longer selected
@@ -139,14 +131,12 @@ class MessageRepositoryImpl implements MessageRepository {
       final cachedConversationIds = _cachedMessages.keys.toSet();
       final removedConversations = cachedConversationIds.difference(conversationIds);
       for (final removedId in removedConversations) {
-        _logger.d('Clearing cache for deselected conversation: $removedId');
         _cachedMessages.remove(removedId);
         _loadedRanges.remove(removedId);
       }
 
       // Fetch messages from each conversation using sequential pagination
       for (final conversationId in conversationIds) {
-        _logger.d('Fetching messages for conversation: $conversationId');
         try {
           final messageDtos = await _remoteDataSource.getMessages(
             conversationId: conversationId,
@@ -156,7 +146,6 @@ class MessageRepositoryImpl implements MessageRepository {
 
           final messages = messageDtos.map((dto) => dto.toDomain()).toList();
           allMessages.addAll(messages);
-          _logger.i('Added ${messages.length} messages from conversation $conversationId');
         } on Exception catch (e) {
           // Log warning but continue with other conversations
           _logger.e('Failed to fetch messages from $conversationId: $e');
@@ -166,7 +155,6 @@ class MessageRepositoryImpl implements MessageRepository {
       // Sort all messages by date (newest first)
       allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      _logger.i('Successfully fetched ${allMessages.length} total messages from ${conversationIds.length} conversations');
       return success(allMessages);
     } on Exception catch (e, stack) {
       _logger.e('Error fetching messages from multiple conversations', error: e, stackTrace: stack);
