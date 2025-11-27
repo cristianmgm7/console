@@ -265,10 +265,10 @@ void main() {
     expect(message.creatorId, 'travis');
     expect(message.audioModels.length, 2);
     expect(message.transcripts.length, 2);
-    expect(message.streamingAudioModel?.format, 'm3u8');
+    expect(message.audioModels.where((model) => model.isStreaming).first.format, 'm3u8');
     expect(message.audioModels.where((model) => !model.isStreaming).first.format, 'mp3');
-    expect(message.transcriptWithTimecodes?.timecodes.isNotEmpty, true);
-    expect(message.summaryTranscript?.text,
+    expect(message.transcripts.where((t) => t.timecodes.isNotEmpty).first.timecodes.isNotEmpty, true);
+    expect(message.transcripts.where((t) => t.type == 'summary').first.text,
         "Hi Christian, Thomas asked me to reach out. I'm Carbon Voice's founder/CEO with a thousand ideas; I'd love to discuss your goals and collaboration.");
   });
 }

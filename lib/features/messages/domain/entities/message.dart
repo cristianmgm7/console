@@ -40,37 +40,12 @@ class Message extends Equatable {
   final String notes;
   final DateTime? lastUpdatedAt;
 
-  // Computed properties
-  String get primaryWorkspaceId => workspaceIds.first;
-  String get primaryChannelId => channelIds.first;
-  AudioModel? get streamingAudioModel =>
-      audioModels.where((model) => model.isStreaming).firstOrNull;
-  AudioModel? get originalAudioModel =>
-      audioModels.where((model) => model.isOriginal).firstOrNull;
-  Transcript? get transcriptWithTimecodes =>
-      transcripts.where((t) => t.timecodes.isNotEmpty).firstOrNull;
-  Transcript? get summaryTranscript =>
-      transcripts.where((t) => t.type == 'summary').firstOrNull;
-
-  // Backward compatibility getters
-  String get conversationId => primaryChannelId;
+  // Backward compatibility getters (used by existing UI code)
+  String get conversationId => channelIds.isNotEmpty ? channelIds.first : '';
   String get userId => creatorId;
   String? get text => notes.isNotEmpty ? notes : null;
   String? get transcript => transcripts.isNotEmpty ? transcripts.first.text : null;
   String? get audioUrl => audioModels.isNotEmpty ? audioModels.first.url : null;
-  Map<String, dynamic>? get metadata => {
-    'type': type,
-    'status': status,
-    'isTextMessage': isTextMessage,
-    'workspaceIds': workspaceIds,
-    'channelIds': channelIds,
-    'heardDuration': heardDuration?.inMilliseconds,
-    'totalHeardDuration': totalHeardDuration?.inMilliseconds,
-    'lastHeardAt': lastHeardAt?.toIso8601String(),
-    'lastUpdatedAt': lastUpdatedAt?.toIso8601String(),
-    'audioModelCount': audioModels.length,
-    'transcriptCount': transcripts.length,
-  };
 
   @override
   List<Object?> get props => [

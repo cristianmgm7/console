@@ -1,17 +1,13 @@
-import 'audio_model_dto.dart';
-import 'reaction_summary_dto.dart';
-import 'text_model_dto.dart';
-import 'utm_data_dto.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/audio_model_dto.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/reaction_summary_dto.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/text_model_dto.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/utm_data_dto.dart';
 
 /// DTO for message from API response
 class MessageDto {
   const MessageDto({
-    this.deletedAt,
-    this.parentMessageId,
     required this.heardMs,
     required this.utmData,
-    this.name,
-    this.sourceMessageId,
     required this.messageId,
     required this.creatorId,
     required this.createdAt,
@@ -34,13 +30,17 @@ class MessageDto {
     required this.notifiedUsers,
     required this.totalHeardMs,
     required this.usersCaughtUp,
-    this.forwardId,
-    this.shareLinkId,
     required this.socketDisconnectsWhileStreaming,
-    this.streamKey,
     required this.type,
     required this.channelSequence,
     required this.lastHeardAt,
+    this.deletedAt,
+    this.parentMessageId,
+    this.name,
+    this.sourceMessageId,
+    this.forwardId,
+    this.shareLinkId,
+    this.streamKey,
     this.folderId,
   });
 
