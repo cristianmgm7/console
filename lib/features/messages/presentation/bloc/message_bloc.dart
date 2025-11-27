@@ -1,12 +1,11 @@
 import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
-import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart';
-
 // Remove LoadMessageDetail import - now handled by MessageDetailBloc
 // import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,11 +35,8 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     ConversationSelectedEvent event,
     Emitter<MessageState> emit,
   ) async {
-    _logger.i('ConversationSelectedEvent received with conversationIds: ${event.conversationIds}');
-
     // If no conversations are selected, clear the messages immediately
     if (event.conversationIds.isEmpty) {
-      _logger.i('No conversations selected, clearing messages');
       _currentConversationIds = {};
       emit(const MessageLoaded(messages: [], users: {}));
       return;
@@ -48,11 +44,8 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
 
     // Only load messages if the conversation selection has actually changed
     if (_currentConversationIds != event.conversationIds) {
-      _logger.i('Conversation selection changed from $_currentConversationIds to ${event.conversationIds}, loading messages');
       _currentConversationIds = event.conversationIds;
       add(LoadMessages(event.conversationIds));
-    } else {
-      _logger.d('Conversation selection unchanged, skipping message reload');
     }
   }
 
@@ -60,7 +53,6 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     LoadMessages event,
     Emitter<MessageState> emit,
   ) async {
-    _logger.d('Loading messages for conversations: ${event.conversationIds}');
     emit(const MessageLoading());
     _currentConversationIds = event.conversationIds;
 
@@ -71,7 +63,6 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
 
     if (result.isSuccess) {
       final messages = result.valueOrNull!;
-      _logger.i('Successfully loaded ${messages.length} messages from ${event.conversationIds.length} conversations');
       await _loadUsersAndEmit(messages, emit);
     } else {
       _logger.e('Failed to load messages: ${result.failureOrNull}');
@@ -113,7 +104,6 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     if (_currentConversationIds.isEmpty) return;
 
     emit(currentState.copyWith(isLoadingMore: true));
-
 
     // For pagination with multiple conversations, we load more from all selected conversations
     final result = await _messageRepository.getMessagesFromConversations(
@@ -161,6 +151,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       }
     } else {
       emit(currentState.copyWith(isLoadingMore: false));
+      _logger.e('Failed to load more messages: ${result.failureOrNull}');
       emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
     }
   }

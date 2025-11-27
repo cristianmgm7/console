@@ -31,8 +31,7 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   @override
   Future<void> saveCredentials(oauth2.Credentials credentials) async {
     final json = credentials.toJson();
-    final encoded = jsonEncode(json);
-    await _storage.write(key: _credentialsKey, value: encoded);
+    await _storage.write(key: _credentialsKey, value: json);
   }
 
   @override

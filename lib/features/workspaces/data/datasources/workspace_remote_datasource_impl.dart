@@ -18,8 +18,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   @override
   Future<List<WorkspaceModel>> getWorkspaces() async {
     try {
-      _logger.d('Fetching workspaces from /workspaces');
-
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces',
       );
@@ -87,7 +85,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
       }
 
       if (workspacesJson.isEmpty) {
-        _logger.w('No workspaces found in response');
         return [];
       }
 
@@ -98,7 +95,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
           })
           .toList();
 
-      _logger.i('Fetched ${workspaces.length} workspaces');
       return workspaces;
     } on ServerException {
       rethrow;
@@ -114,8 +110,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   @override
   Future<WorkspaceModel> getWorkspace(String workspaceId) async {
     try {
-      _logger.d('Fetching workspace: $workspaceId');
-
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId',
       );
@@ -124,7 +118,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final normalized = JsonNormalizer.normalizeWorkspace(data);
         final workspace = WorkspaceModel.fromJson(normalized);
-        _logger.i('Fetched workspace: ${workspace.name}');
         return workspace;
       } else {
         _logger.e('Failed to fetch workspace: ${response.statusCode}');

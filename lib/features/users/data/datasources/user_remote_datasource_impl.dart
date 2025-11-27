@@ -18,8 +18,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   @override
   Future<UserModel> getUser(String userId) async {
     try {
-      _logger.d('Fetching user: $userId');
-
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/users/$userId',
       );
@@ -28,7 +26,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final normalized = JsonNormalizer.normalizeUser(data);
         final user = UserModel.fromJson(normalized);
-        _logger.i('Fetched user: ${user.name}');
         return user;
       } else {
         _logger.e('Failed to fetch user: ${response.statusCode}');
@@ -48,10 +45,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   @override
   Future<List<UserModel>> getUsers(List<String> userIds) async {
     try {
-      _logger.d('Fetching ${userIds.length} users');
-
-      // If API supports batch fetching, use it
-      // For now, fetch individually (can be optimized later)
       final users = <UserModel>[];
       for (final userId in userIds) {
         try {
@@ -63,7 +56,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         }
       }
 
-      _logger.i('Fetched ${users.length}/${userIds.length} users');
       return users;
     } on Exception catch (e, stack) {
       _logger.e('Error fetching users', error: e, stackTrace: stack);
@@ -74,8 +66,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   @override
   Future<List<UserModel>> getWorkspaceUsers(String workspaceId) async {
     try {
-      _logger.d('Fetching users for workspace: $workspaceId');
-
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId/users',
       );
@@ -100,7 +90,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
             })
             .toList();
 
-        _logger.i('Fetched ${users.length} workspace users');
         return users;
       } else {
         _logger.e('Failed to fetch workspace users: ${response.statusCode}');

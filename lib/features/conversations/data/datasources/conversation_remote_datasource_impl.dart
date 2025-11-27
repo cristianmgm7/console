@@ -18,8 +18,6 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   @override
   Future<List<ConversationModel>> getConversations(String workspaceId) async {
     try {
-      _logger.d('Fetching conversations for workspace: $workspaceId');
-
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/channels/$workspaceId',
       );
@@ -44,9 +42,9 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
             })
             .toList();
 
-        _logger.i('Fetched ${conversations.length} conversations');
         return conversations;
       } else {
+        // Log only errors or exceptions
         _logger.e('Failed to fetch conversations: ${response.statusCode}');
         throw ServerException(
           statusCode: response.statusCode,
@@ -64,8 +62,6 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   @override
   Future<ConversationModel> getConversation(String conversationId) async {
     try {
-      _logger.d('Fetching conversation: $conversationId');
-
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/channel/$conversationId',
       );
@@ -74,9 +70,9 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final normalized = JsonNormalizer.normalizeConversation(data);
         final conversation = ConversationModel.fromJson(normalized);
-        _logger.i('Fetched conversation: ${conversation.name}');
         return conversation;
       } else {
+        // Log only errors or exceptions
         _logger.e('Failed to fetch conversation: ${response.statusCode}');
         throw ServerException(
           statusCode: response.statusCode,
