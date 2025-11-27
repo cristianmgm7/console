@@ -5,7 +5,7 @@ import 'package:carbon_voice_console/features/messages/data/models/api/timecode_
 import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/timecode.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/transcript.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
 
 /// Extension methods to convert DTOs to domain entities
 extension MessageDtoMapper on MessageDto {
@@ -18,7 +18,7 @@ extension MessageDtoMapper on MessageDto {
       channelIds: channelIds,
       duration: Duration(milliseconds: durationMs),
       audioModels: audioModels.map((dto) => dto.toDomain()).toList(),
-      transcripts: textModels.map((dto) => dto.toDomain()).toList(),
+      textModels: textModels.map((dto) => dto.toDomain()).toList(),
       status: status,
       type: type,
       lastHeardAt: lastHeardAt,
@@ -47,8 +47,8 @@ extension AudioModelDtoMapper on AudioModelDto {
 }
 
 extension TextModelDtoMapper on TextModelDto {
-  Transcript toDomain() {
-    return Transcript(
+  TextModel toDomain() {
+    return TextModel(
       type: type,
       audioId: audioId,
       language: languageId,

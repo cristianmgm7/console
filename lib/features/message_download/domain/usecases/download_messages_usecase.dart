@@ -90,7 +90,7 @@ class DownloadMessagesUsecase {
 
           // Add transcript download item if content exists and transcript is requested
           if (downloadType == DownloadType.transcript || downloadType == DownloadType.both) {
-            final transcriptContent = message.transcript ?? message.text;
+            final transcriptContent = message.transcriptText ?? message.text;
             if (transcriptContent != null && transcriptContent.isNotEmpty) {
               downloadItems.add(DownloadItem(
                 messageId: message.id,

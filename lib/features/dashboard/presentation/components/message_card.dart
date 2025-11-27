@@ -80,7 +80,7 @@ class MessageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    message.text ?? message.transcript ?? 'No content',
+                    message.text ?? message.transcriptText ?? 'No content',
                     style: Theme.of(context).textTheme.bodyMedium,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

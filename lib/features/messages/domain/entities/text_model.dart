@@ -1,9 +1,9 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/timecode.dart';
 import 'package:equatable/equatable.dart';
 
-/// Domain entity representing a transcript
-class Transcript extends Equatable {
-  const Transcript({
+/// Domain entity representing a text model
+class TextModel extends Equatable {
+  const TextModel({
     required this.type,
     required this.audioId,
     required this.language,
