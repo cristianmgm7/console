@@ -49,12 +49,6 @@ class MessageCard extends StatelessWidget {
                     _formatDate(message.createdAt),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  Text(
-                    'Received: ${_formatFullDate(message.createdAt)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
                 ],
               ),
             ),
@@ -65,7 +59,7 @@ class MessageCard extends StatelessWidget {
             SizedBox(
               width: 140,
               child: Text(
-                user?.name ?? 'Unknown User',
+                message.creatorId,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -97,38 +91,6 @@ class MessageCard extends StatelessWidget {
             ),
 
             const SizedBox(width: 16),
-
-            // AI Action Button
-            SizedBox(
-              width: 60,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 16),
-
             // Duration
             SizedBox(
               width: 60,
@@ -140,29 +102,6 @@ class MessageCard extends StatelessWidget {
             ),
 
             const SizedBox(width: 16),
-
-            // Status
-            SizedBox(
-              width: 90,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(message.status, context),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Center(
-                    child: Text(
-                      message.status,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-                  ),
-                ),
-            ),
-
-            const SizedBox(width: 8),
 
             // Menu
             PopupMenuButton(
@@ -237,27 +176,9 @@ class MessageCard extends StatelessWidget {
 
     return '$displayHour:$minute $period ${date.month}/${date.day}/${date.year % 100}';
   }
-
-  String _formatFullDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  Color _getStatusColor(String status, BuildContext context) {
-    switch (status.toLowerCase()) {
-      case 'processed':
-        return Colors.green;
-      case 'new':
-        return Colors.blue;
-      case 'archived':
-        return Colors.grey;
-      default:
-        return Theme.of(context).colorScheme.secondary;
-    }
   }
 }
