@@ -1,5 +1,4 @@
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,15 +7,15 @@ class MessageDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MessageBloc, MessageState>(
+    return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
-        if (state is MessageLoading) {
+        if (state is MessageDetailLoading) {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is MessageDetailLoaded) {
           return _buildDetailContent(context, state);
         }
-        if (state is MessageError) {
+        if (state is MessageDetailError) {
           return Center(child: Text('Error: ${state.message}'));
         }
         return const SizedBox.shrink();

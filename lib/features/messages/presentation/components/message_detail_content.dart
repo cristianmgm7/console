@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:flutter/material.dart';
 
 class MessageDetailContent extends StatelessWidget {
