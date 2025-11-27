@@ -32,6 +32,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print (data[0]);
 
         // List endpoint returns: [{message}, {message}, ...]
         // Detail endpoint returns: {"channel_id": "...", "messages": [{message}]}
@@ -115,6 +116,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         // 1. Wrapped: {"channel_id": "...", "messages": [{...}]}
         // 2. Direct: {message object with all fields}
         final messagesJson = data['messages'] as List<dynamic>?;
+        print (jsonEncode(data));
 
         if (messagesJson != null && messagesJson.isNotEmpty) {
           // Wrapped format - extract first message

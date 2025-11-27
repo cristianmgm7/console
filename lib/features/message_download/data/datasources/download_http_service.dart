@@ -3,24 +3,25 @@ import 'package:carbon_voice_console/core/network/authenticated_http_service.dar
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
-/// HTTP service for downloading files from authenticated stream URLs
+/// HTTP service for downloading files from authenticated URLs
 @LazySingleton()
 class DownloadHttpService {
-  DownloadHttpService(this._authenticatedHttpService, this._logger);
+  DownloadHttpService(this._httpService, this._logger);
 
-  final AuthenticatedHttpService _authenticatedHttpService;
+  final AuthenticatedHttpService _httpService;
   final Logger _logger;
 
-  /// Downloads file bytes from authenticated stream URLs
+  /// Downloads file bytes from an authenticated URL
   /// Returns bytes and Content-Type header
   Future<DownloadResponse> downloadFile(String url) async {
     try {
-      _logger.d('Downloading audio from: ${url.contains('.m3u8') ? 'streaming URL (.m3u8)' : 'direct URL (.mp3)'}');
+      _logger.d('Downloading file from: $url');
 
-      // Use authenticated HTTP for API stream URLs
-      _logger.d('Making authenticated GET request to: $url');
-      final response = await _authenticatedHttpService.get(url);
-      _logger.d('Authenticated response status: ${response.statusCode}');
+      // Use authenticated HTTP service to include OAuth token
+      final response = await _httpService.get(url);
+
+      _logger.d('Response status: ${response.statusCode}');
+      _logger.d('Response headers: ${response.headers}');
 
       if (response.statusCode == 200) {
         final contentType = response.headers['content-type'];
@@ -31,7 +32,7 @@ class DownloadHttpService {
           contentType: contentType,
         );
       } else {
-        _logger.e('Failed to download file: ${response.statusCode}, body: ${response.body}, headers: ${response.headers}');
+        _logger.e('Failed to download file: ${response.statusCode}');
         throw ServerException(
           statusCode: response.statusCode,
           message: 'Failed to download file',
