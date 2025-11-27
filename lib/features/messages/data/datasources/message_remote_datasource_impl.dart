@@ -30,37 +30,16 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print (data[0]);
 
-        // List endpoint returns: [{message}, {message}, ...]
-        // Detail endpoint returns: {"channel_id": "...", "messages": [{message}]}
-        final List<dynamic> messagesJson;
-
-        if (data is List) {
-          // Direct array format (list endpoint)
-          messagesJson = data;
-          _logger.d('Received direct array with ${data.length} messages');
-        } else if (data is Map<String, dynamic>) {
-          // Wrapped format - try 'messages' field first, fallback to 'data'
-          final messages = data['messages'] as List<dynamic>?;
-          final dataField = data['data'] as List<dynamic>?;
-
-          if (messages != null) {
-            messagesJson = messages;
-            _logger.d('Received wrapped response with ${messages.length} messages');
-          } else if (dataField != null) {
-            messagesJson = dataField;
-            _logger.d('Received wrapped response (data field) with ${dataField.length} messages');
-          } else {
-            throw FormatException(
-              'Wrapped response missing messages/data array. Keys: ${data.keys.join(", ")}',
-            );
-          }
-        } else {
+        // API returns: [{message}, {message}, ...]
+        if (data is! List) {
           throw FormatException(
-            'Unexpected response type: ${data.runtimeType}. Expected List or Map.',
+            'Expected List but got ${data.runtimeType} for messages endpoint',
           );
         }
+
+        final messagesJson = data;
+        _logger.d('Received ${messagesJson.length} messages');
 
         // Convert each message JSON to DTO
         final messages = messagesJson
