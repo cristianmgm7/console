@@ -22,7 +22,6 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   }) async {
     try {
       final stop = start + count;
-      _logger.d('Fetching messages [$start-$stop] for conversation: $conversationId');
 
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/v3/messages/$conversationId/sequential/$start/$stop',
@@ -39,7 +38,6 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         }
 
         final messagesJson = data;
-        _logger.d('Received ${messagesJson.length} messages from API');
 
         // Convert each message JSON to DTO
         final messages = <MessageDto>[];
@@ -50,14 +48,12 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
             }
             final messageDto = MessageDto.fromJson(json);
             messages.add(messageDto);
-          } catch (e, stack) {
+          } on Exception catch (e, stack) {
             _logger.e('Failed to parse message in list: $e', error: e, stackTrace: stack);
-            _logger.d('Failed message JSON: $json');
-            // Continue with other messages instead of failing completely
+            throw ServerException(statusCode: 422, message: 'Failed to parse message in list: $e');
           }
         }
 
-        _logger.i('Successfully fetched and normalized ${messages.length} messages');
         return messages;
       } else {
         _logger.e('Failed to fetch messages: ${response.statusCode}');
@@ -77,15 +73,12 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   @override
   Future<MessageDto> getMessage(String messageId) async {
     try {
-      _logger.d('Fetching message: $messageId');
-
       // Try v5 endpoint first, fallback to v4
       var response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId',
       );
 
       if (response.statusCode == 404) {
-        _logger.d('Message not found in v5, trying v4');
         response = await _httpService.get(
           '${OAuthConfig.apiBaseUrl}/v4/messages/$messageId',
         );
@@ -93,16 +86,11 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        _logger.d('API Response keys: ${data.keys.toList()}');
 
         // Check if response has a 'message' key with the actual message data
         if (data.containsKey('message') && data['message'] != null && data['message'] is Map<String, dynamic>) {
           // Wrapped format: {"message": {...}, ...}
-          _logger.d('Using wrapped message format');
           final messageData = data['message'] as Map<String, dynamic>;
-          _logger.d('messageData type: ${messageData.runtimeType}');
-          _logger.d('messageData keys: ${messageData.keys.toList()}');
-          _logger.d('messageData isEmpty: ${messageData.isEmpty}');
 
           // Check if message data is not empty
           if (messageData.isNotEmpty) {
@@ -117,9 +105,6 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
               final messageDto = MessageDto.fromJson(normalizedData);
 
-              // Log channel info if available
-              final channelId = data['channel_id'] as String?;
-              _logger.i('Fetched message: ${messageDto.messageId ?? "null"}${channelId != null ? ' from channel: $channelId' : ''}');
               return messageDto;
             } catch (e, stack) {
               _logger.e('Failed to parse message JSON: $e', error: e, stackTrace: stack);
@@ -132,11 +117,10 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
           }
         } else {
           // Direct format: {message object with all fields}
-          _logger.d('Using direct message format');
 
           // Check if data contains message fields (not just wrapper fields)
           final messageKeys = ['message_id', 'creator_id', 'created_at'];
-          final hasMessageFields = messageKeys.any((key) => data.containsKey(key));
+          final hasMessageFields = messageKeys.any(data.containsKey);
 
           if (hasMessageFields) {
             try {
@@ -149,7 +133,6 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
               }
 
               final messageDto = MessageDto.fromJson(normalizedData);
-              _logger.i('Fetched message: ${messageDto.messageId ?? "null"}');
               return messageDto;
             } catch (e, stack) {
               _logger.e('Failed to parse direct message JSON: $e', error: e, stackTrace: stack);

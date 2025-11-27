@@ -8,7 +8,6 @@ import 'package:carbon_voice_console/features/dashboard/presentation/components/
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/table_header_dashboard.dart';
-import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
@@ -16,6 +15,7 @@ import 'package:carbon_voice_console/features/message_download/presentation/widg
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -160,9 +160,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: Theme.of(context).colorScheme.surface,
       child: Stack(
         children: [
-          _selectedMessageForDetail == null
-              ? _buildFullDashboard()
-              : _buildDashboardWithDetail(),
+          if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
 
           // Floating Action Panel - only show when no detail is selected
           if (_selectedMessages.isNotEmpty && _selectedMessageForDetail == null)
@@ -317,52 +315,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDashboardWithDetail() {
-    return Row(
+    return Column(
       children: [
-        // Main dashboard area (takes remaining space)
+        // App Bar - full width at top
+        DashboardAppBar(
+          onRefresh: _onRefresh,
+        ),
+
+        // Main content area below app bar: left = messages, right = detail
         Expanded(
-          child: Column(
+          child: Row(
             children: [
-              // App Bar
-              DashboardAppBar(
-                onRefresh: _onRefresh,
-              ),
-
-              // Table Header - only show when messages are loaded
-              BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-                selector: (state) => state is MessageLoaded ? state : null,
-                builder: (context, messageState) {
-                  if (messageState == null || messageState.messages.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return DashboardTableHeader(
-                    onToggleSelectAll: _toggleSelectAll,
-                    messageState: messageState,
-                    selectAll: _selectAll,
-                  );
-                },
-              ),
-
-              // Content
+              // Left side: Message list area
               Expanded(
-                child: DashboardContent(
-                  isAnyBlocLoading: _isAnyBlocLoading,
-                  scrollController: _scrollController,
-                  selectedMessages: _selectedMessages,
-                  onToggleMessageSelection: _toggleMessageSelection,
-                  onViewDetail: _onViewDetail,
+                child: Column(
+                  children: [
+                    // Table Header - only show when messages are loaded
+                    BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+                      selector: (state) => state is MessageLoaded ? state : null,
+                      builder: (context, messageState) {
+                        if (messageState == null || messageState.messages.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return DashboardTableHeader(
+                          onToggleSelectAll: _toggleSelectAll,
+                          messageState: messageState,
+                          selectAll: _selectAll,
+                        );
+                      },
+                    ),
+
+                    // Content
+                    Expanded(
+                      child: DashboardContent(
+                        isAnyBlocLoading: _isAnyBlocLoading,
+                        scrollController: _scrollController,
+                        selectedMessages: _selectedMessages,
+                        onToggleMessageSelection: _toggleMessageSelection,
+                        onViewDetail: _onViewDetail,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+
+              // Right side: Detail panel
+              if (_selectedMessageForDetail != null)
+                MessageDetailPanel(
+                  messageId: _selectedMessageForDetail!,
+                  onClose: _onCloseDetail,
+                ),
             ],
           ),
         ),
-
-        // Detail panel
-        if (_selectedMessageForDetail != null)
-          MessageDetailPanel(
-            messageId: _selectedMessageForDetail!,
-            onClose: _onCloseDetail,
-          ),
       ],
     );
   }
