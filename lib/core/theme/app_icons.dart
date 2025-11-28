@@ -7,6 +7,7 @@ class AppIcons {
   static final IconData back = PhosphorIcons.arrowLeft();
   static final IconData forward = PhosphorIcons.arrowRight();
   static final IconData close = PhosphorIcons.x();
+  static final IconData cancel = PhosphorIcons.xCircle();
   static final IconData menu = PhosphorIcons.list();
   static final IconData more = PhosphorIcons.dotsThree();
   static final IconData moreVertical = PhosphorIcons.dotsThreeVertical();
@@ -58,6 +59,7 @@ class AppIcons {
   static final IconData settings = PhosphorIcons.gear();
   static final IconData dashboard = PhosphorIcons.squaresFour();
   static final IconData notification = PhosphorIcons.bell();
+  static final IconData bell = PhosphorIcons.bell();
   static final IconData workspace = PhosphorIcons.briefcase();
   static final IconData conversation = PhosphorIcons.chats();
 
@@ -67,6 +69,9 @@ class AppIcons {
   static final IconData link = PhosphorIcons.link();
   static final IconData eye = PhosphorIcons.eye();
   static final IconData eyeSlash = PhosphorIcons.eyeSlash();
+  static final IconData lock = PhosphorIcons.lock();
   static final IconData logout = PhosphorIcons.signOut();
   static final IconData login = PhosphorIcons.signIn();
+  static final IconData globe = PhosphorIcons.globe();
+  static final IconData palette = PhosphorIcons.palette();
 }
