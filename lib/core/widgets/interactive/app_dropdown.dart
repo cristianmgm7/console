@@ -4,7 +4,13 @@ import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:flutter/material.dart';
 
-/// A themed dropdown button component that follows the app's design system
+/// A themed dropdown button component that follows the app's design system.
+///
+/// Usage:
+/// - For forms with labels: Use with `label` parameter in a Column layout
+/// - For inline usage (like in app bars): Wrap with `SizedBox` and set `isExpanded: true`
+/// - For constrained layouts: Set `isExpanded: false` and provide width via parent container
+/// - The component automatically adapts its layout based on whether a label is provided
 class AppDropdown<T> extends StatelessWidget {
   const AppDropdown({
     required this.value,
@@ -37,10 +43,40 @@ class AppDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (label != null) ...[
+    final dropdownWidget = Container(
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? AppColors.surface,
+        border: Border.all(
+          color: borderColor ?? AppColors.border,
+        ),
+        borderRadius: borderRadius ?? AppBorders.small,
+      ),
+      child: DropdownButton<T>(
+        value: value,
+        items: items,
+        onChanged: onChanged,
+        hint: hint,
+        isExpanded: isExpanded,
+        underline: const SizedBox.shrink(),
+        icon: Icon(
+          AppIcons.chevronDown,
+          size: 20,
+          color: iconColor ?? AppColors.textSecondary,
+        ),
+        style: AppTextStyle.bodyMedium.copyWith(
+          color: textColor ?? AppColors.textPrimary,
+        ),
+        dropdownColor: AppColors.surface,
+      ),
+    );
+
+    // If there's a label, use Column layout with constrained size
+    if (label != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
           DefaultTextStyle(
             style: AppTextStyle.bodySmall.copyWith(
               color: AppColors.textSecondary,
@@ -49,35 +85,12 @@ class AppDropdown<T> extends StatelessWidget {
             child: label!,
           ),
           const SizedBox(height: 8),
+          dropdownWidget,
         ],
-        Container(
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: backgroundColor ?? AppColors.surface,
-            border: Border.all(
-              color: borderColor ?? AppColors.border,
-            ),
-            borderRadius: borderRadius ?? AppBorders.small,
-          ),
-          child: DropdownButton<T>(
-            value: value,
-            items: items,
-            onChanged: onChanged,
-            hint: hint,
-            isExpanded: isExpanded,
-            underline: const SizedBox.shrink(),
-            icon: Icon(
-              AppIcons.chevronDown,
-              size: 20,
-              color: iconColor ?? AppColors.textSecondary,
-            ),
-            style: AppTextStyle.bodyMedium.copyWith(
-              color: textColor ?? AppColors.textPrimary,
-            ),
-            dropdownColor: AppColors.surface,
-          ),
-        ),
-      ],
-    );
+      );
+    }
+
+    // If no label, just return the dropdown widget directly
+    return dropdownWidget;
   }
 }

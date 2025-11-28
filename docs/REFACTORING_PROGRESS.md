@@ -49,15 +49,21 @@ Successfully created a comprehensive **themed widget library** and started syste
 - IconButton → AppIconButton
 - Checkbox → AppCheckbox
 - DropdownButton → AppDropdown (workspace selector)
+- PopupMenuButton → Consistent AppContainer styling (conversation selector)
 - Material Icons → Phosphor Icons (AppIcons)
 - Theme colors → AppColors
-- Consistent border styling
+- Consistent border styling and widths
+- Standardized dimensions (170px × 40px each) for perfect visual balance
+- **ADDED:** Clear labels ("Workspace" and "Conversations") above each selector
 
 **Impact:**
 - Cleaner, more maintainable code
 - Consistent theming throughout
 - Reduced inline styling by ~80%
 - **BONUS:** Now uses the new AppDropdown component!
+- **IMPROVED:** Both selectors now look identical and professional
+- **ENHANCED:** Clear labeling makes functionality obvious to users
+- **PERFECTED:** Identical dimensions ensure perfect visual symmetry
 
 #### 2. **message_card.dart** ✓
 **Changes:**
@@ -253,6 +259,9 @@ Successfully created a comprehensive **themed widget library** and started syste
 - Customizable colors and styling
 - Uses AppColors, AppTextStyle, AppIcons, AppBorders
 - Supports labels, hints, and full customization
+- **FIXED:** Layout issues when used in Row contexts (dashboard app bar)
+- **ENHANCED:** Smart layout adaptation based on label presence
+- **OPTIMIZED:** Fixed width containers for Row compatibility
 
 #### 18. **AppTextField Component** ✓
 **New Component:** A themed text input field
