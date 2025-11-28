@@ -1,7 +1,7 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
+import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/message_download/data/services/download_http_service.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_progress.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_result.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_summary.dart';
@@ -16,14 +16,14 @@ import 'package:logger/logger.dart';
 class DownloadAudioMessagesUsecase {
   const DownloadAudioMessagesUsecase(
     this._downloadRepository,
-    this._downloadHttpService,
+    this._authenticatedHttpService,
     this._messageRepository,
     this._logger,
   );
 
   final MessageRepository _messageRepository;
   final DownloadRepository _downloadRepository;
-  final DownloadHttpService _downloadHttpService;
+  final AuthenticatedHttpService _authenticatedHttpService;
   final Logger _logger;
 
   /// Downloads audio files for the specified messages
@@ -76,7 +76,7 @@ class DownloadAudioMessagesUsecase {
 
       // Check for cancellation
       if (isCancelled()) {
-        _logger.i('Audio download cancelled by user at item ${messageIndex}/$totalItems');
+        _logger.i('Audio download cancelled by user at item $messageIndex/$totalItems');
         return failure(UnknownFailure(
           details: 'Audio download cancelled at item $messageIndex of $totalItems',
         ),);
@@ -96,31 +96,46 @@ class DownloadAudioMessagesUsecase {
         // Check if message has audio URL
         if (uiMessage.audioUrl != null && uiMessage.audioUrl!.isNotEmpty) {
           try {
-            // Download file bytes using HTTP service
-            final downloadResponse = await _downloadHttpService.downloadFile(uiMessage.audioUrl!);
+            // Download file bytes using authenticated HTTP service
+            final response = await _authenticatedHttpService.get(uiMessage.audioUrl!);
 
-            // Save file using repository
-            final saveResult = await _downloadRepository.saveAudioFile(
-              uiMessage.id,
-              downloadResponse.bytes,
-              '${uiMessage.id}.mp3',
-              downloadResponse.contentType,
-            );
+            _logger.d('Response status: ${response.statusCode}');
+            _logger.d('Response headers: ${response.headers}');
 
-            saveResult.fold(
-              onSuccess: (result) {
-                results.add(result);
-                _logger.d('Downloaded and saved audio for message ${uiMessage.id}: ${result.status}');
-              },
-              onFailure: (failure) {
-                results.add(DownloadResult(
-                  messageId: uiMessage.id,
-                  status: DownloadStatus.failed,
-                  errorMessage: failure.failureOrNull?.details ?? 'Failed to save audio file',
-                ),);
-                _logger.e('Failed to save audio for message ${uiMessage.id}');
-              },
-            );
+            if (response.statusCode == 200) {
+              final contentType = response.headers['content-type'];
+              _logger.i('Downloaded file (${response.bodyBytes.length} bytes, type: $contentType)');
+
+              // Save file using repository
+              final saveResult = await _downloadRepository.saveAudioFile(
+                uiMessage.id,
+                response.bodyBytes,
+                '${uiMessage.id}.mp3',
+                contentType,
+              );
+
+              saveResult.fold(
+                onSuccess: (result) {
+                  results.add(result);
+                  _logger.d('Downloaded and saved audio for message ${uiMessage.id}: ${result.status}');
+                },
+                onFailure: (failure) {
+                  results.add(DownloadResult(
+                    messageId: uiMessage.id,
+                    status: DownloadStatus.failed,
+                    errorMessage: failure.failureOrNull?.details ?? 'Failed to save audio file',
+                  ),);
+                  _logger.e('Failed to save audio for message ${uiMessage.id}');
+                },
+              );
+            } else {
+              _logger.e('Failed to download file: ${response.statusCode}');
+              results.add(DownloadResult(
+                messageId: uiMessage.id,
+                status: DownloadStatus.failed,
+                errorMessage: 'Failed to download file (HTTP ${response.statusCode})',
+              ),);
+            }
           } on NetworkException catch (e) {
             _logger.e('Network error downloading audio for message ${uiMessage.id}', error: e);
             results.add(DownloadResult(
