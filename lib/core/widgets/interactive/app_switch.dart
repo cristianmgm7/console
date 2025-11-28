@@ -43,7 +43,11 @@ class _AppSwitchState extends State<AppSwitch>
     if (widget.value) {
       _controller.value = 1;
     }
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _updateColorAnimation();
   }
 

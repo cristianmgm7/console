@@ -122,15 +122,11 @@ class DashboardContent extends StatelessWidget {
               ),
               AppTableColumn(
                 title: 'Duration',
-                width: FixedColumnWidth(60),
-              ),
-              AppTableColumn(
-                title: 'Status',
-                width: FixedColumnWidth(90),
+                width: FlexColumnWidth(),
               ),
               AppTableColumn(
                 title: '',
-                width: FixedColumnWidth(56),
+                width: FixedColumnWidth(180), // Increased width for horizontal action buttons
               ),
             ],
             rows: messageState.messages.map((message) {
@@ -182,7 +178,15 @@ class DashboardContent extends StatelessWidget {
                           foregroundColor: AppColors.primary,
                           size: AppIconButtonSize.small,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Play',
+                          style: AppTextStyle.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
                       ],
                       Text(
                         _formatDuration(message.duration),
@@ -193,51 +197,48 @@ class DashboardContent extends StatelessWidget {
                     ],
                   ),
 
-                  // Status
-                  Text(
-                    'Active', // You can customize this based on message status
-                    style: AppTextStyle.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
+                  // Horizontal Actions
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppIconButton(
+                          icon: AppIcons.eye,
+                          tooltip: 'View Details',
+                          onPressed: () => onViewDetail?.call(message.id),
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                        AppIconButton(
+                          icon: AppIcons.edit,
+                          tooltip: 'Edit',
+                          onPressed: () => {}, // TODO: Implement edit action
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                        AppIconButton(
+                          icon: AppIcons.download,
+                          tooltip: 'Download',
+                          onPressed: () => {}, // TODO: Implement download action
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                        AppIconButton(
+                          icon: AppIcons.archive,
+                          tooltip: 'Archive',
+                          onPressed: () => {}, // TODO: Implement archive action
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                        AppIconButton(
+                          icon: AppIcons.delete,
+                          tooltip: 'Delete',
+                          onPressed: () => {}, // TODO: Implement delete action
+                          foregroundColor: AppColors.error,
+                          size: AppIconButtonSize.small,
+                        ),
+                      ],
                     ),
-                  ),
-
-                  // Menu
-                  PopupMenuButton(
-                    icon: Icon(AppIcons.moreVertical, color: AppColors.textSecondary, size: 20),
-                    itemBuilder: (context) => [
-                      AppPopupMenuItem.standard(
-                        value: 'view',
-                        icon: AppIcons.eye,
-                        text: 'View Details',
-                      ),
-                      AppPopupMenuItem.standard(
-                        value: 'edit',
-                        icon: AppIcons.edit,
-                        text: 'Edit',
-                      ),
-                      AppPopupMenuItem.standard(
-                        value: 'download',
-                        icon: AppIcons.download,
-                        text: 'Download',
-                      ),
-                      AppPopupMenuItem.standard(
-                        value: 'archive',
-                        icon: AppIcons.archive,
-                        text: 'Archive',
-                      ),
-                      AppPopupMenuItem.destructive(
-                        value: 'delete',
-                        icon: AppIcons.delete,
-                        text: 'Delete',
-                      ),
-                    ],
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'view':
-                          onViewDetail?.call(message.id);
-                        // TODO: Implement other menu actions
-                      }
-                    },
                   ),
                 ],
               );
