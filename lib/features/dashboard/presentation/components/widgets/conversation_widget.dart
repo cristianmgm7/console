@@ -1,3 +1,7 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 import 'package:flutter/material.dart';
 
@@ -13,43 +17,33 @@ class ConversationWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Text(
-              conversation.name,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 6),
-          InkWell(
-            onTap: onRemove,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              child: Icon(
-                Icons.close,
-                size: 14,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+      child: AppPillContainer(
+        backgroundColor: AppColors.surface.withValues(alpha: 0.5),
+        foregroundColor: AppColors.textPrimary,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                conversation.name,
+                style: AppTextStyle.bodySmall.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 6),
+            AppIconButton(
+              icon: AppIcons.close,
+              onPressed: onRemove,
+              size: AppIconButtonSize.small,
+              backgroundColor: Colors.transparent,
+              foregroundColor: AppColors.textSecondary,
+            ),
+          ],
+        ),
       ),
     );
   }

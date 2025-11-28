@@ -14,6 +14,7 @@ class AppIcons {
   static final IconData chevronDown = PhosphorIcons.caretDown();
   static final IconData chevronUp = PhosphorIcons.caretUp();
   static final IconData chevronLeft = PhosphorIcons.caretLeft();
+  static final IconData unfoldMore = PhosphorIcons.caretUpDown();
 
   // Actions
   static final IconData refresh = PhosphorIcons.arrowClockwise();

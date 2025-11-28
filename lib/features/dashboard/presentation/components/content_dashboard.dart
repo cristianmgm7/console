@@ -1,3 +1,7 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
@@ -28,7 +32,7 @@ class DashboardContent extends StatelessWidget {
       builder: (context, messageState) {
         // Show loading when any bloc is loading
         if (isAnyBlocLoading(context)) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppProgressIndicator());
         }
 
         if (messageState is MessageError) {
@@ -36,16 +40,19 @@ class DashboardContent extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                Icon(AppIcons.error, size: 64, color: AppColors.error),
                 const SizedBox(height: 16),
                 Text(
                   'Error loading messages',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 8),
-                Text(messageState.message),
+                Text(
+                  messageState.message,
+                  style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+                ),
                 const SizedBox(height: 24),
-                ElevatedButton(
+                AppButton(
                   onPressed: () {
                     // Retry by reloading workspaces
                     context.read<WorkspaceBloc>().add(const ws_events.LoadWorkspaces());
@@ -63,14 +70,17 @@ class DashboardContent extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.inbox_outlined, size: 64),
+                  Icon(AppIcons.inbox, size: 64, color: AppColors.textSecondary),
                   const SizedBox(height: 16),
                   Text(
                     'No messages',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 8),
-                  const Text('No messages found in this conversation'),
+                  Text(
+                    'No messages found in this conversation',
+                    style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             );
@@ -86,7 +96,7 @@ class DashboardContent extends StatelessWidget {
                   // Loading more indicator
                   return const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(child: AppProgressIndicator()),
                   );
                 }
 
@@ -108,14 +118,17 @@ class DashboardContent extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.dashboard_outlined, size: 64),
+              Icon(AppIcons.dashboard, size: 64, color: AppColors.textSecondary),
               const SizedBox(height: 16),
               Text(
                 'Loading dashboard...',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              const Text('Please wait while we load your data'),
+              Text(
+                'Please wait while we load your data',
+                style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
             ],
           ),
         );

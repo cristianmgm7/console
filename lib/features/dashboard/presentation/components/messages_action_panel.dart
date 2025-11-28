@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
-import 'package:carbon_voice_console/core/theme/app_shadows.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 
