@@ -20,27 +20,23 @@ class MessageLoading extends MessageState {
 class MessageLoaded extends MessageState {
   const MessageLoaded({
     required this.messages,
-    required this.users,
     this.isLoadingMore = false,
     this.hasMoreMessages = true,
   });
   final List<MessageUiModel> messages;
-  final Map<String, User> users;
   final bool isLoadingMore;
   final bool hasMoreMessages;
 
   @override
-  List<Object?> get props => [messages, users, isLoadingMore, hasMoreMessages];
+  List<Object?> get props => [messages, isLoadingMore, hasMoreMessages];
 
   MessageLoaded copyWith({
     List<MessageUiModel>? messages,
-    Map<String, User>? users,
     bool? isLoadingMore,
     bool? hasMoreMessages,
   }) {
     return MessageLoaded(
       messages: messages ?? this.messages,
-      users: users ?? this.users,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMoreMessages: hasMoreMessages ?? this.hasMoreMessages,
     );

@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/dtos/user_profile_mapper.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
@@ -26,8 +27,14 @@ class UserRepositoryImpl implements UserRepository {
         return success(_cachedUsers[userId]!);
       }
 
-      final userModel = await _remoteDataSource.getUser(userId);
-      final user = userModel.toEntity();
+      final userProfileDto = await _remoteDataSource.getUser(userId);
+      final userProfile = userProfileDto.toDomain();
+      final user = User(
+        id: userProfile.id,
+        name: userProfile.fullName,
+        email: userProfile.email,
+        // avatarUrl and workspaceId can be added later if available in API
+      );
 
       // Cache the result
       _cachedUsers[userId] = user;
@@ -63,8 +70,16 @@ class UserRepositoryImpl implements UserRepository {
       // Fetch uncached users
       if (uncachedIds.isNotEmpty) {
         _logger.d('Fetching ${uncachedIds.length} uncached users');
-        final userModels = await _remoteDataSource.getUsers(uncachedIds);
-        final users = userModels.map((model) => model.toEntity()).toList();
+        final userProfileDtos = await _remoteDataSource.getUsers(uncachedIds);
+        final users = userProfileDtos.map((dto) {
+          final userProfile = dto.toDomain();
+          return User(
+            id: userProfile.id,
+            name: userProfile.fullName,
+            email: userProfile.email,
+            // avatarUrl and workspaceId can be added later if available in API
+          );
+        }).toList();
 
         // Cache the results
         for (final user in users) {
@@ -90,8 +105,16 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<Result<List<User>>> getWorkspaceUsers(String workspaceId) async {
     try {
-      final userModels = await _remoteDataSource.getWorkspaceUsers(workspaceId);
-      final users = userModels.map((model) => model.toEntity()).toList();
+      final userProfileDtos = await _remoteDataSource.getWorkspaceUsers(workspaceId);
+      final users = userProfileDtos.map((dto) {
+        final userProfile = dto.toDomain();
+        return User(
+          id: userProfile.id,
+          name: userProfile.fullName,
+          email: userProfile.email,
+          // avatarUrl and workspaceId can be added later if available in API
+        );
+      }).toList();
 
       // Cache all workspace users
       for (final user in users) {

@@ -91,11 +91,9 @@ class DashboardContent extends StatelessWidget {
                 }
 
                 final message = messageState.messages[index];
-                final user = messageState.users[message.userId];
 
                 return MessageCard(
                   message: message,
-                  user: user,
                   isSelected: selectedMessages.contains(message.id),
                   onSelected: (value) => onToggleMessageSelection(message.id, value: value),
                   onViewDetail: onViewDetail,

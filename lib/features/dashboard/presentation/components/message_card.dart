@@ -2,14 +2,12 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
-import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
     required this.message,
-    required this.user,
     required this.isSelected,
     required this.onSelected,
     this.onViewDetail,
@@ -17,7 +15,6 @@ class MessageCard extends StatelessWidget {
   });
 
   final MessageUiModel message;
-  final User? user;
   final bool isSelected;
   final ValueChanged<bool?> onSelected;
   final ValueChanged<String>? onViewDetail;
@@ -65,7 +62,7 @@ class MessageCard extends StatelessWidget {
             SizedBox(
               width: 140,
               child: Text(
-                message.creatorId,
+                message.creator?.name ?? message.creatorId,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),

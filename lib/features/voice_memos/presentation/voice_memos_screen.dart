@@ -1,7 +1,6 @@
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
-import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:flutter/material.dart';
 
 class VoiceMemosScreen extends StatefulWidget {
@@ -15,11 +14,6 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
 
-  // Dummy user data
-  final User _dummyUser = const User(
-    id: 'user-1',
-    name: 'Travis Bogard',
-  );
 
   // Dummy data
   final List<MessageUiModel> _messages = [
@@ -361,7 +355,6 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       final message = _messages[index];
                       return MessageCard(
                         message: message,
-                        user: _dummyUser,
                         isSelected: _selectedMessages.contains(message.id),
                         onSelected: (value) => _toggleMessageSelection(message.id, value),
                       );

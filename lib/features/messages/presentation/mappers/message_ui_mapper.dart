@@ -1,9 +1,11 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
+import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 
 /// Extension methods to convert domain entities to UI models
 extension MessageUiMapper on Message {
-  MessageUiModel toUiModel() {
+  /// Creates a UI model with optional user enrichment
+  MessageUiModel toUiModel([User? creator]) {
     return MessageUiModel(
       // Original message properties
       id: id,
@@ -22,6 +24,8 @@ extension MessageUiMapper on Message {
       isTextMessage: isTextMessage,
       notes: notes,
       lastUpdatedAt: lastUpdatedAt,
+      // User profile data
+      creator: creator,
       // Computed UI properties
       conversationId: channelIds.isNotEmpty ? channelIds.first : '',
       userId: creatorId,

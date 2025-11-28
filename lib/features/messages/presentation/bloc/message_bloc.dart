@@ -31,6 +31,42 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   final int _messagesPerPage = 50;
   Set<String> _currentConversationIds = {};
 
+  /// Cache for user profiles to avoid repeated API calls
+  final Map<String, User> _profileCache = {};
+
+  /// Gets cached user profiles, fetching missing ones from the repository
+  Future<Map<String, User>> _getUsersWithCache(Set<String> userIds) async {
+    final cachedUsers = <String, User>{};
+    final missingUserIds = <String>[];
+
+    // Check cache for existing users
+    for (final userId in userIds) {
+      final cachedUser = _profileCache[userId];
+      if (cachedUser != null) {
+        cachedUsers[userId] = cachedUser;
+      } else {
+        missingUserIds.add(userId);
+      }
+    }
+
+    // Fetch missing users
+    if (missingUserIds.isNotEmpty) {
+      final result = await _userRepository.getUsers(missingUserIds);
+      if (result.isSuccess) {
+        final fetchedUsers = result.valueOrNull!;
+        for (final user in fetchedUsers) {
+          cachedUsers[user.id] = user;
+          _profileCache[user.id] = user; // Update cache
+        }
+      } else {
+        _logger.w('Failed to fetch users: ${result.failureOrNull}');
+        // Return only cached users if fetch fails
+      }
+    }
+
+    return cachedUsers;
+  }
+
   Future<void> _onConversationSelected(
     ConversationSelectedEvent event,
     Emitter<MessageState> emit,
@@ -38,7 +74,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     // If no conversations are selected, clear the messages immediately
     if (event.conversationIds.isEmpty) {
       _currentConversationIds = {};
-      emit(const MessageLoaded(messages: [], users: {}));
+      emit(const MessageLoaded(messages: []));
       return;
     }
 
@@ -74,24 +110,18 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     List<Message> messages,
     Emitter<MessageState> emit,
   ) async {
-    final userIds = messages.map((m) => m.userId).toSet().toList();
-    final userResult = await _userRepository.getUsers(userIds);
+    final userIds = messages.map((m) => m.userId).toSet();
+    final userMap = await _getUsersWithCache(userIds);
 
-    userResult.fold(
-      onSuccess: (users) {
-        final userMap = {for (final u in users) u.id: u};
-        emit(MessageLoaded(
-          messages: messages.map((message) => message.toUiModel()).toList(),
-          users: userMap,
-          hasMoreMessages: messages.length == _messagesPerPage,
-        ),);
-      },
-      onFailure: (_) => emit(MessageLoaded(
-        messages: messages.map((message) => message.toUiModel()).toList(),
-        users: const {},
-        hasMoreMessages: messages.length == _messagesPerPage,
-      ),),
-    );
+    final enrichedMessages = messages.map((message) {
+      final creator = userMap[message.creatorId];
+      return message.toUiModel(creator);
+    }).toList();
+
+    emit(MessageLoaded(
+      messages: enrichedMessages,
+      hasMoreMessages: messages.length == _messagesPerPage,
+    ));
   }
 
   Future<void> _onLoadMoreMessages(
@@ -121,34 +151,22 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         return;
       }
 
-      // Merge with existing messages (convert new messages to UI models)
-      final newUiMessages = newMessages.map((message) => message.toUiModel()).toList();
-      final allMessages = [...currentState.messages, ...newUiMessages];
+      // Load new users and enrich messages
+      final newUserIds = newMessages.map((m) => m.userId).toSet();
+      final newUserMap = await _getUsersWithCache(newUserIds);
 
-      // Load new users
-      final newUserIds = newMessages.map((m) => m.userId).toSet().toList();
-      final usersResult = await _userRepository.getUsers(newUserIds);
+      final newEnrichedMessages = newMessages.map((message) {
+        final creator = newUserMap[message.creatorId];
+        return message.toUiModel(creator);
+      }).toList();
 
-      if (usersResult.isSuccess) {
-        final newUsers = usersResult.valueOrNull!;
-        final userMap = Map<String, User>.from(currentState.users);
-        for (final user in newUsers) {
-          userMap[user.id] = user;
-        }
+      final allMessages = [...currentState.messages, ...newEnrichedMessages];
 
-        emit(currentState.copyWith(
-          messages: allMessages,
-          users: userMap,
-          isLoadingMore: false,
-          hasMoreMessages: newMessages.length == _messagesPerPage,
-        ),);
-      } else {
-        emit(currentState.copyWith(
-          messages: allMessages,
-          isLoadingMore: false,
-          hasMoreMessages: newMessages.length == _messagesPerPage,
-        ),);
-      }
+      emit(currentState.copyWith(
+        messages: allMessages,
+        isLoadingMore: false,
+        hasMoreMessages: newMessages.length == _messagesPerPage,
+      ));
     } else {
       emit(currentState.copyWith(isLoadingMore: false));
       _logger.e('Failed to load more messages: ${result.failureOrNull}');

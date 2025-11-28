@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
+import 'package:carbon_voice_console/dtos/user_profile_dto.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
-import 'package:carbon_voice_console/features/users/data/models/user_model.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -16,7 +15,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<UserModel> getUser(String userId) async {
+  Future<UserProfileDto> getUser(String userId) async {
     try {
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/user/profile/$userId',
@@ -24,9 +23,11 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final normalized = JsonNormalizer.normalizeUser(data);
-        final user = UserModel.fromJson(normalized);
-        return user;
+        printJsonStructure(data);
+
+        // Parse using DTO
+        final userProfileDto = UserProfileDto.fromJson(data);
+        return userProfileDto;
       } else {
         _logger.e('Failed to fetch user: ${response.statusCode}');
         throw ServerException(
@@ -43,9 +44,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }
 
   @override
-  Future<List<UserModel>> getUsers(List<String> userIds) async {
+  Future<List<UserProfileDto>> getUsers(List<String> userIds) async {
     try {
-      final users = <UserModel>[];
+      final users = <UserProfileDto>[];
       for (final userId in userIds) {
         try {
           final user = await getUser(userId);
@@ -64,7 +65,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }
 
   @override
-  Future<List<UserModel>> getWorkspaceUsers(String workspaceId) async {
+  Future<List<UserProfileDto>> getWorkspaceUsers(String workspaceId) async {
     try {
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId/users',
@@ -85,8 +86,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
         final users = usersJson
             .map((json) {
-              final normalized = JsonNormalizer.normalizeUser(json as Map<String, dynamic>);
-              return UserModel.fromJson(normalized);
+              return UserProfileDto.fromJson(json as Map<String, dynamic>);
             })
             .toList();
 
@@ -104,5 +104,33 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       _logger.e('Network error fetching workspace users', error: e, stackTrace: stack);
       throw NetworkException(message: 'Failed to fetch workspace users: $e');
     }
+  }
+}
+
+void printJsonStructure(dynamic data, {int indent = 0}) {
+  final padding = '  ' * indent;
+
+  if (data is Map) {
+    print('$padding{');
+    for (var key in data.keys) {
+      final value = data[key];
+
+      if (value is Map || value is List) {
+        print('$padding  "$key":');
+        printJsonStructure(value, indent: indent + 2);
+      } else {
+        final typeName = value.runtimeType.toString();
+        print('$padding  "$key": <$typeName>');
+      }
+    }
+    print('$padding}');
+  } else if (data is List) {
+    print('$padding[');
+    if (data.isNotEmpty) {
+      printJsonStructure(data.first, indent: indent + 1);
+    } else {
+      print('$padding  <empty>');
+    }
+    print('$padding]');
   }
 }

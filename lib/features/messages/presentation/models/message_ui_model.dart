@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
+import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:equatable/equatable.dart';
 
 /// UI model for message presentation
@@ -22,6 +23,8 @@ class MessageUiModel extends Equatable {
     required this.isTextMessage,
     required this.notes,
     required this.lastUpdatedAt,
+    // User profile data
+    this.creator,
     // Computed properties for UI
     required this.conversationId,
     required this.userId,
@@ -48,6 +51,9 @@ class MessageUiModel extends Equatable {
   final String notes;
   final DateTime? lastUpdatedAt;
 
+  // User profile data
+  final User? creator;
+
   // Computed UI properties
   final String conversationId;
   final String userId;
@@ -73,6 +79,7 @@ class MessageUiModel extends Equatable {
         isTextMessage,
         notes,
         lastUpdatedAt,
+        creator,
         conversationId,
         userId,
         text,
