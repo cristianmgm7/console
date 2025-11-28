@@ -1,9 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
@@ -24,20 +29,17 @@ class MessageCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
-            : Colors.transparent,
+            ? AppColors.primary.withValues(alpha: 0.08)
+            : AppColors.transparent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             // Checkbox
-            Checkbox(
+            AppCheckbox(
               value: isSelected,
               onChanged: onSelected,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
             ),
 
             const SizedBox(width: 8),
@@ -50,7 +52,9 @@ class MessageCard extends StatelessWidget {
                 children: [
                   Text(
                     _formatDate(message.createdAt),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -63,9 +67,10 @@ class MessageCard extends StatelessWidget {
               width: 140,
               child: Text(
                 message.creator?.name ?? message.creatorId,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                style: AppTextStyle.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
 
@@ -78,17 +83,13 @@ class MessageCard extends StatelessWidget {
                 children: [
                   Text(
                     message.text ?? 'No content',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
+                  if (message.text?.isNotEmpty ?? false) const SizedBox(height: 4),
                 ],
               ),
             ),
@@ -99,7 +100,9 @@ class MessageCard extends StatelessWidget {
               width: 60,
               child: Text(
                 _formatDuration(message.duration),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -108,65 +111,71 @@ class MessageCard extends StatelessWidget {
 
             // Play button - only show if message has playable audio
             if (message.hasPlayableAudio) ...[
-              IconButton(
-                icon: const Icon(Icons.play_circle_outline),
+              AppIconButton(
+                icon: AppIcons.play,
                 tooltip: 'Play audio',
                 onPressed: () => _handlePlayAudio(context, message),
+                foregroundColor: AppColors.primary,
               ),
               const SizedBox(width: 8),
             ],
 
             // Menu
             PopupMenuButton(
-              icon: const Icon(Icons.more_vert),
+              icon: Icon(AppIcons.moreVertical, color: AppColors.textSecondary),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'view',
                   child: Row(
                     children: [
-                      Icon(Icons.visibility),
-                      SizedBox(width: 8),
-                      Text('View Details'),
+                      Icon(AppIcons.eye, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('View Details', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit),
-                      SizedBox(width: 8),
-                      Text('Edit'),
+                      Icon(AppIcons.edit, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Edit', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'download',
                   child: Row(
                     children: [
-                      Icon(Icons.download),
-                      SizedBox(width: 8),
-                      Text('Download'),
+                      Icon(AppIcons.download, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Download', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'archive',
                   child: Row(
                     children: [
-                      Icon(Icons.archive),
-                      SizedBox(width: 8),
-                      Text('Archive'),
+                      Icon(AppIcons.archive, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Archive', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Delete', style: TextStyle(color: Colors.red)),
+                      Icon(AppIcons.delete, size: 20, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Delete',
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
                     ],
                   ),
                 ),

@@ -1,12 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/widgets/conversation_widget.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
+    as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardAppBar extends StatelessWidget {
   const DashboardAppBar({
@@ -18,14 +24,13 @@ class DashboardAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppContainer(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
-          ),
+      backgroundColor: AppColors.surface,
+      borderRadius: BorderRadius.zero,
+      border: const Border(
+        bottom: BorderSide(
+          color: AppColors.border,
         ),
       ),
       child: Row(
@@ -33,9 +38,10 @@ class DashboardAppBar extends StatelessWidget {
           // Title
           Text(
             'Audio Messages',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: AppTextStyle.titleLarge.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
 
           const SizedBox(width: 16),
@@ -48,18 +54,20 @@ class DashboardAppBar extends StatelessWidget {
                 return const SizedBox.shrink();
               }
 
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
+              return AppContainer(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                backgroundColor: AppColors.surface,
+                border: Border.all(
+                  color: AppColors.border,
+                  width: 1.5,
                 ),
                 child: DropdownButton<String>(
                   value: workspaceState.selectedWorkspace?.id,
                   underline: const SizedBox.shrink(),
-                  icon: const Icon(Icons.arrow_drop_down),
+                  icon: Icon(AppIcons.chevronDown, size: 20),
+                  style: AppTextStyle.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                   items: workspaceState.workspaces.map((workspace) {
                     return DropdownMenuItem<String>(
                       value: workspace.id,
@@ -68,7 +76,9 @@ class DashboardAppBar extends StatelessWidget {
                   }).toList(),
                   onChanged: (String? newValue) {
                     if (newValue != null) {
-                      context.read<WorkspaceBloc>().add(ws_events.SelectWorkspace(newValue));
+                      context
+                          .read<WorkspaceBloc>()
+                          .add(ws_events.SelectWorkspace(newValue));
                     }
                   },
                 ),
@@ -84,19 +94,22 @@ class DashboardAppBar extends StatelessWidget {
             child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
               selector: (state) => state is ConversationLoaded ? state : null,
               builder: (context, conversationState) {
-                if (conversationState == null || conversationState.conversations.isEmpty) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                      ),
-                      borderRadius: BorderRadius.circular(8),
+                if (conversationState == null ||
+                    conversationState.conversations.isEmpty) {
+                  return AppContainer(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    backgroundColor: AppColors.surface,
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 1.5,
                     ),
                     child: Text(
                       'No conversations',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      style: AppTextStyle.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   );
@@ -108,26 +121,31 @@ class DashboardAppBar extends StatelessWidget {
                     : '$selectedCount selected';
 
                 return PopupMenuButton<String>(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                      ),
-                      borderRadius: BorderRadius.circular(8),
+                  child: AppContainer(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    backgroundColor: AppColors.surface,
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 1.5,
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text(
                             displayText,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: AppTextStyle.bodyMedium.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         Icon(
-                          Icons.arrow_drop_down,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          AppIcons.chevronDown,
+                          size: 20,
+                          color: AppColors.textSecondary,
                         ),
                       ],
                     ),
@@ -139,7 +157,7 @@ class DashboardAppBar extends StatelessWidget {
                         value: conversation.id,
                         child: Row(
                           children: [
-                            Checkbox(
+                            AppCheckbox(
                               value: isSelected,
                               onChanged: null, // Handled by parent onSelected
                             ),
@@ -147,6 +165,7 @@ class DashboardAppBar extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 conversation.name,
+                                style: AppTextStyle.bodyMedium,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -203,8 +222,8 @@ class DashboardAppBar extends StatelessWidget {
               final hasData = workspaceState is WorkspaceLoaded;
               if (!hasData) return const SizedBox.shrink();
 
-              return IconButton(
-                icon: const Icon(Icons.refresh),
+              return AppIconButton(
+                icon: AppIcons.refresh,
                 onPressed: onRefresh,
                 tooltip: 'Refresh',
               );

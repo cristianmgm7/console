@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_shadows.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
+
 class MessagesActionPanel extends StatelessWidget {
 
   const MessagesActionPanel({
@@ -22,110 +28,86 @@ class MessagesActionPanel extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      margin: const EdgeInsets.all(16),
+    return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
+      opacity: 0.8,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(
+            AppIcons.checkCircle,
+            size: 20,
+            color: AppColors.primary,
+          ),
+          const SizedBox(width: 8),
           Text(
             '$selectedCount items selected',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            style: AppTextStyle.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(width: 24),
 
           // Download Audio Button
-          ElevatedButton.icon(
+          AppOutlinedButton(
             onPressed: onDownloadAudio,
-            icon: const Icon(Icons.audiotrack, size: 18),
-            label: const Text('Download Audio'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              ),
+            size: AppOutlinedButtonSize.medium,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(AppIcons.audioTrack, size: 18),
+                const SizedBox(width: 8),
+                const Text('Download Audio'),
+              ],
             ),
           ),
 
           const SizedBox(width: 8),
 
           // Download Transcript Button
-          ElevatedButton.icon(
+          AppOutlinedButton(
             onPressed: onDownloadTranscript,
-            icon: const Icon(Icons.description, size: 18),
-            label: const Text('Download Transcript'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              ),
+            size: AppOutlinedButtonSize.medium,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(AppIcons.message, size: 18),
+                const SizedBox(width: 8),
+                const Text('Download Transcript'),
+              ],
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
           // Download Both Button
-          ElevatedButton.icon(
+          AppOutlinedButton(
             onPressed: onSummarize,
-            icon: const Icon(Icons.summarize, size: 18),
-            label: const Text('both'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                ),
-              ),
+            size: AppOutlinedButtonSize.medium,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(AppIcons.download, size: 18),
+                const SizedBox(width: 8),
+                const Text('Both'),
+              ],
             ),
           ),
 
           const SizedBox(width: 12),
 
           // AI Chat Button
-          ElevatedButton.icon(
+          AppButton(
             onPressed: onAIChat,
-            icon: const Icon(Icons.smart_toy, size: 18),
-            label: const Text('AI Chat'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+            size: AppButtonSize.medium,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(AppIcons.sparkles, size: 18),
+                const SizedBox(width: 8),
+                const Text('AI Chat'),
+              ],
             ),
           ),
         ],
