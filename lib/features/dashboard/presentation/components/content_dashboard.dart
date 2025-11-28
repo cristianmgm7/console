@@ -104,207 +104,144 @@ class DashboardContent extends StatelessWidget {
             );
           }
 
-          final tableWidget = SingleChildScrollView(
-            controller: scrollController,
-            child: DataTable(
-              headingRowHeight: 56,
-              dataRowMinHeight: 60,
-              dataRowMaxHeight: 80,
-              columnSpacing: 16,
-              horizontalMargin: 64,
-              columns: const [
-                DataColumn(
-                  label: SizedBox(
-                    width: 120,
-                    child: Text('Date', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 140,
-                    child: Text('Owner', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text('Message', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 60,
-                    child: Text('Duration', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 90,
-                    child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                DataColumn(
-                  label: SizedBox(
-                    width: 56,
-                    child: Text('', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                ),
-              ],
-              rows: messageState.messages.map((message) => DataRow(
+          final tableWidget = AppTable(
+            selectAll: selectAll,
+            onSelectAllChanged: (value) => onToggleSelectAll(messageState.messages.length, value: value),
+            columns: const [
+              AppTableColumn(
+                title: 'Date',
+                width: FixedColumnWidth(120),
+              ),
+              AppTableColumn(
+                title: 'Owner',
+                width: FixedColumnWidth(140),
+              ),
+              AppTableColumn(
+                title: 'Message',
+                width: FlexColumnWidth(),
+              ),
+              AppTableColumn(
+                title: 'Duration',
+                width: FixedColumnWidth(60),
+              ),
+              AppTableColumn(
+                title: 'Status',
+                width: FixedColumnWidth(90),
+              ),
+              AppTableColumn(
+                title: '',
+                width: FixedColumnWidth(56),
+              ),
+            ],
+            rows: messageState.messages.map((message) {
+              return AppTableRow(
                 selected: selectedMessages.contains(message.id),
                 onSelectChanged: (selected) => onToggleMessageSelection(message.id, value: selected),
                 cells: [
-                  DataCell(
-                    SizedBox(
-                      width: 120,
-                      child: Text(
-                        _formatDate(message.createdAt),
+                  // Date
+                  Text(
+                    _formatDate(message.createdAt),
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+
+                  // Owner
+                  Text(
+                    message.creator?.name ?? message.creatorId,
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+
+                  // Message
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        message.text ?? 'No content',
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+
+                  // Duration
+                  Row(
+                    children: [
+                      if (message.hasPlayableAudio) ...[
+                        AppIconButton(
+                          icon: AppIcons.play,
+                          tooltip: 'Play audio',
+                          onPressed: () => _handlePlayAudio(context, message),
+                          foregroundColor: AppColors.primary,
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(
+                        _formatDuration(message.duration),
                         style: AppTextStyle.bodyMedium.copyWith(
                           color: AppColors.textPrimary,
                         ),
                       ),
+                    ],
+                  ),
+
+                  // Status
+                  Text(
+                    'Active', // You can customize this based on message status
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  DataCell(
-                    SizedBox(
-                      width: 140,
-                      child: Text(
-                        message.creator?.name ?? message.creatorId,
-                        style: AppTextStyle.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
+
+                  // Menu
+                  PopupMenuButton(
+                    icon: Icon(AppIcons.moreVertical, color: AppColors.textSecondary, size: 20),
+                    itemBuilder: (context) => [
+                      AppPopupMenuItem.standard(
+                        value: 'view',
+                        icon: AppIcons.eye,
+                        text: 'View Details',
                       ),
-                    ),
-                  ),
-                  DataCell(
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            message.text ?? 'No content',
-                            style: AppTextStyle.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      AppPopupMenuItem.standard(
+                        value: 'edit',
+                        icon: AppIcons.edit,
+                        text: 'Edit',
                       ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: 60,
-                      child: Row(
-                        children: [
-                          if (message.hasPlayableAudio) ...[
-                              AppIconButton(
-                                icon: AppIcons.play,
-                                tooltip: 'Play audio',
-                                onPressed: () => _handlePlayAudio(context, message),
-                                foregroundColor: AppColors.primary,
-                                size: AppIconButtonSize.small,
-                              ),
-                            const SizedBox(width: 4),
-                          ],
-                          Text(
-                            _formatDuration(message.duration),
-                            style: AppTextStyle.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
+                      AppPopupMenuItem.standard(
+                        value: 'download',
+                        icon: AppIcons.download,
+                        text: 'Download',
                       ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: 90,
-                      child: Text(
-                        'Active', // You can customize this based on message status
-                        style: AppTextStyle.bodyMedium.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
+                      AppPopupMenuItem.standard(
+                        value: 'archive',
+                        icon: AppIcons.archive,
+                        text: 'Archive',
                       ),
-                    ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: 56,
-                      child: PopupMenuButton(
-                        icon: Icon(AppIcons.moreVertical, color: AppColors.textSecondary, size: 20),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'view',
-                            child: Row(
-                              children: [
-                                Icon(AppIcons.eye, size: 20, color: AppColors.textPrimary),
-                                const SizedBox(width: 8),
-                                Text('View Details', style: AppTextStyle.bodyMedium),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(AppIcons.edit, size: 20, color: AppColors.textPrimary),
-                                const SizedBox(width: 8),
-                                Text('Edit', style: AppTextStyle.bodyMedium),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'download',
-                            child: Row(
-                              children: [
-                                Icon(AppIcons.download, size: 20, color: AppColors.textPrimary),
-                                const SizedBox(width: 8),
-                                Text('Download', style: AppTextStyle.bodyMedium),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'archive',
-                            child: Row(
-                              children: [
-                                Icon(AppIcons.archive, size: 20, color: AppColors.textPrimary),
-                                const SizedBox(width: 8),
-                                Text('Archive', style: AppTextStyle.bodyMedium),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(AppIcons.delete, size: 20, color: AppColors.error),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Delete',
-                                  style: AppTextStyle.bodyMedium.copyWith(
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        onSelected: (value) {
-                          switch (value) {
-                            case 'view':
-                              onViewDetail?.call(message.id);
-                            // TODO: Implement other menu actions
-                          }
-                        },
+                      AppPopupMenuItem.destructive(
+                        value: 'delete',
+                        icon: AppIcons.delete,
+                        text: 'Delete',
                       ),
-                    ),
+                    ],
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'view':
+                          onViewDetail?.call(message.id);
+                        // TODO: Implement other menu actions
+                      }
+                    },
                   ),
                 ],
-              ),).toList(),
-            ),
+              );
+            }).toList(),
           );
 
           // Add loading indicator below the table if loading more
