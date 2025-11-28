@@ -1,3 +1,7 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
@@ -232,8 +236,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
+    return AppContainer(
+      backgroundColor: AppColors.surface,
       child: Stack(
         children: [
           Column(
@@ -241,28 +245,20 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               // Table Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 64),
-                child: Container(
+                child: AppContainer(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                      ),
+                  backgroundColor: AppColors.surface.withValues(alpha: 0.3),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppColors.border,
                     ),
                   ),
                   child: Row(
                     children: [
                       // Select All Checkbox
-                      Checkbox(
+                      AppCheckbox(
                         value: _selectAll,
                         onChanged: _toggleSelectAll,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
                       ),
 
                       const SizedBox(width: 8),
@@ -274,11 +270,12 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Date',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: AppTextStyle.titleSmall.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                            const Icon(Icons.arrow_upward, size: 16),
+                            Icon(AppIcons.chevronUp, size: 16, color: AppColors.textSecondary),
                           ],
                         ),
                       ),
@@ -289,9 +286,10 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                         width: 140,
                         child: Text(
                           'Owner',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: AppTextStyle.titleSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
 
@@ -300,9 +298,10 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       Expanded(
                         child: Text(
                           'Message',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: AppTextStyle.titleSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
 
@@ -318,11 +317,12 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Dur',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: AppTextStyle.titleSmall.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                            const Icon(Icons.unfold_more, size: 16),
+                            Icon(AppIcons.unfoldMore, size: 16, color: AppColors.textSecondary),
                           ],
                         ),
                       ),
@@ -333,9 +333,10 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                         width: 90,
                         child: Text(
                           'Status',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: AppTextStyle.titleSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
 

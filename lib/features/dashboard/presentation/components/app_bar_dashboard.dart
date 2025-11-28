@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
@@ -13,6 +10,8 @@ import 'package:carbon_voice_console/features/workspaces/presentation/bloc/works
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardAppBar extends StatelessWidget {
   const DashboardAppBar({
@@ -54,34 +53,27 @@ class DashboardAppBar extends StatelessWidget {
                 return const SizedBox.shrink();
               }
 
-              return AppContainer(
+              return AppDropdown<String>(
+                value: workspaceState.selectedWorkspace?.id,
+                items: workspaceState.workspaces.map((workspace) {
+                  return DropdownMenuItem<String>(
+                    value: workspace.id,
+                    child: Text(
+                      workspace.name,
+                      style: AppTextStyle.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    context
+                        .read<WorkspaceBloc>()
+                        .add(ws_events.SelectWorkspace(newValue));
+                  }
+                },
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                backgroundColor: AppColors.surface,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: 1.5,
-                ),
-                child: DropdownButton<String>(
-                  value: workspaceState.selectedWorkspace?.id,
-                  underline: const SizedBox.shrink(),
-                  icon: Icon(AppIcons.chevronDown, size: 20),
-                  style: AppTextStyle.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                  items: workspaceState.workspaces.map((workspace) {
-                    return DropdownMenuItem<String>(
-                      value: workspace.id,
-                      child: Text(workspace.name),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      context
-                          .read<WorkspaceBloc>()
-                          .add(ws_events.SelectWorkspace(newValue));
-                    }
-                  },
-                ),
               );
             },
           ),
