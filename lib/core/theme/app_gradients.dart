@@ -1,5 +1,5 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 class AppGradients {
   static const LinearGradient aura = LinearGradient(
