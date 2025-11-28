@@ -82,25 +82,11 @@ class MessageRepositoryImpl implements MessageRepository {
   @override
   Future<Result<Message>> getMessage(String messageId) async {
     try {
-      // Check cache across all conversations
-      for (final messages in _cachedMessages.values) {
-        final cached = messages.where((m) => m.id == messageId).firstOrNull;
-        if (cached != null) {
-          return success(cached);
-        }
-      }
 
       final messageDto = await _remoteDataSource.getMessage(messageId);
       final message = messageDto.toDomain();
 
-      // Add to cache for the conversation
-      final existingMessages = _cachedMessages[message.conversationId] ?? [];
-      if (!existingMessages.any((m) => m.id == message.id)) {
-        existingMessages.add(message);
-        existingMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        _cachedMessages[message.conversationId] = existingMessages;
-      }
-
+     
       return success(message);
     } on ServerException catch (e) {
       _logger.e('Server error fetching message', error: e);

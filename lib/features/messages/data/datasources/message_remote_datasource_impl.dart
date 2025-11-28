@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
 import 'package:injectable/injectable.dart';
@@ -44,7 +45,9 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
             if (json is! Map<String, dynamic>) {
               throw FormatException('Message item is not a Map: ${json.runtimeType}');
             }
-            final messageDto = MessageDto.fromJson(json);
+            // Use JsonNormalizer to handle field normalization including audio models
+            final normalizedJson = JsonNormalizer.normalizeMessage(json);
+            final messageDto = MessageDto.fromJson(normalizedJson);
             messages.add(messageDto);
           } on Exception catch (e, stack) {
             _logger.e('Failed to parse message in list: $e', error: e, stackTrace: stack);
@@ -93,14 +96,8 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
           // Check if message data is not empty
           if (messageData.isNotEmpty) {
             try {
-              // Handle field name differences between APIs
-              // Single message API uses 'id', list API uses 'message_id'
-              final normalizedData = Map<String, dynamic>.from(messageData);
-              if (normalizedData.containsKey('id') && !normalizedData.containsKey('message_id')) {
-                normalizedData['message_id'] = normalizedData['id'];
-                normalizedData.remove('id');
-              }
-
+              // Use JsonNormalizer to handle all field normalization including audio models
+              final normalizedData = JsonNormalizer.normalizeMessage(messageData);
               final messageDto = MessageDto.fromJson(normalizedData);
 
               return messageDto;
@@ -122,14 +119,8 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
           if (hasMessageFields) {
             try {
-              // Handle field name differences between APIs
-              // Single message API uses 'id', list API uses 'message_id'
-              final normalizedData = Map<String, dynamic>.from(data);
-              if (normalizedData.containsKey('id') && !normalizedData.containsKey('message_id')) {
-                normalizedData['message_id'] = normalizedData['id'];
-                normalizedData.remove('id');
-              }
-
+              // Use JsonNormalizer to handle all field normalization including audio models
+              final normalizedData = JsonNormalizer.normalizeMessage(data);
               final messageDto = MessageDto.fromJson(normalizedData);
               return messageDto;
             } catch (e, stack) {

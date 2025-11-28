@@ -40,8 +40,7 @@ class JsonNormalizer {
 
     final actualJson = nestedData ?? json;
 
-    // Handle new API format with message_id, creator_id, channel_ids array, etc.
-    // API consistently uses message_id - check it first
+    // Extract critical message fields that must be present for Message entity
     final messageId = actualJson['message_id'] ??
                      actualJson['id'] ??
                      actualJson['_id'] ??
@@ -51,20 +50,19 @@ class JsonNormalizer {
                      json['_id'] ??
                      json['messageId'];
 
-    // channel_ids is an array, take the first one
-    final channelIds = actualJson['channel_ids'] as List<dynamic>?;
-    final conversationId = actualJson['conversationId'] ??
-        actualJson['conversation_id'] ??
-        actualJson['channelId'] ??
-        actualJson['channel_id'] ??
-        (channelIds != null && channelIds.isNotEmpty ? channelIds.first.toString() : null);
+    final creatorId = actualJson['creator_id'] ??
+                     actualJson['user_id'] ??
+                     actualJson['creatorId'] ??
+                     json['creator_id'] ??
+                     json['user_id'] ??
+                     json['creatorId'];
 
-    final creatorId = actualJson['creator_id'];
-    final userId = actualJson['userId'] ??
-        actualJson['user_id'] ??
-        actualJson['ownerId'] ??
-        actualJson['owner_id'] ??
-        creatorId;
+    final createdAt = actualJson['created_at'] ??
+                     actualJson['createdAt'] ??
+                     actualJson['date'] ??
+                     json['created_at'] ??
+                     json['createdAt'] ??
+                     json['date'];
     
     // Extract audio URL from audio_models array or nested audio object
     final audioModels = actualJson['audio_models'] as List<dynamic>?;
@@ -79,6 +77,30 @@ class JsonNormalizer {
                      json['audio'] as Map<String, dynamic>?;
     if (audioData != null && audioUrl == null) {
       audioUrl = audioData['url'] as String?;
+    }
+
+    // Handle different audio data structures from various endpoints
+    // Normalize audio models if they exist in different formats
+    List<dynamic>? normalizedAudioModels;
+    if (audioModels != null && audioModels.isNotEmpty) {
+      normalizedAudioModels = audioModels.map((audioJson) {
+        if (audioJson is Map<String, dynamic>) {
+          // Check if this audio model needs normalization
+          final hasExpectedFields = audioJson.containsKey('_id') &&
+                               audioJson.containsKey('url') &&
+                               audioJson.containsKey('streaming');
+          if (!hasExpectedFields) {
+            // Normalize to expected AudioModelDto format
+            return normalizeAudioModel(audioJson);
+          }
+          return audioJson; // Already in correct format
+        }
+        return audioJson;
+      }).toList();
+    } else if (audioData != null) {
+      // If there's no audio_models array but there's an audio object,
+      // normalize the audio object and create an audio_models array
+      normalizedAudioModels = [normalizeAudioModel(audioData)];
     }
 
     // Extract transcript from text_models array
@@ -103,36 +125,81 @@ class JsonNormalizer {
       transcript = transcriptValue.toString();
     }
 
-    // Convert duration_ms to seconds
-    // API provides duration_ms at root level - prioritize it first
-    // Check actualJson first (root message object), then fallback to nested audioData
-    final durationMsValue = actualJson['duration_ms'] ??
-                            json['duration_ms'] ??  // Also check original json
-                            audioData?['duration_ms'];
-    final durationMs = durationMsValue is int
-        ? durationMsValue
-        : durationMsValue is double
-            ? durationMsValue.toInt()
-            : null;
-    final duration = durationMs != null ? durationMs ~/ 1000 : null;
+    // Duration handling is done within audio model normalization if needed
 
-    return {
-      'id': messageId,
-      'conversationId': conversationId,
-      'userId': userId,
-      'createdAt': actualJson['createdAt'] ??
-                   actualJson['created_at'] ??
-                   actualJson['date'] ??
-                   json['createdAt'], // fallback to original
-      'text': actualJson['text'] ?? actualJson['message'] ?? json['text'],
-      'transcript': transcript,
-      'audioUrl': audioUrl,
-      'duration': duration ?? // Use calculated duration from duration_ms first
-                  actualJson['duration'] ??
-                  actualJson['durationSeconds'],
-      'status': actualJson['status'] ?? json['status'],
-      'metadata': actualJson['metadata'] ?? json['metadata'],
+    // Create a copy of the original JSON to modify
+    final normalizedJson = Map<String, dynamic>.from(actualJson);
+
+    // Normalize audio models in place if they exist
+    if (normalizedAudioModels != null) {
+      normalizedJson['audio_models'] = normalizedAudioModels;
+    }
+
+    // Ensure critical message fields are present with correct field names
+    if (messageId != null) {
+      normalizedJson['message_id'] = messageId;
+    }
+    if (creatorId != null) {
+      normalizedJson['creator_id'] = creatorId;
+    }
+    if (createdAt != null) {
+      normalizedJson['created_at'] = createdAt;
+    }
+
+    // Ensure required MessageDto fields have default values to prevent null casting errors
+    if (!normalizedJson.containsKey('utm_data') || normalizedJson['utm_data'] == null) {
+      normalizedJson['utm_data'] = <String, dynamic>{}; // Will be handled by UtmDataDtoConverter
+    }
+    if (!normalizedJson.containsKey('reaction_summary') || normalizedJson['reaction_summary'] == null) {
+      normalizedJson['reaction_summary'] = <String, dynamic>{}; // Will be handled by ReactionSummaryDtoConverter
+    }
+
+    // Add extracted fields that might not be in the original JSON
+    if (transcript != null && !normalizedJson.containsKey('transcript')) {
+      normalizedJson['transcript'] = transcript;
+    }
+    if (audioUrl != null && !normalizedJson.containsKey('audio_url')) {
+      normalizedJson['audio_url'] = audioUrl;
+    }
+
+    return normalizedJson;
+  }
+
+  /// Normalizes audio model JSON from various API formats to our expected format
+  static Map<String, dynamic> normalizeAudioModel(Map<String, dynamic> json) {
+    final normalized = {
+      '_id': json['_id'] ?? json['id'] ?? json['audio_id'] ?? json['audioId'] ?? 'unknown',
+      'url': json['url'] ?? json['audio_url'] ?? json['audioUrl'] ?? json['stream_url'] ?? '',
+      'streaming': json['streaming'] ?? json['is_streaming'] ?? json['can_stream'] ?? true,
+      'language': json['language'] ?? json['lang'] ?? 'en',
+      'duration_ms': json['duration_ms'] ?? json['durationMs'] ?? json['duration'] ?? 0,
+      'waveform_percentages': json['waveform_percentages'] ??
+                             json['waveformPercentages'] ??
+                             json['waveform'] ??
+                             <double>[],
+      'is_original_audio': json['is_original_audio'] ??
+                          json['isOriginalAudio'] ??
+                          json['is_original'] ??
+                          json['original'] ??
+                          true,
+      'extension': json['extension'] ?? json['format'] ?? json['file_extension'] ?? 'mp3',
     };
+
+    // Ensure required string fields are not empty
+    if ((normalized['_id'] as String).isEmpty) {
+      normalized['_id'] = 'unknown';
+    }
+    if ((normalized['url'] as String).isEmpty) {
+      normalized['url'] = 'unknown';
+    }
+    if ((normalized['language'] as String).isEmpty) {
+      normalized['language'] = 'en';
+    }
+    if ((normalized['extension'] as String).isEmpty) {
+      normalized['extension'] = 'mp3';
+    }
+
+    return normalized;
   }
 
   /// Normalizes user JSON from API format to our expected format

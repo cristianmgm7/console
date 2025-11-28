@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/data/mappers/message_dto_mapper.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -269,5 +270,161 @@ void main() {
     expect(message.textModels.where((t) => t.timecodes.isNotEmpty).first.timecodes.isNotEmpty, true);
     expect(message.textModels.where((t) => t.type == 'summary').first.text,
         "Hi Christian, Thomas asked me to reach out. I'm Carbon Voice's founder/CEO with a thousand ideas; I'd love to discuss your goals and collaboration.");
+  });
+
+  test('MessageDto normalizes different audio data structures correctly', () {
+    // Test with audio model using different field names (like from a different endpoint)
+    const jsonStringWithDifferentAudioFormat = '''
+{
+  "message_id": "test-message-id",
+  "creator_id": "test-user",
+  "created_at": "2025-11-21T23:59:30.373Z",
+  "duration_ms": 30000,
+  "audio_models": [
+    {
+      "id": "audio-123",
+      "audio_url": "https://example.com/audio.mp3",
+      "is_streaming": false,
+      "lang": "en",
+      "durationMs": 30000,
+      "waveformPercentages": [0.1, 0.2, 0.3],
+      "isOriginalAudio": false,
+      "format": "mp3"
+    },
+    {
+      "audio_id": "audio-456",
+      "stream_url": "https://example.com/stream.m3u8",
+      "can_stream": true,
+      "language": "english",
+      "duration_ms": 30000,
+      "waveform": [0.4, 0.5, 0.6],
+      "original": true,
+      "file_extension": "m3u8"
+    }
+  ],
+  "text_models": [],
+  "reaction_summary": {"reaction_counts": {}, "top_user_reactions": []},
+  "utm_data": {"utm_source": null, "utm_medium": null, "utm_campaign": null, "utm_term": null, "utm_content": null}
+}
+''';
+
+    final json = jsonDecode(jsonStringWithDifferentAudioFormat) as Map<String, dynamic>;
+    final normalizedJson = JsonNormalizer.normalizeMessage(json);
+    final dto = MessageDto.fromJson(normalizedJson);
+
+    // Verify DTO parsing with normalized audio models
+    expect(dto.messageId, 'test-message-id');
+    expect(dto.creatorId, 'test-user');
+    expect(dto.audioModels?.length, 2);
+
+    // First audio model should be normalized from different field names
+    final firstAudio = dto.audioModels![0];
+    expect(firstAudio.id, 'audio-123'); // Should use 'id' field
+    expect(firstAudio.url, 'https://example.com/audio.mp3'); // Should use 'audio_url' field
+    expect(firstAudio.streaming, false); // Should use 'is_streaming' field
+    expect(firstAudio.language, 'en'); // Should use 'lang' field
+    expect(firstAudio.durationMs, 30000); // Should use 'durationMs' field
+    expect(firstAudio.waveformPercentages, [0.1, 0.2, 0.3]); // Should use 'waveformPercentages' field
+    expect(firstAudio.isOriginalAudio, false); // Should use 'isOriginalAudio' field
+    expect(firstAudio.extension, 'mp3'); // Should use 'format' field
+
+    // Second audio model should also be normalized
+    final secondAudio = dto.audioModels![1];
+    expect(secondAudio.id, 'audio-456'); // Should use 'audio_id' field
+    expect(secondAudio.url, 'https://example.com/stream.m3u8'); // Should use 'stream_url' field
+    expect(secondAudio.streaming, true); // Should use 'can_stream' field
+    expect(secondAudio.language, 'english'); // Should use 'language' field
+    expect(secondAudio.durationMs, 30000); // Should use 'duration_ms' field
+    expect(secondAudio.waveformPercentages, [0.4, 0.5, 0.6]); // Should use 'waveform' field
+    expect(secondAudio.isOriginalAudio, true); // Should use 'original' field
+    expect(secondAudio.extension, 'm3u8'); // Should use 'file_extension' field
+
+    // Convert to domain and verify
+    final message = dto.toDomain();
+    expect(message.id, 'test-message-id');
+    expect(message.audioModels.length, 2);
+
+    // Verify first domain audio model
+    final firstDomainAudio = message.audioModels[0];
+    expect(firstDomainAudio.id, 'audio-123');
+    expect(firstDomainAudio.url, 'https://example.com/audio.mp3');
+    expect(firstDomainAudio.isStreaming, false);
+    expect(firstDomainAudio.language, 'en');
+    expect(firstDomainAudio.duration.inMilliseconds, 30000);
+    expect(firstDomainAudio.waveformData, [0.1, 0.2, 0.3]);
+    expect(firstDomainAudio.isOriginal, false);
+    expect(firstDomainAudio.format, 'mp3');
+
+    // Verify second domain audio model
+    final secondDomainAudio = message.audioModels[1];
+    expect(secondDomainAudio.id, 'audio-456');
+    expect(secondDomainAudio.url, 'https://example.com/stream.m3u8');
+    expect(secondDomainAudio.isStreaming, true);
+    expect(secondDomainAudio.language, 'english');
+    expect(secondDomainAudio.duration.inMilliseconds, 30000);
+    expect(secondDomainAudio.waveformData, [0.4, 0.5, 0.6]);
+    expect(secondDomainAudio.isOriginal, true);
+    expect(secondDomainAudio.format, 'm3u8');
+  });
+
+  test('MessageDto normalizes single audio object to audio_models array', () {
+    // Test with single audio object instead of audio_models array
+    const jsonStringWithSingleAudioObject = '''
+{
+  "message_id": "test-message-single-audio",
+  "creator_id": "test-user",
+  "created_at": "2025-11-21T23:59:30.373Z",
+  "duration_ms": 25000,
+  "audio": {
+    "id": "single-audio-123",
+    "audio_url": "https://example.com/single-audio.mp3",
+    "is_streaming": false,
+    "lang": "en",
+    "durationMs": 25000,
+    "waveformPercentages": [0.2, 0.3, 0.4],
+    "isOriginalAudio": true,
+    "format": "mp3"
+  },
+  "text_models": [],
+  "reaction_summary": {"reaction_counts": {}, "top_user_reactions": []},
+  "utm_data": {"utm_source": null, "utm_medium": null, "utm_campaign": null, "utm_term": null, "utm_content": null}
+}
+''';
+
+    final json = jsonDecode(jsonStringWithSingleAudioObject) as Map<String, dynamic>;
+    final normalizedJson = JsonNormalizer.normalizeMessage(json);
+    final dto = MessageDto.fromJson(normalizedJson);
+
+    // Verify DTO parsing with normalized single audio object converted to audio_models array
+    expect(dto.messageId, 'test-message-single-audio');
+    expect(dto.creatorId, 'test-user');
+    expect(dto.audioModels?.length, 1); // Should have one audio model
+
+    // The single audio object should be normalized and put into audio_models array
+    final audioModel = dto.audioModels![0];
+    expect(audioModel.id, 'single-audio-123'); // Should use 'id' field
+    expect(audioModel.url, 'https://example.com/single-audio.mp3'); // Should use 'audio_url' field
+    expect(audioModel.streaming, false); // Should use 'is_streaming' field
+    expect(audioModel.language, 'en'); // Should use 'lang' field
+    expect(audioModel.durationMs, 25000); // Should use 'durationMs' field
+    expect(audioModel.waveformPercentages, [0.2, 0.3, 0.4]); // Should use 'waveformPercentages' field
+    expect(audioModel.isOriginalAudio, true); // Should use 'isOriginalAudio' field
+    expect(audioModel.extension, 'mp3'); // Should use 'format' field
+
+    // Convert to domain and verify
+    final message = dto.toDomain();
+    expect(message.id, 'test-message-single-audio');
+    expect(message.audioModels.length, 1);
+
+    // Verify domain audio model
+    final domainAudio = message.audioModels[0];
+    expect(domainAudio.id, 'single-audio-123');
+    expect(domainAudio.url, 'https://example.com/single-audio.mp3');
+    expect(domainAudio.isStreaming, false);
+    expect(domainAudio.language, 'en');
+    expect(domainAudio.duration.inMilliseconds, 25000);
+    expect(domainAudio.waveformData, [0.2, 0.3, 0.4]);
+    expect(domainAudio.isOriginal, true);
+    expect(domainAudio.format, 'mp3');
   });
 }

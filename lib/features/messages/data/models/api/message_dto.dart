@@ -38,10 +38,10 @@ class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, M
 @JsonSerializable()
 class MessageDto {
   const MessageDto({
-    required this.utmData,
-    required this.creatorId,
-    required this.createdAt,
     required this.reactionSummary,
+    required this.utmData,
+    this.creatorId,
+    this.createdAt,
     this.messageId,
     this.lastUpdatedAt,
     this.workspaceIds,
