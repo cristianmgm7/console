@@ -13,6 +13,8 @@ class UtmDataDto {
     this.utmContent,
   });
 
+  factory UtmDataDto.fromJson(Map<String, dynamic> json) => _$UtmDataDtoFromJson(json);
+
   @JsonKey(name: 'utm_source')
   final String? utmSource;
 
@@ -27,8 +29,6 @@ class UtmDataDto {
 
   @JsonKey(name: 'utm_content')
   final String? utmContent;
-
-  factory UtmDataDto.fromJson(Map<String, dynamic> json) => _$UtmDataDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$UtmDataDtoToJson(this);
 }

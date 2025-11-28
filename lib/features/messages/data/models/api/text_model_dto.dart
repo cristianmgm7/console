@@ -1,5 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/timecode_dto.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'text_model_dto.g.dart';
 
@@ -14,6 +14,8 @@ class TextModelDto {
     required this.timecodes,
   });
 
+  factory TextModelDto.fromJson(Map<String, dynamic> json) => _$TextModelDtoFromJson(json);
+
   final String type;
 
   @JsonKey(name: 'audio_id')
@@ -24,8 +26,6 @@ class TextModelDto {
 
   final String value;
   final List<TimecodeDto> timecodes;
-
-  factory TextModelDto.fromJson(Map<String, dynamic> json) => _$TextModelDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$TextModelDtoToJson(this);
 }

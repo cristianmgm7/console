@@ -39,9 +39,10 @@ class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, M
 class MessageDto {
   const MessageDto({
     required this.utmData,
-    this.messageId,
     required this.creatorId,
     required this.createdAt,
+    required this.reactionSummary,
+    this.messageId,
     this.lastUpdatedAt,
     this.workspaceIds,
     this.channelIds,
@@ -49,7 +50,6 @@ class MessageDto {
     this.notes,
     this.notify,
     this.lastHeardUpdate,
-    required this.reactionSummary,
     this.isTextMessage,
     this.status,
     this.labelIds,

@@ -4,8 +4,8 @@ import 'package:carbon_voice_console/features/messages/data/models/api/text_mode
 import 'package:carbon_voice_console/features/messages/data/models/api/timecode_dto.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/timecode.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/timecode.dart';
 
 /// Extension methods to convert DTOs to domain entities
 extension MessageDtoMapper on MessageDto {
