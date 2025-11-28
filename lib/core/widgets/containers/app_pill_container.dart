@@ -22,7 +22,7 @@ class AppPillContainer extends StatelessWidget {
       padding: padding ??
           const EdgeInsets.symmetric(
             horizontal: 12,
-            vertical: 6,
+            vertical: 3,
           ),
       decoration: BoxDecoration(
         color: backgroundColor ??

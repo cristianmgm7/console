@@ -294,9 +294,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
       return success(_client!);
     } on oauth2.AuthorizationException catch (e) {
       _logger.e('OAuth authorization error', error: e);
-      _logger.e('Error code: ${e.error}');
-      _logger.e('Error description: ${e.description}');
-      _logger.e('Error URI: ${e.uri}');
       return failure(AuthFailure(
         code: e.error,
         details: e.description ?? 'Authorization failed',

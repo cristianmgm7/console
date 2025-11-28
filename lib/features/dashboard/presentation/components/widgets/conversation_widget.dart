@@ -18,7 +18,7 @@ class ConversationWidget extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: AppPillContainer(
-        backgroundColor: AppColors.surface.withValues(alpha: 0.5),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
         foregroundColor: AppColors.textPrimary,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         child: Row(
@@ -40,7 +40,7 @@ class ConversationWidget extends StatelessWidget {
               onPressed: onRemove,
               size: AppIconButtonSize.small,
               backgroundColor: Colors.transparent,
-              foregroundColor: AppColors.textSecondary,
+              foregroundColor: AppColors.primary,
             ),
           ],
         ),

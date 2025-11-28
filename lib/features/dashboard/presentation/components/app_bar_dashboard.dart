@@ -231,6 +231,7 @@ class DashboardAppBar extends StatelessWidget {
                   child: Row(
                     children: selectedConversations.map((conversation) {
                       return ConversationWidget(
+                        
                         conversation: conversation,
                         onRemove: () {
                           context.read<ConversationBloc>().add(ToggleConversation(conversation.id));
@@ -243,9 +244,6 @@ class DashboardAppBar extends StatelessWidget {
               ),
             ),
           ),
-
-          const Spacer(),
-
           // Refresh button - only show when any bloc is loaded
           BlocBuilder<WorkspaceBloc, WorkspaceState>(
             builder: (context, workspaceState) {
