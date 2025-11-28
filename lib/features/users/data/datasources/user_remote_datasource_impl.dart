@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/dtos/user_profile_dto.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -23,7 +24,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        printJsonStructure(data);
+
 
         // Parse using DTO
         final userProfileDto = UserProfileDto.fromJson(data);
@@ -107,30 +108,30 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }
 }
 
-void printJsonStructure(dynamic data, {int indent = 0}) {
+void debugPrintJsonStructure(dynamic data, {int indent = 0}) {
   final padding = '  ' * indent;
 
   if (data is Map) {
-    print('$padding{');
-    for (var key in data.keys) {
+    debugPrint('$padding{');
+    for (final key in data.keys) {
       final value = data[key];
 
       if (value is Map || value is List) {
-        print('$padding  "$key":');
-        printJsonStructure(value, indent: indent + 2);
+        debugPrint('$padding  "$key":');
+        debugPrintJsonStructure(value, indent: indent + 2);
       } else {
         final typeName = value.runtimeType.toString();
-        print('$padding  "$key": <$typeName>');
+        debugPrint('$padding  "$key": <$typeName>');
       }
     }
-    print('$padding}');
+    debugPrint('$padding}');
   } else if (data is List) {
-    print('$padding[');
+    debugPrint('$padding[');
     if (data.isNotEmpty) {
-      printJsonStructure(data.first, indent: indent + 1);
+      debugPrintJsonStructure(data.first, indent: indent + 1);
     } else {
-      print('$padding  <empty>');
+      debugPrint('$padding  <empty>');
     }
-    print('$padding]');
+    debugPrint('$padding]');
   }
 }
