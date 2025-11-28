@@ -16,6 +16,8 @@ class AudioModelDto {
     required this.extension,
   });
 
+  factory AudioModelDto.fromJson(Map<String, dynamic> json) => _$AudioModelDtoFromJson(json);
+
   @JsonKey(name: '_id')
   final String id;
 
@@ -33,8 +35,6 @@ class AudioModelDto {
   final bool isOriginalAudio;
 
   final String extension;
-
-  factory AudioModelDto.fromJson(Map<String, dynamic> json) => _$AudioModelDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$AudioModelDtoToJson(this);
 }

@@ -26,6 +26,7 @@ class AppDropdown<T> extends StatelessWidget {
     this.iconColor,
     this.padding,
     super.key,
+    this.alignment = Alignment.topCenter,
   });
 
   final T? value;
@@ -40,7 +41,8 @@ class AppDropdown<T> extends StatelessWidget {
   final Color? textColor;
   final Color? iconColor;
   final EdgeInsetsGeometry? padding;
-
+  final Alignment? alignment;
+  
   @override
   Widget build(BuildContext context) {
     final dropdownWidget = Container(
@@ -68,6 +70,7 @@ class AppDropdown<T> extends StatelessWidget {
           color: textColor ?? AppColors.textPrimary,
         ),
         dropdownColor: AppColors.surface,
+        alignment: Alignment.topCenter,
       ),
     );
 

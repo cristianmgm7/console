@@ -198,7 +198,7 @@ class DashboardContent extends StatelessWidget {
                   ),
 
                   // Horizontal Actions
-                  Expanded(
+                  FittedBox(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
