@@ -9,6 +9,4 @@ abstract class UserRepository {
   /// Fetches multiple users by their IDs (batch operation)
   Future<Result<List<User>>> getUsers(List<String> userIds);
 
-  /// Fetches all users in a workspace
-  Future<Result<List<User>>> getWorkspaceUsers(String workspaceId);
 }

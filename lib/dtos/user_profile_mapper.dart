@@ -3,7 +3,10 @@ import 'package:carbon_voice_console/dtos/user_profile_dto.dart';
 
 /// Mapper extension to convert UserProfileDto to UserProfile domain model
 extension UserProfileMapper on UserProfileDto {
-  UserProfile toDomain() {
+  UserProfile toDomain(String userId) {
+    // Use the userId from the URL parameter as the ID, since the API response might not include it
+    final validatedId = id ?? userId;
+
     // Extract key permissions
     final canViewMembers = permissions?['view-members-workspace']?.value ?? false;
     final canDeleteMessages = permissions?['can-delete-sent-messages-workspace']?.value ?? false;
@@ -13,7 +16,7 @@ extension UserProfileMapper on UserProfileDto {
     final hasWorkspaces = workspaces?.isNotEmpty ?? false;
 
     return UserProfile(
-      id: id,
+      id: validatedId,
       email: email,
       firstName: firstName,
       lastName: lastName,

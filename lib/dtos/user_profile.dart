@@ -2,7 +2,7 @@
 class UserProfile {
   const UserProfile({
     required this.id,
-    required this.email,
+    this.email,
     this.firstName,
     this.lastName,
     this.displayName,
@@ -13,7 +13,7 @@ class UserProfile {
   });
 
   final String id;
-  final String email;
+  final String? email;
   final String? firstName;
   final String? lastName;
   final String? displayName;
@@ -30,7 +30,7 @@ class UserProfile {
     if (firstName != null && lastName != null) {
       return '$firstName $lastName';
     }
-    return displayName ?? email;
+    return displayName ?? email ?? 'Unknown User';
   }
 
   UserProfile copyWith({

@@ -8,8 +8,8 @@ part 'user_profile_dto.g.dart';
 @JsonSerializable()
 class UserProfileDto {
   const UserProfileDto({
-    required this.id,
-    required this.email,
+    this.id,
+    this.email,
     this.firstName,
     this.lastName,
     this.permissions,
@@ -22,8 +22,8 @@ class UserProfileDto {
 
   Map<String, dynamic> toJson() => _$UserProfileDtoToJson(this);
 
-  final String id;
-  final String email;
+  final String? id;
+  final String? email;
 
   @JsonKey(name: 'first_name')
   final String? firstName;

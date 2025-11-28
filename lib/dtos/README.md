@@ -19,29 +19,29 @@ This folder contains the DTO (Data Transfer Object) classes and domain models fo
 
 ### Data Source Layer (Returns DTOs)
 ```dart
-// In UserRemoteDataSourceImpl
+// In UserRemoteDataSourceImpl - handles nullable API fields
 final userProfileDto = UserProfileDto.fromJson(jsonData);
-return userProfileDto; // Data source returns raw DTO
+return userProfileDto; // Returns raw API data (id/email may be null)
 ```
 
 ### Repository Layer (Converts DTO → Domain Entity)
 ```dart
-// In UserRepositoryImpl
+// In UserRepositoryImpl - uses userId from URL parameter
 final userProfileDto = await _remoteDataSource.getUser(userId);
-final userProfile = userProfileDto.toDomain();
+final userProfile = userProfileDto.toDomain(userId); // Uses userId if API doesn't provide id
 final user = User(
-  id: userProfile.id,
-  name: userProfile.fullName,
-  email: userProfile.email,
+  id: userProfile.id, // Guaranteed non-null after validation
+  name: userProfile.fullName, // Falls back to 'Unknown User' if no name data
+  email: userProfile.email, // May be null
 );
-return user; // Repository returns domain entity
+return user; // Returns domain entity
 ```
 
 ### Domain Layer (Works with Entities)
 ```dart
 // Domain entities have only significant parameters
-print(userProfile.fullName); // Combined first + last name
-print(userProfile.canViewMembers); // Key permission
+print(userProfile.fullName); // Combined first + last name, or 'Unknown User'
+print(userProfile.canViewMembers); // Key permission (defaults to false)
 print(userProfile.hasWorkspaces); // Derived data
 ```
 

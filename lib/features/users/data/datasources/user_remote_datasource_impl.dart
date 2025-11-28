@@ -25,7 +25,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-
         // Parse using DTO
         final userProfileDto = UserProfileDto.fromJson(data);
         return userProfileDto;
@@ -65,47 +64,6 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     }
   }
 
-  @override
-  Future<List<UserProfileDto>> getWorkspaceUsers(String workspaceId) async {
-    try {
-      final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId/users',
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        // API might return {users: [...]} or just [...]
-        final List<dynamic> usersJson;
-        if (data is List) {
-          usersJson = data;
-        } else if (data is Map<String, dynamic>) {
-          usersJson = data['users'] as List<dynamic>? ?? data['data'] as List<dynamic>;
-        } else {
-          throw const FormatException('Unexpected response format');
-        }
-
-        final users = usersJson
-            .map((json) {
-              return UserProfileDto.fromJson(json as Map<String, dynamic>);
-            })
-            .toList();
-
-        return users;
-      } else {
-        _logger.e('Failed to fetch workspace users: ${response.statusCode}');
-        throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to fetch workspace users',
-        );
-      }
-    } on ServerException {
-      rethrow;
-    } on Exception catch (e, stack) {
-      _logger.e('Network error fetching workspace users', error: e, stackTrace: stack);
-      throw NetworkException(message: 'Failed to fetch workspace users: $e');
-    }
-  }
 }
 
 void debugPrintJsonStructure(dynamic data, {int indent = 0}) {

@@ -13,8 +13,4 @@ abstract class UserRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<List<UserProfileDto>> getUsers(List<String> userIds);
 
-  /// Fetches all users in a workspace
-  /// Throws [ServerException] on API errors
-  /// Throws [NetworkException] on network errors
-  Future<List<UserProfileDto>> getWorkspaceUsers(String workspaceId);
 }

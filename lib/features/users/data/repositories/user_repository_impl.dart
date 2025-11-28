@@ -28,7 +28,7 @@ class UserRepositoryImpl implements UserRepository {
       }
 
       final userProfileDto = await _remoteDataSource.getUser(userId);
-      final userProfile = userProfileDto.toDomain();
+      final userProfile = userProfileDto.toDomain(userId);
       final user = User(
         id: userProfile.id,
         name: userProfile.fullName,
@@ -46,6 +46,9 @@ class UserRepositoryImpl implements UserRepository {
     } on NetworkException catch (e) {
       _logger.e('Network error fetching user', error: e);
       return failure(NetworkFailure(details: e.message));
+    } on FormatException catch (e) {
+      _logger.e('Invalid user data format', error: e);
+      return failure(UnknownFailure(details: 'Invalid user data format: ${e.message}'));
     } on Exception catch (e, stack) {
       _logger.e('Unknown error fetching user', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
@@ -71,15 +74,18 @@ class UserRepositoryImpl implements UserRepository {
       if (uncachedIds.isNotEmpty) {
         _logger.d('Fetching ${uncachedIds.length} uncached users');
         final userProfileDtos = await _remoteDataSource.getUsers(uncachedIds);
-        final users = userProfileDtos.map((dto) {
-          final userProfile = dto.toDomain();
-          return User(
+        final users = <User>[];
+        for (var i = 0; i < userProfileDtos.length; i++) {
+          final dto = userProfileDtos[i];
+          final userId = uncachedIds[i];
+          final userProfile = dto.toDomain(userId);
+          users.add(User(
             id: userProfile.id,
             name: userProfile.fullName,
             email: userProfile.email,
             // avatarUrl and workspaceId can be added later if available in API
-          );
-        }).toList();
+          ));
+        }
 
         // Cache the results
         for (final user in users) {
@@ -96,43 +102,15 @@ class UserRepositoryImpl implements UserRepository {
     } on NetworkException catch (e) {
       _logger.e('Network error fetching users', error: e);
       return failure(NetworkFailure(details: e.message));
+    } on FormatException catch (e) {
+      _logger.e('Invalid user data format', error: e);
+      return failure(UnknownFailure(details: 'Invalid user data format: ${e.message}'));
     } on Exception catch (e, stack) {
       _logger.e('Unknown error fetching users', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
     }
   }
 
-  @override
-  Future<Result<List<User>>> getWorkspaceUsers(String workspaceId) async {
-    try {
-      final userProfileDtos = await _remoteDataSource.getWorkspaceUsers(workspaceId);
-      final users = userProfileDtos.map((dto) {
-        final userProfile = dto.toDomain();
-        return User(
-          id: userProfile.id,
-          name: userProfile.fullName,
-          email: userProfile.email,
-          // avatarUrl and workspaceId can be added later if available in API
-        );
-      }).toList();
-
-      // Cache all workspace users
-      for (final user in users) {
-        _cachedUsers[user.id] = user;
-      }
-
-      return success(users);
-    } on ServerException catch (e) {
-      _logger.e('Server error fetching workspace users', error: e);
-      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
-    } on NetworkException catch (e) {
-      _logger.e('Network error fetching workspace users', error: e);
-      return failure(NetworkFailure(details: e.message));
-    } on Exception catch (e, stack) {
-      _logger.e('Unknown error fetching workspace users', error: e, stackTrace: stack);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
 
   /// Clears the user cache
   void clearCache() {
