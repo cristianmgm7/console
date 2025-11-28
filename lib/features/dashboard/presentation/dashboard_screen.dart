@@ -7,7 +7,6 @@ import 'package:carbon_voice_console/features/conversations/presentation/bloc/co
 import 'package:carbon_voice_console/features/dashboard/presentation/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/table_header_dashboard.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
@@ -286,29 +285,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onRefresh: _onRefresh,
         ),
 
-        // Table Header - only show when messages are loaded
-        BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-          selector: (state) => state is MessageLoaded ? state : null,
-          builder: (context, messageState) {
-            if (messageState == null || messageState.messages.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return DashboardTableHeader(
-              onToggleSelectAll: _toggleSelectAll,
-              messageState: messageState,
-              selectAll: _selectAll,
-            );
-          },
-        ),
-
         // Content
         Expanded(
-          child: DashboardContent(
-            isAnyBlocLoading: _isAnyBlocLoading,
-            scrollController: _scrollController,
-            selectedMessages: _selectedMessages,
-            onToggleMessageSelection: _toggleMessageSelection,
-            onViewDetail: _onViewDetail,
+          child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+            selector: (state) => state is MessageLoaded ? state : null,
+            builder: (context, messageState) {
+              return DashboardContent(
+                isAnyBlocLoading: _isAnyBlocLoading,
+                scrollController: _scrollController,
+                selectedMessages: _selectedMessages,
+                onToggleMessageSelection: _toggleMessageSelection,
+                onToggleSelectAll: _toggleSelectAll,
+                selectAll: _selectAll,
+                onViewDetail: _onViewDetail,
+              );
+            },
           ),
         ),
       ],
@@ -322,52 +313,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
         DashboardAppBar(
           onRefresh: _onRefresh,
         ),
-
         // Main content area below app bar: left = messages, right = detail
-        Expanded(
-          child: Row(
-            children: [
-              // Left side: Message list area
-              Expanded(
-                child: Column(
-                  children: [
-                    // Table Header - only show when messages are loaded
-                    BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-                      selector: (state) => state is MessageLoaded ? state : null,
-                      builder: (context, messageState) {
-                        if (messageState == null || messageState.messages.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return DashboardTableHeader(
-                          onToggleSelectAll: _toggleSelectAll,
-                          messageState: messageState,
-                          selectAll: _selectAll,
-                        );
-                      },
-                    ),
-
-                    // Content
-                    Expanded(
-                      child: DashboardContent(
-                        isAnyBlocLoading: _isAnyBlocLoading,
-                        scrollController: _scrollController,
-                        selectedMessages: _selectedMessages,
-                        onToggleMessageSelection: _toggleMessageSelection,
-                        onViewDetail: _onViewDetail,
-                      ),
-                    ),
-                  ],
-                ),
+        Row(
+          children: [
+            // Left side: Message list area
+            Expanded(
+              child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+                selector: (state) => state is MessageLoaded ? state : null,
+                builder: (context, messageState) {
+                  return DashboardContent(
+                    isAnyBlocLoading: _isAnyBlocLoading,
+                    scrollController: _scrollController,
+                    selectedMessages: _selectedMessages,
+                    onToggleMessageSelection: _toggleMessageSelection,
+                    onToggleSelectAll: _toggleSelectAll,
+                    selectAll: _selectAll,
+                    onViewDetail: _onViewDetail,
+                  );
+                },
               ),
-
-              // Right side: Detail panel
-              if (_selectedMessageForDetail != null)
-                MessageDetailPanel(
-                  messageId: _selectedMessageForDetail!,
-                  onClose: _onCloseDetail,
-                ),
-            ],
-          ),
+            ),
+        
+            // Right side: Detail panel
+            if (_selectedMessageForDetail != null)
+              MessageDetailPanel(
+                messageId: _selectedMessageForDetail!,
+                onClose: _onCloseDetail,
+              ),
+          ],
         ),
       ],
     );
