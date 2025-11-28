@@ -18,7 +18,7 @@ class AudioModelDto {
 
   factory AudioModelDto.fromJson(Map<String, dynamic> json) => _$AudioModelDtoFromJson(json);
 
-  @JsonKey(name: '_id')
+  @JsonKey(name: '_id', defaultValue: 'unknown')
   final String id;
 
   final String url;

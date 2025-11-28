@@ -30,44 +30,50 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   ) async {
     _isCancelled = false;
 
-    final result = await _downloadAudioMessagesUsecase.call(
-      messageIds: event.messageIds.toList(),
-      onProgress: (progress) {
-        emit(DownloadInProgress(
-          current: progress.current,
-          total: progress.total,
-          progressPercent: progress.progressPercent,
-          currentMessageId: progress.currentMessageId,
-        ),);
-      },
-      isCancelled: () => _isCancelled,
-    );
+    try {
+      final result = await _downloadAudioMessagesUsecase.call(
+        messageIds: event.messageIds.toList(),
+        onProgress: (progress) {
+          emit(DownloadInProgress(
+            current: progress.current,
+            total: progress.total,
+            progressPercent: progress.progressPercent,
+            currentMessageId: progress.currentMessageId,
+          ),);
+        },
+        isCancelled: () => _isCancelled,
+      );
 
-    result.fold(
-      onSuccess: (summary) {
-        emit(DownloadCompleted(
-          successCount: summary.successCount,
-          failureCount: summary.failureCount,
-          skippedCount: summary.skippedCount,
-          results: summary.results,
-        ),);
-      },
-      onFailure: (failure) {
-        // Check if it was a cancellation
-        if (failure.failure.code == 'UNKNOWN_ERROR' &&
-            (failure.failure.details?.contains('cancelled') ?? false)) {
-          // Extract item count from details if possible
-          emit(const DownloadCancelled(
-            completedCount: 0,
-            totalCount: 0,
+      result.fold(
+        onSuccess: (summary) {
+          emit(DownloadCompleted(
+            successCount: summary.successCount,
+            failureCount: summary.failureCount,
+            skippedCount: summary.skippedCount,
+            results: summary.results,
           ),);
-        } else {
-          emit(DownloadError(
-            failure.failure.details ?? 'Download failed',
-          ),);
-        }
-      },
-    );
+        },
+        onFailure: (failure) {
+          // Check if it was a cancellation
+          if (failure.failure.code == 'UNKNOWN_ERROR' &&
+              (failure.failure.details?.contains('cancelled') ?? false)) {
+            emit(const DownloadCancelled(
+              completedCount: 0,
+              totalCount: 0,
+            ),);
+          } else {
+            emit(DownloadError(
+              failure.failure.details ?? 'Audio download failed',
+            ),);
+          }
+        },
+      );
+    } catch (e, stack) {
+      _logger.e('Unexpected error in audio download', error: e, stackTrace: stack);
+      emit(DownloadError(
+        'Unexpected error: ${e.toString()}',
+      ),);
+    }
   }
 
   Future<void> _onStartDownloadTranscripts(
@@ -76,42 +82,49 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   ) async {
     _isCancelled = false;
 
-    final result = await _downloadTranscriptMessagesUsecase.call(
-      messageIds: event.messageIds.toList(),
-      onProgress: (progress) {
-        emit(DownloadInProgress(
-          current: progress.current,
-          total: progress.total,
-          progressPercent: progress.progressPercent,
-          currentMessageId: progress.currentMessageId,
-        ),);
-      },
-      isCancelled: () => _isCancelled,
-    );
+    try {
+      final result = await _downloadTranscriptMessagesUsecase.call(
+        messageIds: event.messageIds.toList(),
+        onProgress: (progress) {
+          emit(DownloadInProgress(
+            current: progress.current,
+            total: progress.total,
+            progressPercent: progress.progressPercent,
+            currentMessageId: progress.currentMessageId,
+          ),);
+        },
+        isCancelled: () => _isCancelled,
+      );
 
-    result.fold(
-      onSuccess: (summary) {
-        emit(DownloadCompleted(
-          successCount: summary.successCount,
-          failureCount: summary.failureCount,
-          skippedCount: summary.skippedCount,
-          results: summary.results,
-        ),);
-      },
-      onFailure: (failure) {
-        // Check if it was a cancellation
-        if (failure.failure.details?.contains('cancelled') ?? false) {
-          emit(const DownloadCancelled(
-            completedCount: 0,
-            totalCount: 0,
+      result.fold(
+        onSuccess: (summary) {
+          emit(DownloadCompleted(
+            successCount: summary.successCount,
+            failureCount: summary.failureCount,
+            skippedCount: summary.skippedCount,
+            results: summary.results,
           ),);
-        } else {
-          emit(DownloadError(
-            failure.failure.details ?? 'Transcript download failed',
-          ),);
-        }
-      },
-    );
+        },
+        onFailure: (failure) {
+          // Check if it was a cancellation
+          if (failure.failure.details?.contains('cancelled') ?? false) {
+            emit(const DownloadCancelled(
+              completedCount: 0,
+              totalCount: 0,
+            ),);
+          } else {
+            emit(DownloadError(
+              failure.failure.details ?? 'Transcript download failed',
+            ),);
+          }
+        },
+      );
+    } catch (e, stack) {
+      _logger.e('Unexpected error in transcript download', error: e, stackTrace: stack);
+      emit(DownloadError(
+        'Unexpected error: ${e.toString()}',
+      ),);
+    }
   }
 
   Future<void> _onCancelDownload(

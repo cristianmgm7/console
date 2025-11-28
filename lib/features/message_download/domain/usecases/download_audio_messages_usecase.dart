@@ -1,7 +1,9 @@
+import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_progress.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_result.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_summary.dart';
@@ -18,12 +20,14 @@ class DownloadAudioMessagesUsecase {
     this._downloadRepository,
     this._authenticatedHttpService,
     this._messageRepository,
+    this._oauthRepository,
     this._logger,
   );
 
   final MessageRepository _messageRepository;
   final DownloadRepository _downloadRepository;
   final AuthenticatedHttpService _authenticatedHttpService;
+  final OAuthRepository _oauthRepository;
   final Logger _logger;
 
   /// Downloads audio files for the specified messages
@@ -93,14 +97,58 @@ class DownloadAudioMessagesUsecase {
         final message = result.valueOrNull!;
         final uiMessage = message.toUiModel();
 
-        // Check if message has audio URL
-        if (uiMessage.audioUrl != null && uiMessage.audioUrl!.isNotEmpty) {
+        // Check if message has playable MP3 audio
+        if (uiMessage.hasPlayableAudio) {
           try {
-            // Download file bytes using authenticated HTTP service
-            final response = await _authenticatedHttpService.get(uiMessage.audioUrl!);
+            // Extract audio ID from the audio URL
+            final audioId = _extractAudioIdFromUrl(uiMessage.audioUrl!);
+            if (audioId == null || audioId.isEmpty) {
+              _logger.w('Message ${uiMessage.id} has MP3 audio but could not extract audio ID from URL: ${uiMessage.audioUrl}');
+              results.add(DownloadResult(
+                messageId: uiMessage.id,
+                status: DownloadStatus.failed,
+                errorMessage: 'Could not extract audio ID from URL',
+              ),);
+              continue;
+            }
 
-            _logger.d('Response status: ${response.statusCode}');
+            _logger.d('Extracted audio ID "$audioId" from URL "${uiMessage.audioUrl}" for message ${uiMessage.id}');
+
+            // Get access token for S3 request
+            final clientResult = await _oauthRepository.getClient();
+            final accessToken = clientResult.fold(
+              onSuccess: (client) => client?.credentials.accessToken,
+              onFailure: (_) => null,
+            );
+
+            if (accessToken == null || accessToken.isEmpty) {
+              _logger.w('No access token available for audio download');
+              results.add(DownloadResult(
+                messageId: uiMessage.id,
+                status: DownloadStatus.failed,
+                errorMessage: 'No access token available',
+              ),);
+              continue;
+            }
+
+            // Build full URL: https://api.carbonvoice.app/stream/{message_id}/{audio_id}/{file}?pxtoken={token}
+            final fullUrl = '${OAuthConfig.apiBaseUrl}/stream/${uiMessage.id}/$audioId/audio.mp3?pxtoken=$accessToken';
+            _logger.i('Built full URL with token: $fullUrl');
+
+            // Download file bytes using authenticated HTTP service
+            final response = await _authenticatedHttpService.get(fullUrl);
+
+            _logger.i('🔥 AUDIO DOWNLOAD RESPONSE: Status ${response.statusCode}');
             _logger.d('Response headers: ${response.headers}');
+            _logger.d('Response body length: ${response.bodyBytes.length}');
+
+            if (response.statusCode != 200) {
+              _logger.e('❌ AUDIO REQUEST FAILED - Status: ${response.statusCode}');
+              _logger.e('❌ Failed URL: $fullUrl');
+              _logger.e('❌ Response body: ${response.body}');
+            } else {
+              _logger.i('✅ AUDIO DOWNLOAD SUCCESS - Got ${response.bodyBytes.length} bytes');
+            }
 
             if (response.statusCode == 200) {
               final contentType = response.headers['content-type'];
@@ -179,7 +227,7 @@ class DownloadAudioMessagesUsecase {
     results.addAll(skippedMessages.map((id) => DownloadResult(
       messageId: id,
       status: DownloadStatus.skipped,
-    ),));
+    ),).toList(),);
 
     // Calculate final counts
     final successCount = results.where((r) => r.status == DownloadStatus.success).length;
@@ -196,4 +244,26 @@ class DownloadAudioMessagesUsecase {
     ),);
   }
 
+  /// Extract audio ID from audio URL
+  /// URL pattern: .../stream/{message_id}/{audio_id}/audio.mp3
+  String? _extractAudioIdFromUrl(String audioUrl) {
+    try {
+      final uri = Uri.parse(audioUrl);
+      final pathSegments = uri.pathSegments;
+
+      // Path should be: ['stream', '{message_id}', '{audio_id}', 'audio.mp3']
+      // We want the third segment (index 2) which is the audio_id
+      if (pathSegments.length >= 4 &&
+          pathSegments[0] == 'stream' &&
+          pathSegments[3] == 'audio.mp3') {
+        return pathSegments[2];
+      }
+
+      _logger.w('Unexpected URL format for audio extraction: $audioUrl');
+      return null;
+    } catch (e, stack) {
+      _logger.e('Failed to parse audio URL: $audioUrl', error: e, stackTrace: stack);
+      return null;
+    }
+  }
 }
