@@ -72,7 +72,6 @@ class UserRepositoryImpl implements UserRepository {
 
       // Fetch uncached users
       if (uncachedIds.isNotEmpty) {
-        _logger.d('Fetching ${uncachedIds.length} uncached users');
         final userProfileDtos = await _remoteDataSource.getUsers(uncachedIds);
         final users = <User>[];
         for (var i = 0; i < userProfileDtos.length; i++) {
@@ -84,7 +83,7 @@ class UserRepositoryImpl implements UserRepository {
             name: userProfile.fullName,
             email: userProfile.email,
             // avatarUrl and workspaceId can be added later if available in API
-          ));
+          ),);
         }
 
         // Cache the results

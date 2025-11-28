@@ -49,7 +49,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
         }
 
         final selected = conversations.first;
-        _logger.i('Auto-selected conversation: ${selected.name}');
 
         final colorMap = <String, int>{};
         for (final conversation in conversations) {
@@ -85,13 +84,10 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     final wasSelected = newSelectedIds.contains(event.conversationId);
     if (wasSelected) {
       newSelectedIds.remove(event.conversationId);
-      _logger.i('Deselected conversation: ${event.conversationId}');
     } else {
       newSelectedIds.add(event.conversationId);
-      _logger.i('Selected conversation: ${event.conversationId}');
     }
 
-    _logger.i('New selected conversation IDs: $newSelectedIds');
     emit(currentState.copyWith(selectedConversationIds: newSelectedIds));
     // State change will trigger dashboard screen to notify MessageBloc
   }
