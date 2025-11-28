@@ -37,6 +37,7 @@ class AppIcons {
   static final IconData skipForward = PhosphorIcons.skipForward();
   static final IconData skipBack = PhosphorIcons.skipBack();
   static final IconData microphone = PhosphorIcons.microphone();
+  static final IconData mic = PhosphorIcons.microphone();
   static final IconData audioTrack = PhosphorIcons.waveform();
   static final IconData volume = PhosphorIcons.speakerHigh();
   static final IconData volumeMute = PhosphorIcons.speakerSlash();

@@ -1,4 +1,8 @@
 import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_content.dart';
 import 'package:flutter/material.dart';
@@ -20,35 +24,33 @@ class MessageDetailPanel extends StatelessWidget {
       create: (_) => getIt<MessageDetailBloc>()..add(LoadMessageDetail(messageId)),
       child: BlocBuilder<MessageDetailBloc, MessageDetailState>(
         builder: (context, state) {
-          return Container(
+          return SizedBox(
             width: 400, // Fixed width panel
-            decoration: BoxDecoration(
-              border: Border(
+            child: AppContainer(
+              border: const Border(
                 left: BorderSide(
-                  color: Theme.of(context).dividerColor,
+                  color: AppColors.border,
                 ),
               ),
-            ),
-            child: Column(
+              child: Column(
               children: [
                 // Header with close button
-                Container(
+                AppContainer(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Theme.of(context).dividerColor),
-                    ),
+                  border: const Border(
+                    bottom: BorderSide(color: AppColors.border),
                   ),
                   child: Row(
                     children: [
-                      const Text(
+                      Text(
                         'Message Details',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close),
+                      AppIconButton(
+                        icon: AppIcons.close,
                         onPressed: onClose,
+                        tooltip: 'Close',
                       ),
                     ],
                   ),
@@ -59,6 +61,7 @@ class MessageDetailPanel extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           );
         },
       ),
@@ -67,13 +70,18 @@ class MessageDetailPanel extends StatelessWidget {
 
   Widget _buildContent(MessageDetailState state) {
     if (state is MessageDetailLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: AppProgressIndicator());
     }
     if (state is MessageDetailLoaded) {
       return MessageDetailContent(state: state);
     }
     if (state is MessageDetailError) {
-      return Center(child: Text('Error: ${state.message}'));
+      return Center(
+        child: Text(
+          'Error: ${state.message}',
+          style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
+        ),
+      );
     }
     return const SizedBox.shrink();
   }

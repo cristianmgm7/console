@@ -1,3 +1,7 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
@@ -11,12 +15,10 @@ class AudioPlayerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppContainer(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: AppColors.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       child: BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
         builder: (context, state) {
           return switch (state) {
@@ -36,10 +38,13 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
+    return SizedBox(
       height: 200,
       child: Center(
-        child: Text('No audio loaded'),
+        child: Text(
+          'No audio loaded',
+          style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textSecondary),
+        ),
       ),
     );
   }
@@ -53,7 +58,7 @@ class _LoadingState extends StatelessWidget {
     return const SizedBox(
       height: 200,
       child: Center(
-        child: CircularProgressIndicator(),
+        child: AppProgressIndicator(),
       ),
     );
   }
@@ -72,11 +77,11 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(AppIcons.error, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               message,
-              style: const TextStyle(color: Colors.red),
+              style: AppTextStyle.bodyMedium.copyWith(color: AppColors.error),
               textAlign: TextAlign.center,
             ),
           ],
@@ -99,20 +104,20 @@ class _PlayerControls extends StatelessWidget {
         // Waveform visualization
         GestureDetector(
           onTapDown: (details) => _handleWaveformTap(context, details),
-          child: Container(
+          child: SizedBox(
             height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+            child: AppContainer(
+              backgroundColor: AppColors.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
-            ),
-            child: CustomPaint(
-              painter: WaveformPainter(
-                waveformData: state.waveformData,
-                progress: state.progress,
-                activeColor: Theme.of(context).primaryColor,
-                inactiveColor: Colors.grey.shade400,
+              child: CustomPaint(
+                painter: WaveformPainter(
+                  waveformData: state.waveformData,
+                  progress: state.progress,
+                  activeColor: AppColors.primary,
+                  inactiveColor: AppColors.border,
+                ),
+                size: Size.infinite,
               ),
-              size: Size.infinite,
             ),
           ),
         ),
@@ -125,11 +130,11 @@ class _PlayerControls extends StatelessWidget {
           children: [
             Text(
               state.positionFormatted,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: AppTextStyle.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
             Text(
               state.durationFormatted,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: AppTextStyle.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -159,9 +164,8 @@ class _PlayerControls extends StatelessWidget {
             const SizedBox(width: 32),
 
             // Skip backward 10s
-            IconButton(
-              icon: const Icon(Icons.replay_10),
-              iconSize: 32,
+            AppIconButton(
+              icon: AppIcons.rewind10,
               onPressed: () {
                 final newPosition = state.position - const Duration(seconds: 10);
                 context.read<AudioPlayerBloc>().add(
@@ -170,16 +174,14 @@ class _PlayerControls extends StatelessWidget {
                       ),
                     );
               },
+              size: AppIconButtonSize.large,
             ),
 
             const SizedBox(width: 16),
 
             // Play/Pause
-            IconButton(
-              icon: Icon(
-                state.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-              ),
-              iconSize: 64,
+            AppIconButton(
+              icon: state.isPlaying ? AppIcons.pause : AppIcons.play,
               onPressed: () {
                 if (state.isPlaying) {
                   context.read<AudioPlayerBloc>().add(const PauseAudio());
@@ -187,14 +189,14 @@ class _PlayerControls extends StatelessWidget {
                   context.read<AudioPlayerBloc>().add(const PlayAudio());
                 }
               },
+              size: AppIconButtonSize.large,
             ),
 
             const SizedBox(width: 16),
 
             // Skip forward 10s
-            IconButton(
-              icon: const Icon(Icons.forward_10),
-              iconSize: 32,
+            AppIconButton(
+              icon: AppIcons.forward10,
               onPressed: () {
                 final newPosition = state.position + const Duration(seconds: 10);
                 context.read<AudioPlayerBloc>().add(
@@ -203,18 +205,19 @@ class _PlayerControls extends StatelessWidget {
                       ),
                     );
               },
+              size: AppIconButtonSize.large,
             ),
 
             const SizedBox(width: 32),
 
             // Stop
-            IconButton(
-              icon: const Icon(Icons.stop),
-              iconSize: 32,
+            AppIconButton(
+              icon: AppIcons.stop,
               onPressed: () {
                 context.read<AudioPlayerBloc>().add(const StopAudio());
                 Navigator.pop(context);
               },
+              size: AppIconButtonSize.large,
             ),
           ],
         ),
@@ -247,19 +250,64 @@ class _SpeedButton extends StatelessWidget {
       initialValue: currentSpeed,
       icon: Text(
         '${currentSpeed}x',
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: AppTextStyle.titleMedium.copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       onSelected: (speed) {
         context.read<AudioPlayerBloc>().add(SetPlaybackSpeed(speed));
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(value: 0.5, child: Text('0.5x')),
-        const PopupMenuItem(value: 0.75, child: Text('0.75x')),
-        const PopupMenuItem(value: 1.0, child: Text('1.0x')),
-        const PopupMenuItem(value: 1.25, child: Text('1.25x')),
-        const PopupMenuItem(value: 1.5, child: Text('1.5x')),
-        const PopupMenuItem(value: 1.75, child: Text('1.75x')),
-        const PopupMenuItem(value: 2.0, child: Text('2.0x')),
+        PopupMenuItem(
+          value: 0.5,
+          child: Text(
+            '0.5x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 0.75,
+          child: Text(
+            '0.75x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 1.0,
+          child: Text(
+            '1.0x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 1.25,
+          child: Text(
+            '1.25x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 1.5,
+          child: Text(
+            '1.5x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 1.75,
+          child: Text(
+            '1.75x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 2.0,
+          child: Text(
+            '2.0x',
+            style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ),
       ],
     );
   }

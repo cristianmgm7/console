@@ -1,3 +1,6 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:flutter/material.dart';
 
@@ -25,15 +28,15 @@ class MessageDetailContent extends StatelessWidget {
 
   Widget _buildBasicInfoSection() {
     final message = state.message;
-    return Card(
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Basic Information',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
             _buildInfoRow('ID', message.id),
@@ -50,42 +53,51 @@ class MessageDetailContent extends StatelessWidget {
 
   Widget _buildContentSection() {
     final message = state.message;
-    return Card(
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Content',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
             if (message.transcriptText != null) ...[
-              const Text(
+              Text(
                 'Transcript',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              Text(message.transcriptText!),
+              Text(
+                message.transcriptText!,
+                style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 16),
             ],
             if (message.text != null) ...[
-              const Text(
+              Text(
                 'Text',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              Text(message.text!),
+              Text(
+                message.text!,
+                style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
             ],
             if (message.audioUrl != null) ...[
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Audio URL',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              SelectableText(message.audioUrl!),
+              SelectableText(
+                message.audioUrl!,
+                style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
             ],
           ],
         ),
@@ -95,28 +107,28 @@ class MessageDetailContent extends StatelessWidget {
 
   Widget _buildMetadataSection() {
     final message = state.message;
-    return Card(
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Metadata',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
             if (message.lastHeardAt != null)
               _buildInfoRow('Last Heard', _formatDate(message.lastHeardAt!)),
             if (message.heardDuration != null)
               _buildInfoRow('Heard Duration',
-                  _formatDuration(message.heardDuration!)),
+                  _formatDuration(message.heardDuration!),),
             if (message.totalHeardDuration != null)
               _buildInfoRow('Total Heard Duration',
-                  _formatDuration(message.totalHeardDuration!)),
+                  _formatDuration(message.totalHeardDuration!),),
             if (message.lastUpdatedAt != null)
               _buildInfoRow('Last Updated',
-                  _formatDate(message.lastUpdatedAt!)),
+                  _formatDate(message.lastUpdatedAt!),),
             _buildInfoRow('Workspace IDs',
                 message.workspaceIds.join(', ')),
             _buildInfoRow('Channel IDs',
@@ -139,11 +151,17 @@ class MessageDetailContent extends StatelessWidget {
             width: 140,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: AppTextStyle.bodyMedium.copyWith(
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+            ),
           ),
         ],
       ),

@@ -1,3 +1,6 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,13 +13,18 @@ class MessageDetailView extends StatelessWidget {
     return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
         if (state is MessageDetailLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppProgressIndicator());
         }
         if (state is MessageDetailLoaded) {
           return _buildDetailContent(context, state);
         }
         if (state is MessageDetailError) {
-          return Center(child: Text('Error: ${state.message}'));
+          return Center(
+            child: Text(
+              'Error: ${state.message}',
+              style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
+            ),
+          );
         }
         return const SizedBox.shrink();
       },
@@ -44,15 +52,15 @@ class MessageDetailView extends StatelessWidget {
 
   Widget _buildBasicInfoSection(MessageDetailLoaded state) {
     final message = state.message;
-    return Card(
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Basic Information',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
             _buildInfoRow('ID', message.id),
@@ -69,42 +77,54 @@ class MessageDetailView extends StatelessWidget {
 
   Widget _buildContentSection(MessageDetailLoaded state) {
     final message = state.message;
-    return Card(
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Content',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
             if (message.transcriptText != null) ...[
-              const Text(
+              Text(
                 'Transcript',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              Text(message.transcriptText!),
+              Text(
+                message.transcriptText!,
+                style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 16),
             ],
             if (message.text != null) ...[
-              const Text(
+              Text(
                 'Text',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              Text(message.text!),
+              Text(
+                message.text!,
+                style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
             ],
             if (message.audioUrl != null) ...[
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Audio URL',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              SelectableText(message.audioUrl!),
+              SelectableText(
+                message.audioUrl!,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
             ],
           ],
         ),
@@ -114,15 +134,15 @@ class MessageDetailView extends StatelessWidget {
 
   Widget _buildMetadataSection(MessageDetailLoaded state) {
     final message = state.message;
-    return Card(
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Metadata',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
             if (message.lastHeardAt != null)
@@ -163,11 +183,17 @@ class MessageDetailView extends StatelessWidget {
             width: 140,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: AppTextStyle.bodyMedium.copyWith(
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+            ),
           ),
         ],
       ),
