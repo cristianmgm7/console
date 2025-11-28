@@ -26,7 +26,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   ) async {
     _isCancelled = false;
 
-    final result = await _downloadMessagesUsecase(
+    final result = await _downloadMessagesUsecase.call(
       messageIds: event.messageIds.toList(),
       downloadType: event.downloadType,
       onProgress: (progress) {

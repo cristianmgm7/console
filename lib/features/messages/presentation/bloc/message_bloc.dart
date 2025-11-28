@@ -121,7 +121,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     emit(MessageLoaded(
       messages: enrichedMessages,
       hasMoreMessages: messages.length == _messagesPerPage,
-    ));
+    ),);
   }
 
   Future<void> _onLoadMoreMessages(

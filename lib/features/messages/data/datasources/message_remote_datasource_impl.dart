@@ -36,9 +36,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
             'Expected List but got ${data.runtimeType} for messages endpoint',
           );
         }
-
         final messagesJson = data;
-
         // Convert each message JSON to DTO
         final messages = <MessageDto>[];
         for (final json in messagesJson) {
