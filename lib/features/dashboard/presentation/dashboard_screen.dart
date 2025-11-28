@@ -363,6 +363,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Right side: Detail panel
               if (_selectedMessageForDetail != null)
                 MessageDetailPanel(
+                  messageId: _selectedMessageForDetail!,
                   onClose: _onCloseDetail,
                 ),
             ],
