@@ -106,16 +106,15 @@ class MessageCard extends StatelessWidget {
 
             const SizedBox(width: 16),
 
-            // Play button
-            IconButton(
-              icon: const Icon(Icons.play_circle_outline),
-              tooltip: 'Play audio',
-              onPressed: message.audioUrl != null && message.audioUrl!.isNotEmpty
-                  ? () => _handlePlayAudio(context, message)
-                  : null,
-            ),
-
-            const SizedBox(width: 8),
+            // Play button - only show if message has playable audio
+            if (message.hasPlayableAudio) ...[
+              IconButton(
+                icon: const Icon(Icons.play_circle_outline),
+                tooltip: 'Play audio',
+                onPressed: () => _handlePlayAudio(context, message),
+              ),
+              const SizedBox(width: 8),
+            ],
 
             // Menu
             PopupMenuButton(
@@ -201,7 +200,7 @@ class MessageCard extends StatelessWidget {
   }
 
   void _handlePlayAudio(BuildContext context, MessageUiModel message) {
-    if (message.audioUrl == null || message.audioUrl!.isEmpty) return;
+    if (!message.hasPlayableAudio || message.audioUrl == null) return;
 
     // Get the audio player BLoC
     final audioBloc = context.read<AudioPlayerBloc>();
@@ -210,9 +209,7 @@ class MessageCard extends StatelessWidget {
     audioBloc.add(LoadAudio(
       messageId: message.id,
       audioUrl: message.audioUrl!,
-      waveformData: message.audioModels.isNotEmpty
-          ? message.audioModels.first.waveformData
-          : [],
+      waveformData: message.playableAudioModel?.waveformData ?? [],
     ),
   );
 

@@ -61,6 +61,16 @@ class MessageUiModel extends Equatable {
   final String? transcriptText;
   final String? audioUrl;
 
+  // Computed properties
+  /// Whether this message has MP3 audio
+  bool get hasPlayableAudio => audioModels.any((audio) => audio.format == 'mp3');
+
+  /// Gets the MP3 audio model if available, null otherwise
+  AudioModel? get playableAudioModel => audioModels.firstWhere(
+        (audio) => audio.format == 'mp3',
+        orElse: () => audioModels.first,
+      );
+
   @override
   List<Object?> get props => [
         id,

@@ -1,9 +1,7 @@
 import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/core/providers/bloc_providers.dart';
 import 'package:carbon_voice_console/core/routing/app_router.dart';
-import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Initialize dependency injection
@@ -19,8 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appRouter = getIt<AppRouter>();
-    return BlocProvider(
-      create: (context) => getIt<AuthBloc>()..add(const AppStarted()),
+    return BlocProviders.generalBlocs(
       child: MaterialApp.router(
         title: 'Carbon Voice Console',
         theme: ThemeData(
