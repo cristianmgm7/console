@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^6.1.0
+  phosphor_flutter: ^5.0.0
   
   # Routing
   go_router: ^14.6.2
