@@ -13,6 +13,7 @@ import 'package:carbon_voice_console/features/message_download/presentation/bloc
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
@@ -362,7 +363,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Right side: Detail panel
               if (_selectedMessageForDetail != null)
                 MessageDetailPanel(
-                  messageId: _selectedMessageForDetail!,
                   onClose: _onCloseDetail,
                 ),
             ],
@@ -376,6 +376,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _selectedMessageForDetail = messageId;
     });
+    // Load message details using the centralized bloc
+    context.read<MessageDetailBloc>().add(LoadMessageDetail(messageId));
   }
 
   void _onCloseDetail() {

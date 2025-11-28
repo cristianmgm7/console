@@ -5,6 +5,7 @@ import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:flutter/material.dart';
@@ -36,6 +37,9 @@ class BlocProviders {
         ),
         BlocProvider<MessageBloc>(
           create: (_) => getIt<MessageBloc>(),
+        ),
+        BlocProvider<MessageDetailBloc>(
+          create: (_) => getIt<MessageDetailBloc>(),
         ),
       ],
       child: const DashboardScreen(),
