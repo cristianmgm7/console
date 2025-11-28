@@ -102,9 +102,9 @@ class _AppOutlinedButtonState extends State<AppOutlinedButton>
   Widget build(BuildContext context) {
     final isDisabled = widget.onPressed == null || widget.isLoading;
     final borderColor =
-        widget.borderColor ?? Theme.of(context).colorScheme.primary;
+        widget.borderColor ?? AppColors.primary;
     final foregroundColor =
-        widget.foregroundColor ?? Theme.of(context).colorScheme.primary;
+        widget.foregroundColor ?? AppColors.primary;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -129,7 +129,7 @@ class _AppOutlinedButtonState extends State<AppOutlinedButton>
                 color: isDisabled ? AppColors.disabled : borderColor,
                 width: 1.5,
               ),
-              borderRadius: AppBorders.button,
+              borderRadius: AppBorders.small,
             ),
             child: DefaultTextStyle(
               style: _textStyle.copyWith(

@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_animations.dart';
 import 'package:carbon_voice_console/core/theme/app_borders.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:flutter/material.dart';
 
 class AppCheckbox extends StatefulWidget {
   const AppCheckbox({
@@ -68,9 +68,8 @@ class _AppCheckboxState extends State<AppCheckbox>
 
   @override
   Widget build(BuildContext context) {
-    final activeColor =
-        widget.activeColor ?? Theme.of(context).colorScheme.primary;
-    final checkColor = widget.checkColor ?? AppColors.onPrimary;
+    final activeColor = widget.activeColor ?? AppColors.primary;
+    final checkColor = widget.checkColor ?? AppColors.surface;
     final isDisabled = widget.onChanged == null;
 
     return GestureDetector(
@@ -96,7 +95,7 @@ class _AppCheckboxState extends State<AppCheckbox>
           ),
           child: widget.value
               ? Icon(
-                  Icons.check,
+                  AppIcons.check,
                   size: 14,
                   color: checkColor,
                 )

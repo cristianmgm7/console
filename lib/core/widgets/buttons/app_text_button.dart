@@ -98,7 +98,7 @@ class _AppTextButtonState extends State<AppTextButton>
   Widget build(BuildContext context) {
     final isDisabled = widget.onPressed == null || widget.isLoading;
     final foregroundColor =
-        widget.foregroundColor ?? Theme.of(context).colorScheme.primary;
+        widget.foregroundColor ?? AppColors.primary;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

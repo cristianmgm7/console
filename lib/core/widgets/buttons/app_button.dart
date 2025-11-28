@@ -12,7 +12,7 @@ class AppButton extends StatefulWidget {
     required this.onPressed,
     required this.child,
     super.key,
-    this.size = AppButtonSize.medium,
+    this.size = AppButtonSize.small,
     this.isLoading = false,
     this.fullWidth = false,
     this.backgroundColor,
@@ -58,26 +58,26 @@ class _AppButtonState extends State<AppButton>
     super.dispose();
   }
 
-  void _handleTapDown(TapDownDetails details) {
+  Future<void> _handleTapDown(TapDownDetails details) async {
     // Ignore: unawaited_futures - animation is fire and forget
-    _controller.forward();
+    await _controller.forward();
   }
 
-  void _handleTapUp(TapUpDetails details) {
+  Future<void> _handleTapUp(TapUpDetails details) async {
     // Ignore: unawaited_futures - animation is fire and forget
-    _controller.reverse();
+    await _controller.reverse();
   }
 
-  void _handleTapCancel() {
+  Future<void> _handleTapCancel() async {
     // Ignore: unawaited_futures - animation is fire and forget
-    _controller.reverse();
+    await _controller.reverse();
   }
 
   EdgeInsets get _padding {
     return switch (widget.size) {
       AppButtonSize.small => const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
+          horizontal: 12,
+          vertical: 10,
         ),
       AppButtonSize.medium => const EdgeInsets.symmetric(
           horizontal: 24,
@@ -102,9 +102,9 @@ class _AppButtonState extends State<AppButton>
   Widget build(BuildContext context) {
     final isDisabled = widget.onPressed == null || widget.isLoading;
     final backgroundColor =
-        widget.backgroundColor ?? Theme.of(context).colorScheme.primary;
+        widget.backgroundColor ?? AppColors.primary;
     final foregroundColor =
-        widget.foregroundColor ?? Theme.of(context).colorScheme.onPrimary;
+        widget.foregroundColor ?? AppColors.surface;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -127,7 +127,7 @@ class _AppButtonState extends State<AppButton>
                   : (_isHovered
                       ? _darkenColor(backgroundColor, 0.1)
                       : backgroundColor),
-              borderRadius: AppBorders.button,
+              borderRadius: AppBorders.small,
               boxShadow: isDisabled
                   ? []
                   : [

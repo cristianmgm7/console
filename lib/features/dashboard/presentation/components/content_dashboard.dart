@@ -28,8 +28,10 @@ class DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MessageBloc, MessageState>(
-      builder: (context, messageState) {
+    return AppContainer(
+      backgroundColor: AppColors.surface,
+      child: BlocBuilder<MessageBloc, MessageState>(
+        builder: (context, messageState) {
         // Show loading when any bloc is loading
         if (isAnyBlocLoading(context)) {
           return const Center(child: AppProgressIndicator());
@@ -133,6 +135,6 @@ class DashboardContent extends StatelessWidget {
           ),
         );
       },
-    );
+    ),);
   }
 }

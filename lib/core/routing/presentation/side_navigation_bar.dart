@@ -18,17 +18,6 @@ class SideNavigationBar extends StatelessWidget {
         backgroundColor: AppColors.surface,
       child: Column(
         children: [
-          // App branding header
-          AppContainer(
-            padding: const EdgeInsets.all(16),
-            child: Icon(
-              AppIcons.mic,
-              size: 24,
-              color: AppColors.primary,
-            ),
-          ),
-          const Divider(height: 1),
-          // Navigation items
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),

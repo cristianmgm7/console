@@ -23,7 +23,7 @@ class AppContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: padding ?? const EdgeInsets.all(AppDimensions.paddingMedium),
+      padding: padding ?? const EdgeInsets.all(AppDimensions.paddingSmall),
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.surface,
         borderRadius: borderRadius ?? AppBorders.small,

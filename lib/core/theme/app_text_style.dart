@@ -5,7 +5,7 @@ import 'app_colors.dart';
 class AppTextStyle {
   // Display styles
   static TextStyle displayLarge = GoogleFonts.dmSans(
-    color: AppColors.textPrimary,
+    color: AppColors.primary,
     fontSize: 32,
     fontWeight: FontWeight.bold,
     height: 1.2,
@@ -13,7 +13,7 @@ class AppTextStyle {
   );
 
   static TextStyle displayMedium = GoogleFonts.dmSans(
-    color: AppColors.textPrimary,
+    color: AppColors.primary,
     fontSize: 28,
     fontWeight: FontWeight.bold,
     height: 1.25,

@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:flutter/material.dart';
 
 class MessagesActionPanel extends StatelessWidget {
 
@@ -29,7 +28,7 @@ class MessagesActionPanel extends StatelessWidget {
 
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      opacity: 0.8,
+      opacity: 0.2,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -48,49 +47,75 @@ class MessagesActionPanel extends StatelessWidget {
           ),
           const SizedBox(width: 24),
 
-          // Download Audio Button
-          AppOutlinedButton(
-            onPressed: onDownloadAudio,
-            size: AppOutlinedButtonSize.medium,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(AppIcons.audioTrack, size: 18),
-                const SizedBox(width: 8),
-                const Text('Download Audio'),
+          // Download Dropdown
+          SizedBox(
+            width: 160,
+            height: 40,
+            child: AppDropdown<String>(
+              value: null, // No default selection
+              hint: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(AppIcons.download, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Download',
+                    style: AppTextStyle.bodyMedium.copyWith(color: AppColors.primary),
+                  ),
+                ],
+              ),
+              items: [
+                DropdownMenuItem<String>(
+                  value: 'audio',
+                  child: Row(
+                    children: [
+                      Icon(AppIcons.audioTrack, size: 18, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Audio',
+                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'transcript',
+                  child: Row(
+                    children: [
+                      Icon(AppIcons.message, size: 18, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Transcript',
+                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'both',
+                  child: Row(
+                    children: [
+                      Icon(AppIcons.download, size: 18, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Both',
+                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Download Transcript Button
-          AppOutlinedButton(
-            onPressed: onDownloadTranscript,
-            size: AppOutlinedButtonSize.medium,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(AppIcons.message, size: 18),
-                const SizedBox(width: 8),
-                const Text('Download Transcript'),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Download Both Button
-          AppOutlinedButton(
-            onPressed: onSummarize,
-            size: AppOutlinedButtonSize.medium,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(AppIcons.download, size: 18),
-                const SizedBox(width: 8),
-                const Text('Both'),
-              ],
+              onChanged: (String? value) {
+                switch (value) {
+                  case 'audio':
+                    onDownloadAudio();
+                  case 'transcript':
+                    onDownloadTranscript();
+                  case 'both':
+                    onSummarize();
+                }
+              },
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           ),
 
@@ -99,7 +124,6 @@ class MessagesActionPanel extends StatelessWidget {
           // AI Chat Button
           AppButton(
             onPressed: onAIChat,
-            size: AppButtonSize.medium,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

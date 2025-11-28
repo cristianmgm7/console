@@ -35,11 +35,14 @@ class DashboardAppBar extends StatelessWidget {
       child: Row(
         children: [
           // Title
-          Text(
-            'Messages',
-            style: AppTextStyle.titleLarge.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: Text(
+              'Messages',
+              style: AppTextStyle.titleLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
             ),
           ),
 
@@ -210,9 +213,11 @@ class DashboardAppBar extends StatelessWidget {
 
           // Selected Conversations Display
           Expanded(
-            child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
-              selector: (state) => state is ConversationLoaded ? state : null,
-              builder: (context, conversationState) {
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+                selector: (state) => state is ConversationLoaded ? state : null,
+                builder: (context, conversationState) {
                 if (conversationState == null || conversationState.selectedConversationIds.isEmpty) {
                   return const SizedBox.shrink();
                 }
@@ -235,6 +240,7 @@ class DashboardAppBar extends StatelessWidget {
                   ),
                 );
               },
+              ),
             ),
           ),
 

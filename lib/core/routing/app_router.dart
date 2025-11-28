@@ -136,10 +136,6 @@ class AppRouter {
         ),
       ],
       errorBuilder: (context, state) {
-        // Log del error para debugging
-        debugPrint('🚨 GoRouter Error: ${state.uri.path}');
-        debugPrint('🚨 GoRouter Error - Full URI: ${state.uri}');
-        debugPrint('🚨 GoRouter Error - Matched subloc: ${state.matchedLocation}');
         
         // Redirigir a login inmediatamente
         WidgetsBinding.instance.addPostFrameCallback((_) {
