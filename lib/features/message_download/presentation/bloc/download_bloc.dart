@@ -1,4 +1,5 @@
-import 'package:carbon_voice_console/features/message_download/domain/usecases/download_messages_usecase.dart';
+import 'package:carbon_voice_console/features/message_download/domain/usecases/download_audio_messages_usecase.dart';
+import 'package:carbon_voice_console/features/message_download/domain/usecases/download_transcript_messages_usecase.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,27 +9,29 @@ import 'package:logger/logger.dart';
 @injectable
 class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
   DownloadBloc(
-    this._downloadMessagesUsecase,
+    this._downloadAudioMessagesUsecase,
+    this._downloadTranscriptMessagesUsecase,
     this._logger,
   ) : super(const DownloadInitial()) {
-    on<StartDownload>(_onStartDownload);
+    on<StartDownloadAudio>(_onStartDownloadAudio);
+    on<StartDownloadTranscripts>(_onStartDownloadTranscripts);
     on<CancelDownload>(_onCancelDownload);
   }
 
-  final DownloadMessagesUsecase _downloadMessagesUsecase;
+  final DownloadAudioMessagesUsecase _downloadAudioMessagesUsecase;
+  final DownloadTranscriptMessagesUsecase _downloadTranscriptMessagesUsecase;
   final Logger _logger;
 
   bool _isCancelled = false;
 
-  Future<void> _onStartDownload(
-    StartDownload event,
+  Future<void> _onStartDownloadAudio(
+    StartDownloadAudio event,
     Emitter<DownloadState> emit,
   ) async {
     _isCancelled = false;
 
-    final result = await _downloadMessagesUsecase.call(
+    final result = await _downloadAudioMessagesUsecase.call(
       messageIds: event.messageIds.toList(),
-      downloadType: event.downloadType,
       onProgress: (progress) {
         emit(DownloadInProgress(
           current: progress.current,
@@ -61,6 +64,50 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         } else {
           emit(DownloadError(
             failure.failure.details ?? 'Download failed',
+          ),);
+        }
+      },
+    );
+  }
+
+  Future<void> _onStartDownloadTranscripts(
+    StartDownloadTranscripts event,
+    Emitter<DownloadState> emit,
+  ) async {
+    _isCancelled = false;
+
+    final result = await _downloadTranscriptMessagesUsecase.call(
+      messageIds: event.messageIds.toList(),
+      onProgress: (progress) {
+        emit(DownloadInProgress(
+          current: progress.current,
+          total: progress.total,
+          progressPercent: progress.progressPercent,
+          currentMessageId: progress.currentMessageId,
+        ),);
+      },
+      isCancelled: () => _isCancelled,
+    );
+
+    result.fold(
+      onSuccess: (summary) {
+        emit(DownloadCompleted(
+          successCount: summary.successCount,
+          failureCount: summary.failureCount,
+          skippedCount: summary.skippedCount,
+          results: summary.results,
+        ),);
+      },
+      onFailure: (failure) {
+        // Check if it was a cancellation
+        if (failure.failure.details?.contains('cancelled') ?? false) {
+          emit(const DownloadCancelled(
+            completedCount: 0,
+            totalCount: 0,
+          ),);
+        } else {
+          emit(DownloadError(
+            failure.failure.details ?? 'Transcript download failed',
           ),);
         }
       },

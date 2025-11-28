@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class DownloadEvent extends Equatable {
@@ -8,15 +7,24 @@ sealed class DownloadEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Event to start downloading messages
-class StartDownload extends DownloadEvent {
-  const StartDownload(this.messageIds, {this.downloadType = DownloadType.both});
+/// Event to start downloading audio files
+class StartDownloadAudio extends DownloadEvent {
+  const StartDownloadAudio(this.messageIds);
 
   final Set<String> messageIds;
-  final DownloadType downloadType;
 
   @override
-  List<Object?> get props => [messageIds, downloadType];
+  List<Object?> get props => [messageIds];
+}
+
+/// Event to start downloading transcript files
+class StartDownloadTranscripts extends DownloadEvent {
+  const StartDownloadTranscripts(this.messageIds);
+
+  final Set<String> messageIds;
+
+  @override
+  List<Object?> get props => [messageIds];
 }
 
 /// Event to cancel ongoing download

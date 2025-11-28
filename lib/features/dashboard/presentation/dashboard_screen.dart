@@ -7,7 +7,6 @@ import 'package:carbon_voice_console/features/conversations/presentation/bloc/co
 import 'package:carbon_voice_console/features/dashboard/presentation/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
-import 'package:carbon_voice_console/features/message_download/domain/entities/download_item.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
@@ -202,7 +201,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       enableDrag: false,
                       builder: (sheetContext) => BlocProvider(
                         create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownload(messagesToDownload, downloadType: DownloadType.audio)),
+                          ..add(StartDownloadAudio(messagesToDownload)),
                         child: const DownloadProgressSheet(),
                       ),
                     ),);
@@ -235,7 +234,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       enableDrag: false,
                       builder: (sheetContext) => BlocProvider(
                         create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownload(messagesToDownload, downloadType: DownloadType.transcript)),
+                          ..add(StartDownloadTranscripts(messagesToDownload)),
                         child: const DownloadProgressSheet(),
                       ),
                     ),);
