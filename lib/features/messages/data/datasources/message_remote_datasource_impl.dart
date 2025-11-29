@@ -81,7 +81,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
       if (response.statusCode == 404) {
         response = await _httpService.get(
-          '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId',
+          '${OAuthConfig.apiBaseUrl}/v4/messages/$messageId',
         );
       }
 

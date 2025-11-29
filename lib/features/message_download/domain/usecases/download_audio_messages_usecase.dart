@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
@@ -5,7 +6,6 @@ import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_progress.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_result.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_summary.dart';
@@ -22,14 +22,12 @@ class DownloadAudioMessagesUsecase {
     this._downloadRepository,
     this._authenticatedHttpService,
     this._messageRepository,
-    this._oauthRepository,
     this._logger,
   );
 
   final MessageRepository _messageRepository;
   final DownloadRepository _downloadRepository;
   final AuthenticatedHttpService _authenticatedHttpService;
-  final OAuthRepository _oauthRepository;
   final Logger _logger;
 
   /// Downloads audio files for the specified messages
@@ -99,47 +97,48 @@ class DownloadAudioMessagesUsecase {
         final message = result.valueOrNull!;
         final uiMessage = message.toUiModel();
 
+        _logger.d('📋 Message ${uiMessage.id} hasPlayableAudio: ${uiMessage.hasPlayableAudio}');
+        _logger.d('🎵 Message audio URL: ${uiMessage.audioUrl}');
+
         // Check if message has playable MP3 audio
         if (uiMessage.hasPlayableAudio) {
+          _logger.i('🎵 Processing audio for message ${uiMessage.id}');
           try {
-            // Get PX token for streaming endpoint
-            final pxTokenResult = await _oauthRepository.getPxToken();
-            final pxToken = pxTokenResult.fold(
-              onSuccess: (token) => token,
-              onFailure: (_) => null,
-            );
+            // First try to get pre-signed URL from v5 endpoint
+            _logger.d('🔗 Trying to get pre-signed URL for message: ${uiMessage.id}');
+            final signedUrlResult = await _getPreSignedUrl(uiMessage.id);
 
-            if (pxToken == null || pxToken.isEmpty) {
-              _logger.w('No PX token available for audio download');
-              results.add(DownloadResult(
-                messageId: uiMessage.id,
-                status: DownloadStatus.failed,
-                errorMessage: 'No PX token available',
-              ),);
-              continue;
+            String downloadUrl;
+            if (signedUrlResult.isSuccess) {
+              downloadUrl = signedUrlResult.valueOrNull!;
+              _logger.i('✅ Got pre-signed URL: $downloadUrl');
+            } else {
+              // Fall back to stream endpoint approach
+              _logger.w('⚠️ No pre-signed URL available, falling back to stream endpoint');
+
+              // Extract audio ID from the audio URL
+              _logger.d('🔗 Audio URL: ${uiMessage.audioUrl}');
+              final audioId = _extractAudioIdFromUrl(uiMessage.audioUrl!);
+              _logger.d('🔍 Extracted audio ID: $audioId');
+
+              if (audioId == null || audioId.isEmpty) {
+                _logger.w('❌ Could not extract audio ID from URL: ${uiMessage.audioUrl}');
+                results.add(DownloadResult(
+                  messageId: uiMessage.id,
+                  status: DownloadStatus.failed,
+                  errorMessage: 'Could not extract audio ID from URL',
+                ),);
+                continue;
+              }
+
+              // Build the stream endpoint: /stream/{message_id}/{audio_id}/{file}
+              // AuthenticatedHttpService automatically adds bearer token to Authorization header
+              downloadUrl = '${OAuthConfig.apiBaseUrl}/stream/${uiMessage.id}/$audioId/audio.mp3';
+              _logger.i('🎵 Trying stream endpoint with bearer token: $downloadUrl');
+              _logger.i('📝 Message ID: ${uiMessage.id}, Audio ID: $audioId');
             }
 
-            // Extract audio ID from the audio URL
-            _logger.d('🔗 Audio URL: ${uiMessage.audioUrl}');
-            final audioId = _extractAudioIdFromUrl(uiMessage.audioUrl!);
-            _logger.d('🔍 Extracted audio ID: $audioId');
-
-            if (audioId == null || audioId.isEmpty) {
-              _logger.w('❌ Could not extract audio ID from URL: ${uiMessage.audioUrl}');
-              results.add(DownloadResult(
-                messageId: uiMessage.id,
-                status: DownloadStatus.failed,
-                errorMessage: 'Could not extract audio ID from URL',
-              ),);
-              continue;
-            }
-
-            // Build the stream endpoint: /stream/{message_id}/{audio_id}/{file}?pxtoken={pxToken}
-            final streamUrl = '${OAuthConfig.apiBaseUrl}/stream/${uiMessage.id}/$audioId/audio.mp3?pxtoken=$pxToken';
-            _logger.i('🎵 Trying stream endpoint with PX token: $streamUrl');
-            _logger.i('📝 Message ID: ${uiMessage.id}, Audio ID: $audioId, PX Token: ${pxToken.substring(0, 10)}...');
-
-            final response = await _authenticatedHttpService.get(streamUrl);
+            final response = await _authenticatedHttpService.get(downloadUrl);
             _logger.i('📡 Response status: ${response.statusCode}');
 
             // Check if response contains JSON (indicates API response, not audio data)
@@ -166,7 +165,7 @@ class DownloadAudioMessagesUsecase {
             _logger.d('Response body length: ${response.bodyBytes.length}');
 
             // The URL used for the final response
-            final finalUrl = response.request?.url.toString() ?? streamUrl;
+            final finalUrl = response.request?.url.toString() ?? downloadUrl;
 
             if (response.statusCode != 200) {
               _logger.e('❌ AUDIO REQUEST FAILED - Status: ${response.statusCode}');
@@ -315,7 +314,7 @@ class DownloadAudioMessagesUsecase {
             ),);
           }
         } else {
-          _logger.w('Message ${uiMessage.id} has no audio URL');
+          _logger.w('⏭️ Skipping message ${uiMessage.id} - no playable audio');
           results.add(DownloadResult(
             messageId: uiMessage.id,
             status: DownloadStatus.skipped,
@@ -350,6 +349,152 @@ class DownloadAudioMessagesUsecase {
       skippedCount: skippedCount,
       results: results,
     ),);
+  }
+
+  /// Try to get a pre-signed URL for audio download from v5 endpoint
+  Future<Result<String>> _getPreSignedUrl(String messageId) async {
+    _logger.i('🔗 STARTING PRE-SIGNED URL ATTEMPT for message: $messageId');
+    try {
+      _logger.d('🔍 Requesting pre-signed URL from v5 endpoint for message: $messageId');
+
+      // Try v5 endpoint with parameter to request pre-signed URLs
+      final response = await _authenticatedHttpService.get(
+        '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId?include_presigned_urls=true',
+      );
+
+      if (response.statusCode == 200) {
+        _logger.i('✅ V5 endpoint returned status 200');
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        _logger.d('📄 V5 response keys: ${data.keys.toList()}');
+
+        // Log the full response structure for debugging
+        _logger.d('🔍 Full V5 response structure:');
+        _logResponseStructure(data, prefix: '');
+
+        // Try to extract signed URL from the response
+        final signedUrl = _extractSignedUrlFromMessageData(data);
+        if (signedUrl != null) {
+          _logger.i('🎯 Found pre-signed URL in v5 response: $signedUrl');
+          return success(signedUrl);
+        } else {
+          _logger.w('⚠️ No signed URL found in v5 response data');
+        }
+      } else {
+        _logger.w('⚠️ V5 endpoint returned status ${response.statusCode}: ${response.body}');
+      }
+
+      _logger.w('⚠️ No pre-signed URL available, will fallback to stream endpoint');
+      return failure(const UnknownFailure(details: 'No pre-signed URL available'));
+    } catch (e, stack) {
+      _logger.e('❌ Exception in _getPreSignedUrl', error: e, stackTrace: stack);
+      _logger.w('⚠️ Failed to get pre-signed URL, falling back to stream endpoint');
+      return failure(UnknownFailure(details: 'Failed to get pre-signed URL: $e'));
+    }
+  }
+
+  /// Extract signed URL from message data if available
+  String? _extractSignedUrlFromMessageData(Map<String, dynamic> data) {
+    try {
+      _logger.d('🔍 Looking for signed URL in response structure...');
+
+      // Try different possible structures based on API response format
+
+      // Structure 1: data['audio_models'] (original assumption)
+      final audioModels = data['audio_models'] as List<dynamic>?;
+      if (audioModels != null && audioModels.isNotEmpty) {
+        _logger.d('✅ Found audio_models array with ${audioModels.length} items');
+        final firstAudio = audioModels.first as Map<String, dynamic>;
+        return _extractSignedUrlFromAudioObject(firstAudio);
+      }
+
+      // Structure 2: data['message']['audio'] (user's reported structure)
+      final messageData = data['message'] as Map<String, dynamic>?;
+      if (messageData != null) {
+        _logger.d('📋 Found message wrapper, checking for audio field...');
+        final audioField = messageData['audio'] as List<dynamic>?;
+        if (audioField != null && audioField.isNotEmpty) {
+          _logger.d('✅ Found audio array in message with ${audioField.length} items');
+          final firstAudio = audioField.first as Map<String, dynamic>;
+          return _extractSignedUrlFromAudioObject(firstAudio);
+        }
+
+        // If audio is not a list, it might be a single object
+        final singleAudio = messageData['audio'] as Map<String, dynamic>?;
+        if (singleAudio != null) {
+          _logger.d('✅ Found single audio object in message');
+          return _extractSignedUrlFromAudioObject(singleAudio);
+        }
+      }
+
+      _logger.w('⚠️ No audio data found in any expected structure');
+      _logger.d('📋 Available top-level keys: ${data.keys.toList()}');
+      if (messageData != null) {
+        _logger.d('📋 Available message keys: ${messageData.keys.toList()}');
+      }
+
+    } catch (e) {
+      _logger.w('Error extracting signed URL from message data: $e');
+    }
+    return null;
+  }
+
+  /// Extract signed URL from a single audio object
+  String? _extractSignedUrlFromAudioObject(Map<String, dynamic> audioObject) {
+    try {
+      _logger.d('🔍 Checking audio object for signed URL fields...');
+
+      // Check for signed_url or presigned_url field
+      final signedUrl = audioObject['signed_url'] ?? audioObject['presigned_url'];
+      if (signedUrl is String && signedUrl.isNotEmpty) {
+        _logger.i('🎯 Found signed_url/presigned_url field: $signedUrl');
+        return signedUrl;
+      }
+
+      // Check if the regular url field contains a signed URL (might be different format)
+      final url = audioObject['url'] as String?;
+      if (url != null) {
+        _logger.d('📋 Found regular url field: $url');
+        if (_isSignedUrl(url)) {
+          _logger.i('🎯 Regular url field contains signed URL: $url');
+          return url;
+        }
+      }
+
+      _logger.w('⚠️ No signed URL found in audio object');
+      _logger.d('📋 Available audio object keys: ${audioObject.keys.toList()}');
+
+    } catch (e) {
+      _logger.w('Error extracting signed URL from audio object: $e');
+    }
+    return null;
+  }
+
+  /// Log the structure of the response for debugging
+  void _logResponseStructure(dynamic data, {String prefix = ''}) {
+    if (data is Map<String, dynamic>) {
+      for (final entry in data.entries) {
+        if (entry.value is Map || entry.value is List) {
+          _logger.d('$prefix${entry.key}: ${entry.value.runtimeType}');
+          if (entry.value is Map) {
+            _logResponseStructure(entry.value, prefix: '$prefix  ');
+          } else if (entry.value is List && (entry.value as List).isNotEmpty) {
+            _logger.d('$prefix  [0]: ${(entry.value as List).first.runtimeType}');
+          }
+        } else {
+          _logger.d('$prefix${entry.key}: ${entry.value?.toString()}');
+        }
+      }
+    }
+  }
+
+  /// Check if URL looks like a signed URL (contains signature parameters)
+  bool _isSignedUrl(String url) {
+    final uri = Uri.parse(url);
+    // Signed URLs typically contain parameters like X-Amz-Signature, Signature, etc.
+    return uri.queryParameters.keys.any((key) =>
+        key.toLowerCase().contains('signature') ||
+        key.toLowerCase().contains('sig') ||
+        key.startsWith('X-Amz'));
   }
 
   /// Extract audio ID from audio URL

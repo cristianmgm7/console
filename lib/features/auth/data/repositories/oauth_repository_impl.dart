@@ -399,11 +399,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(UnknownFailure(details: 'Network error during token exchange: $e'));
       }
 
-      // Check if response is null (shouldn't happen in success case)
-      if (response == null) {
-        return failure(const UnknownFailure(details: 'No response received from exchange endpoint'));
-      }
-
       if (response.statusCode != 200) {
         _logger.e('Exchange request failed: ${response.body}');
         return failure(UnknownFailure(details: 'Failed to get PX token: ${response.statusCode} - ${response.body}'));
