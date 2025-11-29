@@ -23,4 +23,7 @@ abstract class OAuthRepository {
 
   /// Gets the OAuth client for making API calls
   Future<Result<oauth2.Client?>> getClient();
+
+  /// Gets the PX token from /whoami endpoint for streaming
+  Future<Result<String>> getPxToken();
 }

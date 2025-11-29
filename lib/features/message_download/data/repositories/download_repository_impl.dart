@@ -85,7 +85,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         messageId: messageId,
         status: DownloadStatus.failed,
         errorMessage: e.toString(),
-      ),);
+        ),);
     }
   }
 
@@ -172,7 +172,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
         messageId: messageId,
         status: DownloadStatus.failed,
         errorMessage: e.toString(),
-      ),);
+        ),);
     }
   }
 }

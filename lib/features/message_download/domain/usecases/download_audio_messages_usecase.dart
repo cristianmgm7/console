@@ -102,19 +102,19 @@ class DownloadAudioMessagesUsecase {
         // Check if message has playable MP3 audio
         if (uiMessage.hasPlayableAudio) {
           try {
-            // Get access token for potential fallback request
-            final clientResult = await _oauthRepository.getClient();
-            final accessToken = clientResult.fold(
-              onSuccess: (client) => client?.credentials.accessToken,
+            // Get PX token for streaming endpoint
+            final pxTokenResult = await _oauthRepository.getPxToken();
+            final pxToken = pxTokenResult.fold(
+              onSuccess: (token) => token,
               onFailure: (_) => null,
             );
 
-            if (accessToken == null || accessToken.isEmpty) {
-              _logger.w('No access token available for audio download');
+            if (pxToken == null || pxToken.isEmpty) {
+              _logger.w('No PX token available for audio download');
               results.add(DownloadResult(
                 messageId: uiMessage.id,
                 status: DownloadStatus.failed,
-                errorMessage: 'No access token available',
+                errorMessage: 'No PX token available',
               ),);
               continue;
             }
@@ -134,10 +134,10 @@ class DownloadAudioMessagesUsecase {
               continue;
             }
 
-            // Build the stream endpoint: /stream/{message_id}/{audio_id}/{file}?pxtoken={token}
-            final streamUrl = '${OAuthConfig.apiBaseUrl}/stream/${uiMessage.id}/$audioId/audio.mp3?pxtoken=$accessToken';
-            _logger.i('🎵 Trying stream endpoint: $streamUrl');
-            _logger.i('📝 Message ID: ${uiMessage.id}, Audio ID: $audioId');
+            // Build the stream endpoint: /stream/{message_id}/{audio_id}/{file}?pxtoken={pxToken}
+            final streamUrl = '${OAuthConfig.apiBaseUrl}/stream/${uiMessage.id}/$audioId/audio.mp3?pxtoken=$pxToken';
+            _logger.i('🎵 Trying stream endpoint with PX token: $streamUrl');
+            _logger.i('📝 Message ID: ${uiMessage.id}, Audio ID: $audioId, PX Token: ${pxToken.substring(0, 10)}...');
 
             final response = await _authenticatedHttpService.get(streamUrl);
             _logger.i('📡 Response status: ${response.statusCode}');

@@ -361,6 +361,56 @@ class OAuthRepositoryImpl implements OAuthRepository {
   }
 
   @override
+  Future<Result<String>> getPxToken() async {
+    try {
+      final clientResult = await getClient();
+      final client = clientResult.fold(
+        onSuccess: (client) => client,
+        onFailure: (_) => null,
+      );
+
+      if (client == null) {
+        return failure(const UnknownFailure(details: 'Not authenticated'));
+      }
+
+      final accessToken = client.credentials.accessToken;
+      final exchangeUrl = '${OAuthConfig.apiBaseUrl}/token/access/exchange';
+      _logger.d('Fetching PX token from: $exchangeUrl');
+      _logger.d('Using access token in request body');
+
+      final response = await client.post(
+        Uri.parse(exchangeUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'access_token': accessToken,
+        }),
+      );
+      _logger.d('Whoami response status: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        _logger.e('Whoami request failed: ${response.body}');
+        return failure(UnknownFailure(details: 'Failed to get PX token: ${response.statusCode}'));
+      }
+
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      final pxToken = responseData['pxtoken'] as String?;
+
+      if (pxToken == null || pxToken.isEmpty) {
+        _logger.e('PX token not found in whoami response');
+        return failure(const UnknownFailure(details: 'PX token not found in response'));
+      }
+
+      _logger.i('Successfully obtained PX token');
+      return success(pxToken);
+    } catch (e, stack) {
+      _logger.e('Error fetching PX token', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: 'Error fetching PX token: $e'));
+    }
+  }
+
+  @override
   Future<Result<oauth2.Client?>> getClient() async {
     try {
       if (_client != null) {
