@@ -306,14 +306,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDashboardWithDetail() {
-    return Column(
-      children: [
-        // App Bar - full width at top
-        DashboardAppBar(
-          onRefresh: _onRefresh,
-        ),
-        // Main content area below app bar: left = messages, right = detail
-        Row(
+    return SizedBox.expand(
+      child: Column(
+        children: [
+          // App Bar - full width at top
+          DashboardAppBar(
+            onRefresh: _onRefresh,
+          ),
+          // Main content area below app bar: left = messages, right = detail
+          Expanded(
+            child: Row(
           children: [
             // Left side: Message list area
             Expanded(
@@ -341,7 +343,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
           ],
         ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 

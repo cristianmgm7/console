@@ -26,6 +26,7 @@ class MessageDetailPanel extends StatelessWidget {
         builder: (context, state) {
           return SizedBox(
             width: 400, // Fixed width panel
+            height: double.infinity, // Fill available height
             child: AppContainer(
               border: const Border(
                 left: BorderSide(
