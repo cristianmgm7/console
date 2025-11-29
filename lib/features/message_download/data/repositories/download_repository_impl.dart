@@ -124,6 +124,29 @@ class DownloadRepositoryImpl implements DownloadRepository {
         baseFileName,
       );
 
+      // Debug: Log audio data info before saving
+      _logger.i('💾 Saving audio file: $uniqueFileName');
+      _logger.i('📊 Audio bytes length: ${audioBytes.length}');
+      _logger.i('🏷️ Content-Type: $contentType');
+      _logger.i('📁 Extension determined: $extension');
+
+      // Verify bytes are not empty or corrupted
+      if (audioBytes.isEmpty) {
+        _logger.e('❌ Audio bytes are empty!');
+        return failure(StorageFailure(details: 'Received empty audio data'));
+      }
+
+      // Check for common audio file headers
+      if (audioBytes.length >= 4) {
+        final header = audioBytes.sublist(0, 4);
+        _logger.d('🔍 First 4 bytes (header): ${header.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}');
+
+        // MP3 header check (starts with ID3 or FF FB/FB)
+        final isMp3 = header[0] == 0x49 && header[1] == 0x44 && header[2] == 0x33; // ID3
+        final isMp3Frame = header[0] == 0xFF && (header[1] & 0xE0) == 0xE0; // Frame sync
+        _logger.d('🎵 MP3 header detected: ID3=$isMp3, FrameSync=$isMp3Frame');
+      }
+
       // Save file
       final result = await _fileSaver.saveFile(
         directoryPath: directoryPath,

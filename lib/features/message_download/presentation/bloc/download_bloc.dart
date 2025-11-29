@@ -32,42 +32,42 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
     try {
       final result = await _downloadAudioMessagesUsecase.call(
-        messageIds: event.messageIds.toList(),
-        onProgress: (progress) {
-          emit(DownloadInProgress(
-            current: progress.current,
-            total: progress.total,
-            progressPercent: progress.progressPercent,
-            currentMessageId: progress.currentMessageId,
-          ),);
-        },
-        isCancelled: () => _isCancelled,
-      );
+      messageIds: event.messageIds.toList(),
+      onProgress: (progress) {
+        emit(DownloadInProgress(
+          current: progress.current,
+          total: progress.total,
+          progressPercent: progress.progressPercent,
+          currentMessageId: progress.currentMessageId,
+        ),);
+      },
+      isCancelled: () => _isCancelled,
+    );
 
-      result.fold(
-        onSuccess: (summary) {
-          emit(DownloadCompleted(
-            successCount: summary.successCount,
-            failureCount: summary.failureCount,
-            skippedCount: summary.skippedCount,
-            results: summary.results,
+    result.fold(
+      onSuccess: (summary) {
+        emit(DownloadCompleted(
+          successCount: summary.successCount,
+          failureCount: summary.failureCount,
+          skippedCount: summary.skippedCount,
+          results: summary.results,
+        ),);
+      },
+      onFailure: (failure) {
+        // Check if it was a cancellation
+        if (failure.failure.code == 'UNKNOWN_ERROR' &&
+            (failure.failure.details?.contains('cancelled') ?? false)) {
+          emit(const DownloadCancelled(
+            completedCount: 0,
+            totalCount: 0,
           ),);
-        },
-        onFailure: (failure) {
-          // Check if it was a cancellation
-          if (failure.failure.code == 'UNKNOWN_ERROR' &&
-              (failure.failure.details?.contains('cancelled') ?? false)) {
-            emit(const DownloadCancelled(
-              completedCount: 0,
-              totalCount: 0,
-            ),);
-          } else {
-            emit(DownloadError(
+        } else {
+          emit(DownloadError(
               failure.failure.details ?? 'Audio download failed',
-            ),);
-          }
-        },
-      );
+          ),);
+        }
+      },
+    );
     } catch (e, stack) {
       _logger.e('Unexpected error in audio download', error: e, stackTrace: stack);
       emit(DownloadError(
