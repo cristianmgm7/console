@@ -407,22 +407,14 @@ class DownloadAudioMessagesUsecase {
         return _extractSignedUrlFromAudioObject(firstAudio);
       }
 
-      // Structure 2: data['message']['audio'] (user's reported structure)
+      // Use the correct structure: data['message']['audio']
       final messageData = data['message'] as Map<String, dynamic>?;
       if (messageData != null) {
         _logger.d('📋 Found message wrapper, checking for audio field...');
-        final audioField = messageData['audio'] as List<dynamic>?;
-        if (audioField != null && audioField.isNotEmpty) {
-          _logger.d('✅ Found audio array in message with ${audioField.length} items');
-          final firstAudio = audioField.first as Map<String, dynamic>;
-          return _extractSignedUrlFromAudioObject(firstAudio);
-        }
-
-        // If audio is not a list, it might be a single object
-        final singleAudio = messageData['audio'] as Map<String, dynamic>?;
-        if (singleAudio != null) {
-          _logger.d('✅ Found single audio object in message');
-          return _extractSignedUrlFromAudioObject(singleAudio);
+        final audioObject = messageData['audio'] as Map<String, dynamic>?;
+        if (audioObject != null) {
+          _logger.d('✅ Found audio object in message');
+          return _extractSignedUrlFromAudioObject(audioObject);
         }
       }
 
@@ -444,7 +436,7 @@ class DownloadAudioMessagesUsecase {
       _logger.d('🔍 Checking audio object for signed URL fields...');
 
       // Check for signed_url or presigned_url field
-      final signedUrl = audioObject['signed_url'] ?? audioObject['presigned_url'];
+      final signedUrl = audioObject['signed_url'] ?? audioObject['url'];
       if (signedUrl is String && signedUrl.isNotEmpty) {
         _logger.i('🎯 Found signed_url/presigned_url field: $signedUrl');
         return signedUrl;
