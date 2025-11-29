@@ -73,6 +73,7 @@ class DashboardAppBar extends StatelessWidget {
                     height: 40,
                     child: AppDropdown<String>(
                       value: workspaceState.selectedWorkspace?.id,
+                      dropdownKey: const Key('workspace_dropdown'),
                       items: workspaceState.workspaces.map((workspace) {
                         return DropdownMenuItem<String>(
                           value: workspace.id,

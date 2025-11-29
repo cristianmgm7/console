@@ -64,6 +64,7 @@ class MessagesActionPanel extends StatelessWidget {
                   ),
                 ],
               ),
+              dropdownKey: const Key('download_dropdown'),
               items: [
                 DropdownMenuItem<String>(
                   value: 'audio',

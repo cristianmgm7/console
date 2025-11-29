@@ -374,32 +374,49 @@ class OAuthRepositoryImpl implements OAuthRepository {
       }
 
       final accessToken = client.credentials.accessToken;
-      final exchangeUrl = '${OAuthConfig.apiBaseUrl}/token/access/exchange';
-      _logger.d('Fetching PX token from: $exchangeUrl');
-      _logger.d('Using access token in request body');
 
-      final response = await client.post(
-        Uri.parse(exchangeUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'access_token': accessToken,
-        }),
-      );
-      _logger.d('Whoami response status: ${response.statusCode}');
+      // Try POST request with token in JSON body (avoiding URL encoding issues)
+      const exchangeUrl = '${OAuthConfig.apiBaseUrl}/token/access/exchange';
+      _logger.d('Fetching PX token from exchange endpoint (POST): $exchangeUrl');
+      _logger.d('Sending access token in JSON body');
+
+      _logger.d('About to make HTTP POST request to /token/access/exchange...');
+      http.Response? response;
+      try {
+        response = await http.post(
+          Uri.parse(exchangeUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'access_token': accessToken}),
+        ).timeout(const Duration(seconds: 10));
+        _logger.d('HTTP request completed, got response');
+        _logger.d('Exchange response status: ${response.statusCode}');
+      } catch (e) {
+        _logger.e('Network error during exchange request: $e');
+        if (e is http.ClientException) {
+          _logger.e('ClientException details: ${e.message}');
+          _logger.e('URI that failed: ${e.uri}');
+        }
+        return failure(UnknownFailure(details: 'Network error during token exchange: $e'));
+      }
+
+      // Check if response is null (shouldn't happen in success case)
+      if (response == null) {
+        return failure(const UnknownFailure(details: 'No response received from exchange endpoint'));
+      }
 
       if (response.statusCode != 200) {
-        _logger.e('Whoami request failed: ${response.body}');
-        return failure(UnknownFailure(details: 'Failed to get PX token: ${response.statusCode}'));
+        _logger.e('Exchange request failed: ${response.body}');
+        return failure(UnknownFailure(details: 'Failed to get PX token: ${response.statusCode} - ${response.body}'));
       }
 
       final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      _logger.d('Exchange response keys: ${responseData.keys.toList()}');
+
       final pxToken = responseData['pxtoken'] as String?;
 
       if (pxToken == null || pxToken.isEmpty) {
-        _logger.e('PX token not found in whoami response');
-        return failure(const UnknownFailure(details: 'PX token not found in response'));
+        _logger.e('Available keys: ${responseData.keys.toList()}');
+        return failure(UnknownFailure(details: 'PX token not found in response. Available keys: ${responseData.keys.toList()}'));
       }
 
       _logger.i('Successfully obtained PX token');
