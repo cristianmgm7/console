@@ -51,7 +51,6 @@ class DownloadAudioMessagesUsecase {
         details: 'No messages selected',
       ),);
     }
-
     final results = <DownloadResult>[];
     final skippedMessages = <String>[];
 
@@ -93,6 +92,8 @@ class DownloadAudioMessagesUsecase {
         currentMessageId: messageId,
       ),);
 
+      _logger.d('🔄 Processing message $messageIndex/$totalItems: $messageId');
+
       if (result.isSuccess) {
         final message = result.valueOrNull!;
         final uiMessage = message.toUiModel();
@@ -104,6 +105,7 @@ class DownloadAudioMessagesUsecase {
         if (uiMessage.hasPlayableAudio) {
           _logger.i('🎵 Processing audio for message ${uiMessage.id}');
           try {
+            _logger.i('🔗 STARTING PRE-SIGNED URL ATTEMPT for message: ${uiMessage.id}');
             // First try to get pre-signed URL from v5 endpoint
             _logger.d('🔗 Trying to get pre-signed URL for message: ${uiMessage.id}');
             final signedUrlResult = await _getPreSignedUrl(uiMessage.id);
@@ -321,7 +323,7 @@ class DownloadAudioMessagesUsecase {
           ),);
         }
       } else {
-        _logger.e('Failed to fetch metadata for message $messageId: ${result.failureOrNull}');
+        _logger.e('❌ Failed to fetch metadata for message $messageId: ${result.failureOrNull}');
         results.add(DownloadResult(
           messageId: messageId,
           status: DownloadStatus.failed,
