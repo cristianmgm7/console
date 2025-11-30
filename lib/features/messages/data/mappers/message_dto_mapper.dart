@@ -38,14 +38,14 @@ extension MessageDtoMapper on MessageDto {
 extension AudioModelDtoMapper on AudioModelDto {
   AudioModel toDomain() {
     return AudioModel(
-      id: id,
+      id: id ?? 'unknown',
       url: url,
-      isStreaming: streaming,
-      language: language,
+      isStreaming: streamingUrl != null,
+      language: language ?? 'unknown',
       duration: Duration(milliseconds: durationMs),
       waveformData: waveformPercentages,
-      isOriginal: isOriginalAudio,
-      format: extension,
+      isOriginal: isOriginalAudio ?? true,
+      format: extension ?? 'mp3',
     );
   }
 }
@@ -74,8 +74,16 @@ extension TimecodeDtoMapper on TimecodeDto {
 
 extension MessageDetailDtoMapper on MessageDetailDto {
   Message toDomain() {
-    // Convert audio models to domain entities
-    final audioModels = audio?.map((dto) => dto.toDomain()).toList() ?? [];
+    // Validate required fields
+    if (id == null || creatorId == null || createdAt == null) {
+      throw FormatException('Required message fields are missing: id=${id == null}, creator=${creatorId == null}, created=${createdAt == null}');
+    }
+
+    // Convert audio model to domain entity (single object, not list)
+    final audioModels = <AudioModel>[];
+    if (audio != null) {
+      audioModels.add(audio!.toDomain());
+    }
 
     // Create text model from transcript and time codes
     // Use first audio model's id as audioId, or empty string if no audio
@@ -90,17 +98,18 @@ extension MessageDetailDtoMapper on MessageDetailDto {
         timecodes: timeCodes?.map((dto) => dto.toDomain()).toList() ?? [],
       ));
     }
+
     return Message(
-      id: id,
-      creatorId: creatorId,
-      createdAt: createdAt,
-      workspaceIds: [workspaceId],
-      channelIds: [conversationId],
+      id: id!,
+      creatorId: creatorId!,
+      createdAt: createdAt!,
+      workspaceIds: workspaceId != null ? [workspaceId!] : [],
+      channelIds: conversationId != null ? [conversationId!] : [],
       duration: Duration.zero, // Not provided in detail DTO
       audioModels: audioModels,
       textModels: textModels,
-      status: status,
-      type: type,
+      status: status ?? 'unknown',
+      type: type ?? 'unknown',
       lastHeardAt: null,
       heardDuration: null,
       totalHeardDuration: null,

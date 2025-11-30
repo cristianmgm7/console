@@ -82,8 +82,16 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
         try {
-          // Parse directly into MessageDetailDto using the exact API response format
-          final messageDetailDto = MessageDetailDto.fromJson(data);
+          // Extract the actual message data from the nested structure
+          final Map<String, dynamic> messageData;
+          if (data.containsKey('message') && data['message'] is Map<String, dynamic>) {
+            messageData = data['message'] as Map<String, dynamic>;
+          } else {
+            messageData = data;
+          }
+
+          // Parse the message data into MessageDetailDto
+          final messageDetailDto = MessageDetailDto.fromJson(messageData);
           return messageDetailDto;
         } catch (e, stack) {
           _logger.e('Failed to parse message JSON: $e', error: e, stackTrace: stack);

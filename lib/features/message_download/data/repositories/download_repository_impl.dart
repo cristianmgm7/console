@@ -133,9 +133,8 @@ class DownloadRepositoryImpl implements DownloadRepository {
       // Verify bytes are not empty or corrupted
       if (audioBytes.isEmpty) {
         _logger.e('❌ Audio bytes are empty!');
-        return failure(StorageFailure(details: 'Received empty audio data'));
+        return failure(const StorageFailure(details: 'Received empty audio data'));
       }
-
       // Check for common audio file headers
       if (audioBytes.length >= 4) {
         final header = audioBytes.sublist(0, 4);

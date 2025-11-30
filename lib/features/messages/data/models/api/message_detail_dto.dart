@@ -25,16 +25,16 @@ class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, M
 @JsonSerializable()
 class MessageDetailDto {
   const MessageDetailDto({
-    required this.id,
-    required this.type,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.conversationId,
-    required this.workspaceId,
-    required this.creatorId,
-    required this.status,
-    required this.usersCaughtUp,
-    required this.reactionSummary,
+    this.id,
+    this.type,
+    this.createdAt,
+    this.updatedAt,
+    this.conversationId,
+    this.workspaceId,
+    this.creatorId,
+    this.status,
+    this.usersCaughtUp,
+    this.reactionSummary,
     this.language,
     this.availableLanguages,
     this.isOriginalLanguage,
@@ -50,28 +50,28 @@ class MessageDetailDto {
   factory MessageDetailDto.fromJson(Map<String, dynamic> json) => _$MessageDetailDtoFromJson(json);
 
   @JsonKey(name: 'id')
-  final String id;
+  final String? id;
 
   @JsonKey(name: 'type')
-  final String type;
+  final String? type;
 
   @JsonKey(name: 'created_at')
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   @JsonKey(name: 'updated_at')
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
 
   @JsonKey(name: 'conversation_id')
-  final String conversationId;
+  final String? conversationId;
 
   @JsonKey(name: 'workspace_id')
-  final String workspaceId;
+  final String? workspaceId;
 
   @JsonKey(name: 'creator_id')
-  final String creatorId;
+  final String? creatorId;
 
   @JsonKey(name: 'status')
-  final String status;
+  final String? status;
 
   @JsonKey(name: 'parent_message_id')
   final String? parentMessageId;
@@ -101,14 +101,14 @@ class MessageDetailDto {
   final int? conversationSequence;
 
   @JsonKey(name: 'audio')
-  final List<AudioModelDto>? audio;
+  final AudioModelDto? audio;
 
   @JsonKey(name: 'users_caught_up')
-  final String usersCaughtUp;
+  final String? usersCaughtUp;
 
   @ReactionSummaryDtoConverter()
   @JsonKey(name: 'reaction_summary')
-  final ReactionSummaryDto reactionSummary;
+  final ReactionSummaryDto? reactionSummary;
 
   Map<String, dynamic> toJson() => _$MessageDetailDtoToJson(this);
 }

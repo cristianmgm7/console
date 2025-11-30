@@ -44,8 +44,6 @@ class DownloadAudioMessagesUsecase {
     required void Function(DownloadProgress) onProgress,
     required bool Function() isCancelled,
   }) async {
-    _logger.d('Starting audio download for ${messageIds.length} messages');
-
     // Validate non-empty selection
     if (messageIds.isEmpty) {
       _logger.w('Audio download started with empty message selection');

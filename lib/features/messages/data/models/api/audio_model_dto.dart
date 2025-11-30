@@ -6,24 +6,25 @@ part 'audio_model_dto.g.dart';
 @JsonSerializable()
 class AudioModelDto {
   const AudioModelDto({
-    required this.id,
+    this.id,
     required this.url,
-    required this.streaming,
-    required this.language,
+    this.streamingUrl,
     required this.durationMs,
     required this.waveformPercentages,
-    required this.isOriginalAudio,
-    required this.extension,
+    this.language,
+    this.isOriginalAudio,
+    this.extension,
   });
 
   factory AudioModelDto.fromJson(Map<String, dynamic> json) => _$AudioModelDtoFromJson(json);
 
   @JsonKey(name: '_id', defaultValue: 'unknown')
-  final String id;
+  final String? id;
 
   final String url;
-  final bool streaming;
-  final String language;
+
+  @JsonKey(name: 'streaming_url')
+  final String? streamingUrl;
 
   @JsonKey(name: 'duration_ms')
   final int durationMs;
@@ -31,10 +32,14 @@ class AudioModelDto {
   @JsonKey(name: 'waveform_percentages')
   final List<double> waveformPercentages;
 
-  @JsonKey(name: 'is_original_audio')
-  final bool isOriginalAudio;
+  @JsonKey(name: 'language', defaultValue: 'unknown')
+  final String? language;
 
-  final String extension;
+  @JsonKey(name: 'is_original_audio', defaultValue: true)
+  final bool? isOriginalAudio;
+
+  @JsonKey(name: 'extension', defaultValue: 'mp3')
+  final String? extension;
 
   Map<String, dynamic> toJson() => _$AudioModelDtoToJson(this);
 }
