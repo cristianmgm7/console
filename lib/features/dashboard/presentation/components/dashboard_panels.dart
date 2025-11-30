@@ -48,7 +48,7 @@ class DashboardPanels extends StatelessWidget {
           curve: Curves.easeInOut,
           top: 0,
           right: selectedMessageForDetail != null ? 320 : -400, // Offset by download panel width
-          height: double.infinity,
+          bottom: 0,
           width: 400,
           child: selectedMessageForDetail != null
               ? MessageDetailPanel(

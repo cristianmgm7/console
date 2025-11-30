@@ -112,6 +112,13 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
       // Load audio with empty headers (pre-signed URL has auth in the URL itself)
       await _playerService.loadAudio(audioUrl, {});
 
+      // Ensure we have valid current state before emitting
+      if (_currentMessageId == null || _currentAudioUrl == null) {
+        _logger.e('Failed to load audio: missing message ID or audio URL');
+        emit(const AudioPlayerError('Failed to load audio: missing required data'));
+        return;
+      }
+
       // Emit ready state
       emit(
         AudioPlayerReady(
