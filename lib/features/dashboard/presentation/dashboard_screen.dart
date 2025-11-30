@@ -1,20 +1,18 @@
 import 'dart:async';
 
-import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/dashboard_panels.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
-import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -46,9 +44,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   @override
-  void dispose() {
-    _workspaceSubscription.cancel();
-    _conversationSubscription.cancel();
+  Future<void> dispose() async {
+    await _workspaceSubscription.cancel();
+    await _conversationSubscription.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -159,13 +157,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: Theme.of(context).colorScheme.surface,
       child: Stack(
         children: [
-          if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
+          _buildDashboardWithPanels(),
 
           // Floating Action Panel - only show when no detail is selected
           if (_selectedMessages.isNotEmpty && _selectedMessageForDetail == null)
-
-          // Floating Action Panel
-          if (_selectedMessages.isNotEmpty)
             Positioned(
               bottom: 24,
               left: 0,
@@ -173,72 +168,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Center(
                 child: MessagesActionPanel(
                   selectedCount: _selectedMessages.length,
-                  onDownloadAudio: () {
-                    // Check for empty selection
-                    if (_selectedMessages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('No messages selected'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                      return;
-                    }
-
-                    // Create a copy of selected messages for the download
-                    final messagesToDownload = Set<String>.from(_selectedMessages);
-
-                    // Clear selection after capturing the messages to download
-                    setState(() {
-                      _selectedMessages.clear();
-                      _selectAll = false;
-                    });
-
-                    // Show download progress bottom sheet with fresh BLoC instance
-                    unawaited(showModalBottomSheet<void>(
-                      context: context,
-                      isDismissible: false,
-                      enableDrag: false,
-                      builder: (sheetContext) => BlocProvider(
-                        create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownloadAudio(messagesToDownload)),
-                        child: const DownloadProgressSheet(),
-                      ),
-                    ),);
-                  },
-                  onDownloadTranscript: () {
-                    // Check for empty selection
-                    if (_selectedMessages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('No messages selected'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                      return;
-                    }
-
-                    // Create a copy of selected messages for the download
-                    final messagesToDownload = Set<String>.from(_selectedMessages);
-
-                    // Clear selection after capturing the messages to download
-                    setState(() {
-                      _selectedMessages.clear();
-                      _selectAll = false;
-                    });
-
-                    // Show download progress bottom sheet with fresh BLoC instance
-                    unawaited(showModalBottomSheet<void>(
-                      context: context,
-                      isDismissible: false,
-                      enableDrag: false,
-                      builder: (sheetContext) => BlocProvider(
-                        create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownloadTranscripts(messagesToDownload)),
-                        child: const DownloadProgressSheet(),
-                      ),
-                    ),);
-                  },
+                  onDownloadAudio: _handleDownloadAudio,
+                  onDownloadTranscript: _handleDownloadTranscript,
                   onSummarize: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -276,36 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
            messageState is MessageLoading;
   }
 
-  Widget _buildFullDashboard() {
-    return Column(
-      children: [
-        // App Bar
-        DashboardAppBar(
-          onRefresh: _onRefresh,
-        ),
-
-        // Content
-        Expanded(
-          child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-            selector: (state) => state is MessageLoaded ? state : null,
-            builder: (context, messageState) {
-              return DashboardContent(
-                isAnyBlocLoading: _isAnyBlocLoading,
-                scrollController: _scrollController,
-                selectedMessages: _selectedMessages,
-                onToggleMessageSelection: _toggleMessageSelection,
-                onToggleSelectAll: _toggleSelectAll,
-                selectAll: _selectAll,
-                onViewDetail: _onViewDetail,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDashboardWithDetail() {
+  Widget _buildDashboardWithPanels() {
     return SizedBox.expand(
       child: Column(
         children: [
@@ -313,40 +215,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
           DashboardAppBar(
             onRefresh: _onRefresh,
           ),
-          // Main content area below app bar: left = messages, right = detail
+
+          // Main content area with panels
           Expanded(
-            child: Row(
-          children: [
-            // Left side: Message list area
-            Expanded(
-              child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-                selector: (state) => state is MessageLoaded ? state : null,
-                builder: (context, messageState) {
-                  return DashboardContent(
-                    isAnyBlocLoading: _isAnyBlocLoading,
-                    scrollController: _scrollController,
-                    selectedMessages: _selectedMessages,
-                    onToggleMessageSelection: _toggleMessageSelection,
-                    onToggleSelectAll: _toggleSelectAll,
-                    selectAll: _selectAll,
-                    onViewDetail: _onViewDetail,
-                  );
-                },
-              ),
+            child: Stack(
+              children: [
+                // Left side: Message list area (full width)
+                BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+                  selector: (state) => state is MessageLoaded ? state : null,
+                  builder: (context, messageState) {
+                    return DashboardContent(
+                      isAnyBlocLoading: _isAnyBlocLoading,
+                      scrollController: _scrollController,
+                      selectedMessages: _selectedMessages,
+                      onToggleMessageSelection: _toggleMessageSelection,
+                      onToggleSelectAll: _toggleSelectAll,
+                      selectAll: _selectAll,
+                      onViewDetail: _onViewDetail,
+                    );
+                  },
+                ),
+
+                // Right side: All panels (orchestrated)
+                DashboardPanels(
+                  selectedMessageForDetail: _selectedMessageForDetail,
+                  onCloseDetail: _onCloseDetail,
+                ),
+              ],
             ),
-        
-            // Right side: Detail panel
-            if (_selectedMessageForDetail != null)
-              MessageDetailPanel(
-                messageId: _selectedMessageForDetail!,
-                onClose: _onCloseDetail,
-              ),
-          ],
-        ),
           ),
         ],
       ),
     );
+  }
+
+  void _handleDownloadAudio() {
+    if (_selectedMessages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No messages selected'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+    setState(() {
+      _selectedMessages.clear();
+      _selectAll = false;
+    });
+
+    // Trigger download via existing BLoC (no bottom sheet)
+    context.read<DownloadBloc>().add(StartDownloadAudio(messagesToDownload));
+  }
+
+  void _handleDownloadTranscript() {
+    if (_selectedMessages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No messages selected'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+    setState(() {
+      _selectedMessages.clear();
+      _selectAll = false;
+    });
+
+    // Trigger download via existing BLoC (no bottom sheet)
+    context.read<DownloadBloc>().add(StartDownloadTranscripts(messagesToDownload));
   }
 
   void _onViewDetail(String messageId) {

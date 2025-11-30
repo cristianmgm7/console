@@ -16,6 +16,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     on<StartDownloadAudio>(_onStartDownloadAudio);
     on<StartDownloadTranscripts>(_onStartDownloadTranscripts);
     on<CancelDownload>(_onCancelDownload);
+    on<ResetDownload>(_onResetDownload);
   }
 
   final DownloadAudioMessagesUsecase _downloadAudioMessagesUsecase;
@@ -134,5 +135,12 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     _logger.i('Download cancellation requested');
     _isCancelled = true;
     // The actual cancellation happens in the use case
+  }
+
+  Future<void> _onResetDownload(
+    ResetDownload event,
+    Emitter<DownloadState> emit,
+  ) async {
+    emit(const DownloadInitial());
   }
 }

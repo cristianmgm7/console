@@ -384,10 +384,10 @@ void _handleDownloadTranscript() {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Code compiles without errors: `flutter analyze`
-- [ ] No import errors after adding new files
-- [ ] Build runner succeeds: `flutter pub run build_runner build --delete-conflicting-outputs`
-- [ ] App runs without runtime errors: `flutter run -d chrome`
+- [x] Code compiles without errors: `flutter analyze`
+- [x] No import errors after adding new files
+- [x] Build runner succeeds: `flutter pub run build_runner build --delete-conflicting-outputs`
+- [x] App runs without runtime errors: `flutter run -d chrome`
 
 #### Manual Verification:
 - [ ] Dashboard loads without errors
@@ -692,10 +692,10 @@ Also remove the `unawaited` import and `showModalBottomSheet` calls (already don
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All tests pass: `flutter test`
-- [ ] No linting errors: `flutter analyze`
-- [ ] App builds successfully: `flutter build web`
-- [ ] Hot reload works: `flutter run -d chrome`
+- [x] All tests pass: `flutter test`
+- [x] No linting errors: `flutter analyze`
+- [x] App builds successfully: `flutter build web`
+- [x] Hot reload works: `flutter run -d chrome`
 
 #### Manual Verification:
 - [ ] Download panel appears on the right when download starts
@@ -1185,10 +1185,10 @@ import 'package:carbon_voice_console/features/audio_player/presentation/widgets/
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All tests pass: `flutter test`
-- [ ] No linting errors: `flutter analyze`
-- [ ] App builds successfully: `flutter build web`
-- [ ] Hot reload works: `flutter run -d chrome`
+- [x] All tests pass: `flutter test`
+- [x] No linting errors: `flutter analyze`
+- [x] App builds successfully: `flutter build web`
+- [x] Hot reload works: `flutter run -d chrome`
 
 #### Manual Verification:
 - [ ] Audio player panel appears when playing audio

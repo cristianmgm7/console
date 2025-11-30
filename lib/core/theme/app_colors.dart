@@ -31,4 +31,7 @@ class AppColors {
 
   // Transparent colors
   static const Color transparent = Colors.transparent;
+
+  // Shadow colors
+  static const Color shadow = Color(0x1A000000); // 10% opacity black for subtle shadows
 }

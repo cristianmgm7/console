@@ -1,14 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
-import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
@@ -213,7 +211,10 @@ class MessageCard extends StatelessWidget {
     // Get the audio player BLoC
     final audioBloc = context.read<AudioPlayerBloc>();
 
-    // Load audio - let the BLoC fetch the pre-signed URL
+    // Stop any currently playing audio (ensure only one audio at a time)
+    audioBloc.add(const StopAudio());
+
+    // Load new audio - let the BLoC fetch the pre-signed URL
     audioBloc.add(
       LoadAudio(
         messageId: message.id,
@@ -224,11 +225,6 @@ class MessageCard extends StatelessWidget {
     // Auto-play after loading
     audioBloc.add(const PlayAudio());
 
-    // Show player modal
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => const AudioPlayerSheet(),
-    );
+    // Panel will appear automatically via DashboardPanels
   }
 }

@@ -9,7 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Bottom sheet that displays download progress
+///
+/// DEPRECATED: Use DownloadPanel instead.
+/// This widget is replaced by a persistent side panel for better UX.
+@Deprecated('Use DownloadPanel instead. Will be removed in a future version.')
 class DownloadProgressSheet extends StatelessWidget {
+  @Deprecated('Use DownloadPanel instead. Will be removed in a future version.')
   const DownloadProgressSheet({super.key});
 
   @override

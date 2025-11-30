@@ -31,3 +31,8 @@ class StartDownloadTranscripts extends DownloadEvent {
 class CancelDownload extends DownloadEvent {
   const CancelDownload();
 }
+
+/// Reset download state to initial (for hiding panel)
+class ResetDownload extends DownloadEvent {
+  const ResetDownload();
+}

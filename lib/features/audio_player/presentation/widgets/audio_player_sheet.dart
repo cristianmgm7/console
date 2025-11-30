@@ -10,7 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Modal bottom sheet for audio playback controls
+///
+/// DEPRECATED: Use AudioPlayerPanel instead.
+/// This widget is replaced by a persistent side panel for better UX.
+@Deprecated('Use AudioPlayerPanel instead. Will be removed in a future version.')
 class AudioPlayerSheet extends StatelessWidget {
+  @Deprecated('Use AudioPlayerPanel instead. Will be removed in a future version.')
   const AudioPlayerSheet({super.key});
 
   @override
