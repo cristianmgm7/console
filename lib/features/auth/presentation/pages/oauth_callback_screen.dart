@@ -1,6 +1,9 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/web/web_stub.dart'
     if (dart.library.html) 'package:web/web.dart' as web;
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
@@ -76,14 +79,17 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         if (state is ProcessingCallback) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(),
+              child: AppProgressIndicator(),
             ),
           );
         }
         if (state is Authenticated) {
-          return const Scaffold(
+          return Scaffold(
             body: Center(
-              child: Text('Login successful! Redirecting...'),
+              child: Text(
+                'Login successful! Redirecting...',
+                style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textPrimary),
+              ),
             ),
           );
         }
@@ -93,9 +99,12 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Error: ${state.message}'),
+                  Text(
+                    'Error: ${state.message}',
+                    style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
+                  ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  AppButton(
                     onPressed: () {
                       context.go(AppRoutes.login);
                     },
@@ -106,9 +115,12 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
             ),
           );
         }
-        return const Scaffold(
+        return Scaffold(
           body: Center(
-            child: Text('Processing login...'),
+            child: Text(
+              'Processing login...',
+              style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textPrimary),
+            ),
           ),
         );
       },

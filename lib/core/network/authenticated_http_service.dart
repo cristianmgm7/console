@@ -96,4 +96,16 @@ class AuthenticatedHttpService {
       headers: headers,
     );
   }
+
+  /// Get current authentication headers for external use
+  Future<Map<String, String>> getAuthHeaders() async {
+    final client = await _getClient();
+    if (client == null) {
+      throw Exception('No valid access token available');
+    }
+
+    return {
+      'Authorization': client.credentials.accessToken,
+    };
+  }
 }

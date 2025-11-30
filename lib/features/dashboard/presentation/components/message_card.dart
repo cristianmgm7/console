@@ -1,37 +1,43 @@
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 
 class MessageCard extends StatelessWidget {
   const MessageCard({
     required this.message,
     required this.isSelected,
     required this.onSelected,
+    this.onViewDetail,
     super.key,
   });
 
-  final AudioMessage message;
+  final MessageUiModel message;
   final bool isSelected;
   final ValueChanged<bool?> onSelected;
+  final ValueChanged<String>? onViewDetail;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
-            : Colors.transparent,
+        color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : AppColors.transparent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             // Checkbox
-            Checkbox(
+            AppCheckbox(
               value: isSelected,
               onChanged: onSelected,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
             ),
 
             const SizedBox(width: 8),
@@ -43,14 +49,10 @@ class MessageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _formatDate(message.date),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  Text(
-                    'Received: ${_formatFullDate(message.date)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    _formatDate(message.createdAt),
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -62,10 +64,11 @@ class MessageCard extends StatelessWidget {
             SizedBox(
               width: 140,
               child: Text(
-                message.owner,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                message.creator?.name ?? message.creatorId,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
 
@@ -77,147 +80,110 @@ class MessageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    message.message,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    message.text ?? 'No content',
+                    style: AppTextStyle.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    message.project,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
+                  if (message.text?.isNotEmpty ?? false) const SizedBox(height: 4),
                 ],
               ),
             ),
 
             const SizedBox(width: 16),
-
-            // AI Action Button
-            SizedBox(
-              width: 60,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 16),
-
             // Duration
             SizedBox(
               width: 60,
               child: Text(
                 _formatDuration(message.duration),
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
 
             const SizedBox(width: 16),
 
-            // Status
-            SizedBox(
-              width: 90,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(message.status, context),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Center(
-                  child: Text(
-                    message.status,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ),
+            // Play button - only show if message has playable audio
+            if (message.hasPlayableAudio) ...[
+              AppIconButton(
+                icon: AppIcons.play,
+                tooltip: 'Play audio',
+                onPressed: () => _handlePlayAudio(context, message),
+                foregroundColor: AppColors.primary,
               ),
-            ),
-
-            const SizedBox(width: 8),
+              const SizedBox(width: 8),
+            ],
 
             // Menu
             PopupMenuButton(
-              icon: const Icon(Icons.more_vert),
+              icon: Icon(AppIcons.moreVertical, color: AppColors.textSecondary),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'view',
                   child: Row(
                     children: [
-                      Icon(Icons.visibility),
-                      SizedBox(width: 8),
-                      Text('View Details'),
+                      Icon(AppIcons.eye, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('View Details', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit),
-                      SizedBox(width: 8),
-                      Text('Edit'),
+                      Icon(AppIcons.edit, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Edit', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'download',
                   child: Row(
                     children: [
-                      Icon(Icons.download),
-                      SizedBox(width: 8),
-                      Text('Download'),
+                      Icon(AppIcons.download, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Download', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'archive',
                   child: Row(
                     children: [
-                      Icon(Icons.archive),
-                      SizedBox(width: 8),
-                      Text('Archive'),
+                      Icon(AppIcons.archive, size: 20, color: AppColors.textPrimary),
+                      const SizedBox(width: 8),
+                      Text('Archive', style: AppTextStyle.bodyMedium),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Delete', style: TextStyle(color: Colors.red)),
+                      Icon(AppIcons.delete, size: 20, color: AppColors.error),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Delete',
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
               onSelected: (value) {
-                // TODO: Implement menu actions
+                switch (value) {
+                  case 'view':
+                    onViewDetail?.call(message.id);
+                  // TODO: Implement other menu actions (edit, download, archive, delete)
+                }
               },
             ),
           ],
@@ -235,26 +201,34 @@ class MessageCard extends StatelessWidget {
     return '$displayHour:$minute $period ${date.month}/${date.day}/${date.year % 100}';
   }
 
-  String _formatFullDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  Color _getStatusColor(String status, BuildContext context) {
-    switch (status.toLowerCase()) {
-      case 'processed':
-        return Colors.green;
-      case 'new':
-        return Colors.blue;
-      case 'archived':
-        return Colors.grey;
-      default:
-        return Theme.of(context).colorScheme.secondary;
-    }
+  void _handlePlayAudio(BuildContext context, MessageUiModel message) {
+    if (!message.hasPlayableAudio) return;
+
+    // Get the audio player BLoC
+    final audioBloc = context.read<AudioPlayerBloc>();
+
+    // Load audio - let the BLoC fetch the pre-signed URL
+    audioBloc.add(
+      LoadAudio(
+        messageId: message.id,
+        waveformData: message.playableAudioModel?.waveformData ?? [],
+      ),
+    );
+
+    // Auto-play after loading
+    audioBloc.add(const PlayAudio());
+
+    // Show player modal
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => const AudioPlayerSheet(),
+    );
   }
 }

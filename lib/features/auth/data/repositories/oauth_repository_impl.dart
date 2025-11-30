@@ -36,9 +36,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
   @override
   Future<Result<String>> getAuthorizationUrl() async {
     try {
-      _logger.d('Creating authorization URL');
       // Validate client_id is not the default value
-      // validate that the client_id is not empty
       if (OAuthConfig.clientId == 'YOUR_CLIENT_ID' || OAuthConfig.clientId.isEmpty) {
         _logger.e('Invalid client_id: ${OAuthConfig.clientId}');
         return failure(const ConfigurationFailure(
@@ -54,17 +52,13 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       // Save the codeVerifier and state
       if (kIsWeb) {
-        // En web, usar sessionStorage
         await _localDataSource.saveOAuthState(state, codeVerifier);
       } else {
-        // En desktop, usar Map en memoria
         _desktopOAuthStates[state] = codeVerifier;
-        _logger.d('Saved desktop OAuth state for: $state');
       }
 
       // Determinar redirect URI según plataforma
       const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
-      _logger.i('Using redirect URI: $redirectUri (kIsWeb: $kIsWeb)');
 
       // Construir la URL de autorización manualmente con PKCE
       final authUrl = Uri.parse(OAuthConfig.authorizationEndpoint).replace(
@@ -78,7 +72,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
           'state': state,
         },
       );
-      _logger.i('Authorization URL created: $authUrl');
       return success(authUrl.toString());
     } on Exception catch (e, stack) {
       _logger.e('Error creating authorization URL', error: e, stackTrace: stack);
@@ -92,7 +85,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
   /// Desktop OAuth flow - handles everything including opening browser and capturing callback
   @override
   Future<Result<oauth2.Client>> loginWithDesktop() async {
-    // make sure we are on a desktop platform
     if (_desktopServer == null || kIsWeb) {
       _logger.e('Desktop server not available (kIsWeb: $kIsWeb)');
       return failure(const ConfigurationFailure(
@@ -100,19 +92,11 @@ class OAuthRepositoryImpl implements OAuthRepository {
       ),);
     }
     try {
-      // Get authorization URL (will use desktop redirect URI)
       final urlResult = await getAuthorizationUrl();
       
       return urlResult.fold(
         onSuccess: (authUrl) async {
-          _logger.i('🌐 Opening browser with: $authUrl');
-
-          // Use desktop server to handle the flow
-          // This will: open browser, wait for callback, return callback URL
           final callbackUrl = await _desktopServer.authenticate(authUrl);
-          _logger.i('✅ Received callback: $callbackUrl');
-
-          // Now handle the authorization response
           return handleAuthorizationResponse(callbackUrl);
         },
         onFailure: (error) {
@@ -132,21 +116,10 @@ class OAuthRepositoryImpl implements OAuthRepository {
   @override
   Future<Result<oauth2.Client>> handleAuthorizationResponse(String responseUrl) async {
     try {
-      // Log directo a consola del navegador
-      _logger.w('Response URL: $responseUrl');
-
-      // Parsear la URL de respuesta
       final responseUri = Uri.parse(responseUrl);
       final code = responseUri.queryParameters['code'];
       final state = responseUri.queryParameters['state'];
       final error = responseUri.queryParameters['error'];
-
-      _logger.w('Parsed URI - Code: $code');
-      _logger.w('Parsed URI - State: $state');
-      _logger.w('Parsed URI - Error: $error');
-      _logger.w('Token endpoint: ${OAuthConfig.tokenEndpoint}');
-      _logger.w('Client ID: ${OAuthConfig.clientId}');
-      _logger.w('Redirect URI: ${OAuthConfig.redirectUrl}');
 
       // Si hay error en la respuesta
       if (error != null) {
@@ -175,7 +148,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
       String? codeVerifier;
       
       if (kIsWeb) {
-        // En web, cargar de sessionStorage
         final oauthState = await _localDataSource.loadOAuthState(state);
         if (oauthState == null ||
             oauthState['codeVerifier'] == null ||
@@ -188,26 +160,19 @@ class OAuthRepositoryImpl implements OAuthRepository {
         }
         codeVerifier = oauthState['codeVerifier'];
       } else {
-        // En desktop, cargar del Map en memoria
         codeVerifier = _desktopOAuthStates[state];
         if (codeVerifier == null || codeVerifier.isEmpty) {
           _logger.e('No codeVerifier found in memory for state: $state');
-          _logger.w('Available states: ${_desktopOAuthStates.keys}');
           return failure(const AuthFailure(
             code: 'NO_CODE_VERIFIER',
             details: 'No authorization grant found. Please try logging in again.',
           ),);
         }
-        _logger.d('Retrieved codeVerifier from memory for state: $state');
-        // Limpiar el state usado
         _desktopOAuthStates.remove(state);
       }
 
       // Usar el redirect URI correcto según la plataforma
       const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
-      _logger.i('Using redirect URI for token exchange: $redirectUri');
-      _logger.d('Code: $code (length: ${code.length})');
-      _logger.d('State: $state');
 
       final tokenBody = {
         'grant_type': 'authorization_code',
@@ -266,8 +231,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ),);
       }
 
-      _logger.w('Token response status: ${tokenResponse.statusCode}');
-
       if (tokenResponse.statusCode != 200) {
         _logger.e('Token exchange failed', error: tokenResponse.body);
 
@@ -289,35 +252,25 @@ class OAuthRepositoryImpl implements OAuthRepository {
       // Parsear la respuesta del token
       final tokenJson = jsonDecode(tokenResponse.body) as Map<String, dynamic>;
 
-      _logger.i('Token exchange successful!');
-
-      // Transformar la respuesta del backend (snake_case) al formato esperado por oauth2 (camelCase)
-      final expiresIn = tokenJson['expires_in'] as int? ?? 3600; // Default a 1 hora si no viene
+      final expiresIn = tokenJson['expires_in'] as int? ?? 3600;
 
       final credentialsJson = <String, dynamic>{
         'accessToken': tokenJson['access_token'] as String,
         'tokenType': tokenJson['token_type'] as String? ?? 'Bearer',
-        'expiresIn': expiresIn, // Asegurar que no sea null
-        // The oauth2 package expects 'scopes' as a List<String>, not 'scope'
+        'expiresIn': expiresIn,
         'scopes': tokenJson['scope'] is List
             ? (tokenJson['scope'] as List).map((e) => e.toString()).toList()
             : (tokenJson['scope'] as String?)?.split(' ') ?? [],
       };
 
-      // Agregar refresh token si existe
       if (tokenJson.containsKey('refresh_token') && tokenJson['refresh_token'] != null) {
         credentialsJson['refreshToken'] = tokenJson['refresh_token'] as String;
       }
 
-      // Calcular expiration - el paquete oauth2 espera expiration como timestamp Unix en milisegundos (int)
       final expirationDateTime = DateTime.now().add(Duration(seconds: expiresIn));
       credentialsJson['expiration'] =
-          expirationDateTime.millisecondsSinceEpoch; // Timestamp en milisegundos
+          expirationDateTime.millisecondsSinceEpoch;
 
-      _logger.w('Transformed credentials JSON keys: ${credentialsJson.keys}');
-
-      // Crear credentials desde la respuesta transformada
-      // Intentar parsear el JSON primero para verificar el formato
       final jsonString = jsonEncode(credentialsJson);
 
       oauth2.Credentials credentials;
@@ -325,37 +278,22 @@ class OAuthRepositoryImpl implements OAuthRepository {
         credentials = oauth2.Credentials.fromJson(jsonString);
       } on Exception catch (e) {
         _logger.e('Error creating credentials', error: e);
-        // Try to create credentials directly with the constructor
-        // Note: oauth2.Credentials does not have a public constructor, so we must use fromJson
-        // The issue might be the JSON format
         rethrow;
       }
 
-      _logger.w('Access token received: ${credentials.accessToken.substring(0, 20)}...');
-      _logger.w('Token expires: ${credentials.expiration}');
-
-      // Crear cliente OAuth2
       _client = oauth2.Client(
         credentials,
         identifier: OAuthConfig.clientId,
         secret: OAuthConfig.clientSecret,
       );
 
-      // Guardar credentials
       await _localDataSource.saveCredentials(credentials);
 
-      // Limpiar el state del sessionStorage
       await _localDataSource.clearOAuthState(state);
 
-      // Limpiar grant
-
-      _logger.i('Authorization successful, client created');
       return success(_client!);
     } on oauth2.AuthorizationException catch (e) {
       _logger.e('OAuth authorization error', error: e);
-      _logger.e('Error code: ${e.error}');
-      _logger.e('Error description: ${e.description}');
-      _logger.e('Error URI: ${e.uri}');
       return failure(AuthFailure(
         code: e.error,
         details: e.description ?? 'Authorization failed',
@@ -371,22 +309,17 @@ class OAuthRepositoryImpl implements OAuthRepository {
   @override
   Future<Result<oauth2.Client?>> loadSavedClient() async {
     try {
-      _logger.d('Loading saved client');
-
       final credentials = await _localDataSource.loadCredentials();
       if (credentials == null) {
-        _logger.d('No saved credentials found');
         return success(null);
       }
 
-      // Crear cliente desde credentials guardadas
       _client = oauth2.Client(
         credentials,
         identifier: OAuthConfig.clientId,
         secret: OAuthConfig.clientSecret,
       );
 
-      _logger.i('Client loaded from saved credentials');
       return success(_client);
     } on Exception catch (e) {
       _logger.e('Error loading saved client', error: e);
@@ -401,7 +334,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return success(true);
       }
 
-      // Intentar cargar cliente guardado
       final result = await loadSavedClient();
       return result.fold(
         onSuccess: (client) => success(client != null && !client.credentials.isExpired),
@@ -416,20 +348,77 @@ class OAuthRepositoryImpl implements OAuthRepository {
   @override
   Future<Result<void>> logout() async {
     try {
-      _logger.d('Logging out');
-
-      // Cerrar cliente si existe
       _client?.close();
       _client = null;
 
-      // Eliminar credentials guardadas
       await _localDataSource.deleteCredentials();
 
-      _logger.i('Logout successful');
       return success(null);
     } on Exception catch (e) {
       _logger.e('Error during logout', error: e);
       return failure(UnknownFailure(details: e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<String>> getPxToken() async {
+    try {
+      final clientResult = await getClient();
+      final client = clientResult.fold(
+        onSuccess: (client) => client,
+        onFailure: (_) => null,
+      );
+
+      if (client == null) {
+        return failure(const UnknownFailure(details: 'Not authenticated'));
+      }
+
+      final accessToken = client.credentials.accessToken;
+
+      // Try POST request with token in JSON body (avoiding URL encoding issues)
+      const exchangeUrl = '${OAuthConfig.apiBaseUrl}/token/access/exchange';
+      _logger.d('Fetching PX token from exchange endpoint (POST): $exchangeUrl');
+      _logger.d('Sending access token in JSON body');
+
+      _logger.d('About to make HTTP POST request to /token/access/exchange...');
+      http.Response? response;
+      try {
+        response = await http.post(
+          Uri.parse(exchangeUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'access_token': accessToken}),
+        ).timeout(const Duration(seconds: 10));
+        _logger.d('HTTP request completed, got response');
+        _logger.d('Exchange response status: ${response.statusCode}');
+      } catch (e) {
+        _logger.e('Network error during exchange request: $e');
+        if (e is http.ClientException) {
+          _logger.e('ClientException details: ${e.message}');
+          _logger.e('URI that failed: ${e.uri}');
+        }
+        return failure(UnknownFailure(details: 'Network error during token exchange: $e'));
+      }
+
+      if (response.statusCode != 200) {
+        _logger.e('Exchange request failed: ${response.body}');
+        return failure(UnknownFailure(details: 'Failed to get PX token: ${response.statusCode} - ${response.body}'));
+      }
+
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      _logger.d('Exchange response keys: ${responseData.keys.toList()}');
+
+      final pxToken = responseData['pxtoken'] as String?;
+
+      if (pxToken == null || pxToken.isEmpty) {
+        _logger.e('Available keys: ${responseData.keys.toList()}');
+        return failure(UnknownFailure(details: 'PX token not found in response. Available keys: ${responseData.keys.toList()}'));
+      }
+
+      _logger.i('Successfully obtained PX token');
+      return success(pxToken);
+    } catch (e, stack) {
+      _logger.e('Error fetching PX token', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: 'Error fetching PX token: $e'));
     }
   }
 
@@ -440,7 +429,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return success(_client);
       }
 
-      // Intentar cargar cliente guardado
       return await loadSavedClient();
     } on Exception catch (e) {
       _logger.e('Error getting client', error: e);

@@ -1,7 +1,25 @@
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
+import 'dart:async';
+
+import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/app_bar_dashboard.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
+import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -11,148 +29,127 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String _selectedWorkspace = 'Personal';
-  final TextEditingController _searchController = TextEditingController();
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
+  final ScrollController _scrollController = ScrollController();
+  late final StreamSubscription<WorkspaceState> _workspaceSubscription;
+  late final StreamSubscription<ConversationState> _conversationSubscription;
 
-  // Dummy data
-  final List<AudioMessage> _messages = [
-    AudioMessage(
-      id: '1',
-      date: DateTime(2023, 10, 26, 15, 45),
-      owner: 'Travis Bogard',
-      message: 'Some cool stuff in about a message here.',
-      duration: const Duration(seconds: 18),
-      status: 'Processed',
-      project: 'Project Phoenix',
-    ),
-    AudioMessage(
-      id: '2',
-      date: DateTime(2023, 10, 26, 14, 10),
-      owner: 'Jane Doe',
-      message: 'Discussing the quarterly results and planning for the next phase of th...',
-      duration: const Duration(minutes: 1, seconds: 23),
-      status: 'New',
-      project: 'Internal Sprint',
-    ),
-    AudioMessage(
-      id: '3',
-      date: DateTime(2023, 10, 26, 11, 55),
-      owner: 'John Smith',
-      message: 'Following up on the action items from the previous meeting.',
-      duration: const Duration(seconds: 42),
-      status: 'Processed',
-      project: 'Project Phoenix',
-    ),
-    AudioMessage(
-      id: '4',
-      date: DateTime(2023, 10, 25, 9, 30),
-      owner: 'Sarah Johnson',
-      message: 'Client Call - Q3 Strategy review and discussion about upcoming initiatives.',
-      duration: const Duration(minutes: 12, seconds: 31),
-      status: 'Processed',
-      project: 'Project Phoenix',
-    ),
-    AudioMessage(
-      id: '5',
-      date: DateTime(2023, 10, 26, 8, 55),
-      owner: 'Mike Chen',
-      message: 'Daily Standup Recording - team updates and blockers discussion.',
-      duration: const Duration(minutes: 8, seconds: 55),
-      status: 'New',
-      project: 'Internal Sprint',
-    ),
-    AudioMessage(
-      id: '6',
-      date: DateTime(2023, 10, 24, 16, 20),
-      owner: 'Emily Parker',
-      message: 'Onboarding Interview #12 - discussing role expectations and team culture.',
-      duration: const Duration(minutes: 45, seconds: 2),
-      status: 'Archived',
-      project: 'HR Initiatives',
-    ),
-    AudioMessage(
-      id: '7',
-      date: DateTime(2023, 10, 23, 14, 15),
-      owner: 'Alex Rodriguez',
-      message: 'Product Demo - v2.1 feature walkthrough and feedback session.',
-      duration: const Duration(minutes: 18, seconds: 42),
-      status: 'Processed',
-      project: 'Project Chimera',
-    ),
-    AudioMessage(
-      id: '8',
-      date: DateTime(2023, 10, 22, 10, 45),
-      owner: 'Lisa Wong',
-      message: 'Architecture review meeting - discussing microservices migration strategy.',
-      duration: const Duration(minutes: 32, seconds: 18),
-      status: 'Processed',
-      project: 'Tech Infrastructure',
-    ),
-    AudioMessage(
-      id: '9',
-      date: DateTime(2023, 10, 21, 13, 30),
-      owner: 'David Kim',
-      message: 'Customer feedback session - analyzing user pain points and feature requests.',
-      duration: const Duration(minutes: 25, seconds: 10),
-      status: 'New',
-      project: 'Product Research',
-    ),
-    AudioMessage(
-      id: '10',
-      date: DateTime(2023, 10, 20, 11),
-      owner: 'Amanda Torres',
-      message: 'Budget planning discussion - Q4 allocation and resource optimization.',
-      duration: const Duration(minutes: 28, seconds: 33),
-      status: 'Processed',
-      project: 'Finance Review',
-    ),
-    AudioMessage(
-      id: '11',
-      date: DateTime(2023, 10, 19, 15, 15),
-      owner: 'Robert Lee',
-      message: 'Security audit findings - critical vulnerabilities and remediation plan.',
-      duration: const Duration(minutes: 19, seconds: 47),
-      status: 'Processed',
-      project: 'Security Operations',
-    ),
-    AudioMessage(
-      id: '12',
-      date: DateTime(2023, 10, 18, 9, 20),
-      owner: 'Jennifer Martinez',
-      message: 'Marketing campaign review - analyzing metrics and ROI for recent initiatives.',
-      duration: const Duration(minutes: 22, seconds: 5),
-      status: 'Archived',
-      project: 'Marketing Strategy',
-    ),
-  ];
+  // Message detail panel state
+  String? _selectedMessageForDetail;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _setupBlocCommunication();
+  }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _workspaceSubscription.cancel();
+    _conversationSubscription.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _toggleSelectAll(bool? value) {
+  void _setupBlocCommunication() {
+    // Store bloc references to avoid using context in async callbacks
+    final workspaceBloc = context.read<WorkspaceBloc>();
+    final conversationBloc = context.read<ConversationBloc>();
+    final messageBloc = context.read<MessageBloc>();
+
+    // WorkspaceBloc -> ConversationBloc
+    _workspaceSubscription = workspaceBloc.stream.listen((state) {
+      if (state is WorkspaceLoaded && state.selectedWorkspace != null) {
+        conversationBloc.add(
+          conv_events.WorkspaceSelectedEvent(state.selectedWorkspace!.id),
+        );
+      }
+    });
+
+    // ConversationBloc -> MessageBloc
+    _conversationSubscription = conversationBloc.stream.listen((state) {
+      if (state is ConversationLoaded) {
+        messageBloc.add(
+          msg_events.ConversationSelectedEvent(state.selectedConversationIds),
+        );
+      }
+    });
+  }
+
+  Widget _buildErrorListeners() {
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<WorkspaceBloc, WorkspaceState>(
+          listener: (context, state) {
+            if (state is WorkspaceError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+        BlocListener<ConversationBloc, ConversationState>(
+          listener: (context, state) {
+            if (state is ConversationError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+        BlocListener<MessageBloc, MessageState>(
+          listener: (context, state) {
+            if (state is MessageError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+      ],
+      child: const SizedBox.shrink(),
+    );
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
+      // Near bottom, load more
+      context.read<MessageBloc>().add(const msg_events.LoadMoreMessages());
+    }
+  }
+
+  void _toggleSelectAll(int messageCount, {bool? value}) {
     setState(() {
       _selectAll = value ?? false;
       if (_selectAll) {
-        _selectedMessages.addAll(_messages.map((m) => m.id));
+        final state = context.read<MessageBloc>().state;
+        if (state is MessageLoaded) {
+          _selectedMessages.addAll(state.messages.map((m) => m.id));
+        }
       } else {
         _selectedMessages.clear();
       }
     });
   }
 
-  void _toggleMessageSelection(String messageId, bool? value) {
+  void _toggleMessageSelection(String messageId, {bool? value}) {
     setState(() {
       if (value ?? false) {
         _selectedMessages.add(messageId);
       } else {
         _selectedMessages.remove(messageId);
       }
-      _selectAll = _selectedMessages.length == _messages.length;
+    });
+  }
+
+  void _onRefresh() {
+    // Refresh all blocs by reloading workspaces
+    context.read<WorkspaceBloc>().add(const ws_events.LoadWorkspaces());
+    setState(() {
+      _selectedMessages.clear();
+      _selectAll = false;
     });
   }
 
@@ -162,297 +159,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: Theme.of(context).colorScheme.surface,
       child: Stack(
         children: [
-          Column(
-            children: [
-              // App Bar
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Title
-                    Text(
-                      'Audio Messages',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
+          if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
 
-                    const SizedBox(width: 32),
-
-                    // Workspace Dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<String>(
-                        value: _selectedWorkspace,
-                        underline: const SizedBox.shrink(),
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: [
-                          'Personal',
-                          'Work',
-                          'Side Project',
-                          'Research',
-                          'Client Work',
-                        ].map((String workspace) {
-                          return DropdownMenuItem<String>(
-                            value: workspace,
-                            child: Text(workspace),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedWorkspace = newValue!;
-                          });
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(width: 16),
-
-                    // Search Field
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 250),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Conversation ID',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 16),
-
-                    // Conversation Name Display
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 300),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              'Project Phoenix - Q4 Strategy Meeting',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const Spacer(),
-                  ],
-                ),
-              ),
-              // Table Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 64),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      // Select All Checkbox
-                      Checkbox(
-                        value: _selectAll,
-                        onChanged: _toggleSelectAll,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Headers
-                      SizedBox(
-                        width: 120,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Date',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const Icon(Icons.arrow_upward, size: 16),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      SizedBox(
-                        width: 140,
-                        child: Text(
-                          'Owner',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      Expanded(
-                        child: Text(
-                          'Message',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      const SizedBox(width: 60), // AI Action space
-
-                      const SizedBox(width: 16),
-
-                      SizedBox(
-                        width: 60,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Dur',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            const Icon(Icons.unfold_more, size: 16),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      SizedBox(
-                        width: 90,
-                        child: Text(
-                          'Status',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 56), // Menu space
-                    ],
-                  ),
-                ),
-              ),
-
-              // Messages List
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 64),
-                  child: ListView.builder(
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return MessageCard(
-                        message: message,
-                        isSelected: _selectedMessages.contains(message.id),
-                        onSelected: (value) => _toggleMessageSelection(message.id, value),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              // // Pagination
-              // Container(
-              //   padding: const EdgeInsets.symmetric(vertical: 16.0),
-              //   decoration: BoxDecoration(
-              //     color: Theme.of(context).colorScheme.surface,
-              //     border: Border(
-              //       top: BorderSide(
-              //         color: Theme.of(context).dividerColor,
-              //       ),
-              //     ),
-              //   ),
-              //   child: Row(
-              //     mainAxisAlignment: MainAxisAlignment.center,
-              //     children: [
-              //       IconButton(
-              //         icon: const Icon(Icons.chevron_left),
-              //         onPressed: () {
-              //           // TODO: Previous page
-              //         },
-              //       ),
-              //       const SizedBox(width: 16),
-              //       Text(
-              //         'Page 1 of 12',
-              //         style: Theme.of(context).textTheme.bodyMedium,
-              //       ),
-              //       const SizedBox(width: 16),
-              //       IconButton(
-              //         icon: const Icon(Icons.chevron_right),
-              //         onPressed: () {
-              //           // TODO: Next page
-              //         },
-              //       ),
-              //     ],
-              //   ),
-              //           ),
-            ],
-          ),
+          // Floating Action Panel - only show when no detail is selected
+          if (_selectedMessages.isNotEmpty && _selectedMessageForDetail == null)
 
           // Floating Action Panel
           if (_selectedMessages.isNotEmpty)
@@ -463,16 +173,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Center(
                 child: MessagesActionPanel(
                   selectedCount: _selectedMessages.length,
-                  onDownload: () {
-                    // TODO: Implement download
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                  onDownloadAudio: () {
+                    // Check for empty selection
+                    if (_selectedMessages.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No messages selected'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Create a copy of selected messages for the download
+                    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+                    // Clear selection after capturing the messages to download
+                    setState(() {
+                      _selectedMessages.clear();
+                      _selectAll = false;
+                    });
+
+                    // Show download progress bottom sheet with fresh BLoC instance
+                    unawaited(showModalBottomSheet<void>(
+                      context: context,
+                      isDismissible: false,
+                      enableDrag: false,
+                      builder: (sheetContext) => BlocProvider(
+                        create: (_) => getIt<DownloadBloc>()
+                          ..add(StartDownloadAudio(messagesToDownload)),
+                        child: const DownloadProgressSheet(),
                       ),
-                    );
+                    ),);
+                  },
+                  onDownloadTranscript: () {
+                    // Check for empty selection
+                    if (_selectedMessages.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No messages selected'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Create a copy of selected messages for the download
+                    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+                    // Clear selection after capturing the messages to download
+                    setState(() {
+                      _selectedMessages.clear();
+                      _selectAll = false;
+                    });
+
+                    // Show download progress bottom sheet with fresh BLoC instance
+                    unawaited(showModalBottomSheet<void>(
+                      context: context,
+                      isDismissible: false,
+                      enableDrag: false,
+                      builder: (sheetContext) => BlocProvider(
+                        create: (_) => getIt<DownloadBloc>()
+                          ..add(StartDownloadTranscripts(messagesToDownload)),
+                        child: const DownloadProgressSheet(),
+                      ),
+                    ),);
                   },
                   onSummarize: () {
-                    // TODO: Implement summarize
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Summarizing ${_selectedMessages.length} messages...'),
@@ -480,19 +247,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   },
                   onAIChat: () {
-                    // TODO: Implement AI chat
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text('Opening AI chat for ${_selectedMessages.length} messages...'),
+                        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },
                 ),
               ),
             ),
+
+          // Error listeners
+          _buildErrorListeners(),
         ],
       ),
     );
   }
+
+
+
+  bool _isAnyBlocLoading(BuildContext context) {
+    final workspaceState = context.watch<WorkspaceBloc>().state;
+    final conversationState = context.watch<ConversationBloc>().state;
+    final messageState = context.watch<MessageBloc>().state;
+
+    return workspaceState is WorkspaceLoading ||
+           conversationState is ConversationLoading ||
+           messageState is MessageLoading;
+  }
+
+  Widget _buildFullDashboard() {
+    return Column(
+      children: [
+        // App Bar
+        DashboardAppBar(
+          onRefresh: _onRefresh,
+        ),
+
+        // Content
+        Expanded(
+          child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+            selector: (state) => state is MessageLoaded ? state : null,
+            builder: (context, messageState) {
+              return DashboardContent(
+                isAnyBlocLoading: _isAnyBlocLoading,
+                scrollController: _scrollController,
+                selectedMessages: _selectedMessages,
+                onToggleMessageSelection: _toggleMessageSelection,
+                onToggleSelectAll: _toggleSelectAll,
+                selectAll: _selectAll,
+                onViewDetail: _onViewDetail,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardWithDetail() {
+    return SizedBox.expand(
+      child: Column(
+        children: [
+          // App Bar - full width at top
+          DashboardAppBar(
+            onRefresh: _onRefresh,
+          ),
+          // Main content area below app bar: left = messages, right = detail
+          Expanded(
+            child: Row(
+          children: [
+            // Left side: Message list area
+            Expanded(
+              child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+                selector: (state) => state is MessageLoaded ? state : null,
+                builder: (context, messageState) {
+                  return DashboardContent(
+                    isAnyBlocLoading: _isAnyBlocLoading,
+                    scrollController: _scrollController,
+                    selectedMessages: _selectedMessages,
+                    onToggleMessageSelection: _toggleMessageSelection,
+                    onToggleSelectAll: _toggleSelectAll,
+                    selectAll: _selectAll,
+                    onViewDetail: _onViewDetail,
+                  );
+                },
+              ),
+            ),
+        
+            // Right side: Detail panel
+            if (_selectedMessageForDetail != null)
+              MessageDetailPanel(
+                messageId: _selectedMessageForDetail!,
+                onClose: _onCloseDetail,
+              ),
+          ],
+        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onViewDetail(String messageId) {
+    setState(() {
+      _selectedMessageForDetail = messageId;
+    });
+    // Load message details using the centralized bloc
+    context.read<MessageDetailBloc>().add(LoadMessageDetail(messageId));
+  }
+
+  void _onCloseDetail() {
+    setState(() {
+      _selectedMessageForDetail = null;
+    });
+  }
+
 }
