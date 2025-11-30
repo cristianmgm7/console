@@ -27,11 +27,11 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   final FlutterSecureStorage _storage;
 
   final Logger _logger = Logger();
-  
+
   @override
   Future<void> saveCredentials(oauth2.Credentials credentials) async {
     final json = credentials.toJson();
-    await _storage.write(key: _credentialsKey, value: jsonEncode(json));
+    await _storage.write(key: _credentialsKey, value: json);
   }
 
   @override
@@ -39,7 +39,7 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
     final jsonString = await _storage.read(key: _credentialsKey);
     if (jsonString == null) return null;
     try {
-      // oauth2.Credentials.fromJson expects a JSON string, not a Map
+      // oauth2.Credentials.fromJson expects a JSON string representing the credentials
       return oauth2.Credentials.fromJson(jsonString);
     } on Exception catch (e) {
       _logger.e('Error loading credentials', error: e);

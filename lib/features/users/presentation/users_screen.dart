@@ -1,4 +1,8 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,10 +13,13 @@ class UsersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Users'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+        title: Text(
+          'Users',
+          style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
+        ),
+        backgroundColor: AppColors.surface,
+        leading: AppIconButton(
+          icon: AppIcons.back,
           onPressed: () => context.go(AppRoutes.dashboard),
           tooltip: 'Back to Dashboard',
         ),
@@ -24,30 +31,30 @@ class UsersScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.people,
+                AppIcons.users,
                 size: 100,
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.primary,
               ),
               const SizedBox(height: 32),
               Text(
                 'Users Management',
-                style: Theme.of(context).textTheme.headlineLarge,
+                style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 16),
               Text(
                 'Manage system users',
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 48),
-              ElevatedButton.icon(
+              AppButton(
                 onPressed: () => context.go(AppRoutes.dashboard),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Dashboard'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(AppIcons.back, size: 18),
+                    const SizedBox(width: 8),
+                    const Text('Back to Dashboard'),
+                  ],
                 ),
               ),
             ],
