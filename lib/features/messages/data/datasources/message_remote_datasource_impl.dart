@@ -70,11 +70,14 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   }
 
   @override
-  Future<MessageDetailDto> getMessage(String messageId) async {
+  Future<MessageDetailDto> getMessage(String messageId, {bool includePreSignedUrls = false}) async {
     try {
+      // Build URL with optional pre-signed URLs parameter
+      final queryParam = includePreSignedUrls ? '?include_presigned_urls=true' : '';
+
       // Try v5 endpoint first, fallback to v4
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId',
+        '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId$queryParam',
       );
 
 

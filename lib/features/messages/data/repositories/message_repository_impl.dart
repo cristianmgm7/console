@@ -80,13 +80,13 @@ class MessageRepositoryImpl implements MessageRepository {
   }
 
   @override
-  Future<Result<Message>> getMessage(String messageId) async {
+  Future<Result<Message>> getMessage(String messageId, {bool includePreSignedUrls = false}) async {
     try {
 
-      final messageDetailDto = await _remoteDataSource.getMessage(messageId);
+      final messageDetailDto = await _remoteDataSource.getMessage(messageId, includePreSignedUrls: includePreSignedUrls);
       final message = messageDetailDto.toDomain();
 
-     
+
       return success(message);
     } on ServerException catch (e) {
       _logger.e('Server error fetching message', error: e);

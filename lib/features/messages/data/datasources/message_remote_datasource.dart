@@ -16,6 +16,6 @@ abstract class MessageRemoteDataSource {
   /// Fetches a single message by ID
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
-  Future<MessageDetailDto> getMessage(String messageId);
+  Future<MessageDetailDto> getMessage(String messageId, {bool includePreSignedUrls = false});
 
 }

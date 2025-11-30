@@ -14,7 +14,7 @@ abstract class MessageRepository {
   });
 
   /// Fetches a single message by ID
-  Future<Result<Message>> getMessage(String messageId);
+  Future<Result<Message>> getMessage(String messageId, {bool includePreSignedUrls = false});
 
 
   /// Fetches messages from multiple conversations, merged and sorted by date
