@@ -9,6 +9,8 @@ class AudioModelDto {
     this.id,
     required this.url,
     this.streamingUrl,
+    this.presignedUrl,
+    this.presignedUrlExpiration,
     required this.durationMs,
     required this.waveformPercentages,
     this.language,
@@ -25,6 +27,12 @@ class AudioModelDto {
 
   @JsonKey(name: 'streaming_url')
   final String? streamingUrl;
+
+  @JsonKey(name: 'presigned_url')
+  final String? presignedUrl;
+
+  @JsonKey(name: 'presigned_url_expiration')
+  final DateTime? presignedUrlExpiration;
 
   @JsonKey(name: 'duration_ms')
   final int durationMs;

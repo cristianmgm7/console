@@ -40,6 +40,8 @@ extension AudioModelDtoMapper on AudioModelDto {
     return AudioModel(
       id: id ?? 'unknown',
       url: url,
+      presignedUrl: presignedUrl,
+      presignedUrlExpiration: presignedUrlExpiration,
       isStreaming: streamingUrl != null,
       language: language ?? 'unknown',
       duration: Duration(milliseconds: durationMs),
