@@ -4,11 +4,13 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.0
+  sdk: ^3.8.0
 
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^6.1.0
+  phosphor_flutter: ^2.1.0
   
   # Routing
   go_router: ^14.6.2
@@ -35,6 +37,16 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.3.2
   logger: ^2.6.2
+
+  # File system access
+  path_provider: ^2.1.1
+  path: ^1.9.0
+
+  # Platform-specific implementations
+  universal_html: ^2.2.4
+
+  # Audio Playback
+  just_audio: ^0.9.40
 
 dev_dependencies:
   flutter_test:

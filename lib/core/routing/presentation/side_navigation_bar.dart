@@ -1,4 +1,7 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,35 +12,25 @@ class SideNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
 
-    return Container(
+    return SizedBox(
       width: 72,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: AppContainer(
+        backgroundColor: AppColors.surface,
       child: Column(
         children: [
-          // App branding header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Icon(
-              Icons.mic,
-              size: 24,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          const Divider(height: 1),
-          // Navigation items
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 _NavigationItem(
-                  icon: Icons.message,
+                  icon: AppIcons.message,
                   label: 'Messages',
                   route: AppRoutes.dashboard,
                   isSelected: currentPath == AppRoutes.dashboard,
                   onTap: () => context.go(AppRoutes.dashboard),
                 ),
                 _NavigationItem(
-                  icon: Icons.mic,
+                  icon: AppIcons.mic,
                   label: 'Voice Memos',
                   route: AppRoutes.voiceMemos,
                   isSelected: currentPath == AppRoutes.voiceMemos,
@@ -50,34 +43,24 @@ class SideNavigationBar extends StatelessWidget {
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: Material(
-              color: currentPath == AppRoutes.settings
-                  ? Theme.of(context).colorScheme.primaryContainer
+            child: AppContainer(
+              backgroundColor: currentPath == AppRoutes.settings
+                  ? AppColors.primary.withValues(alpha: 0.1)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                onTap: () => context.go(AppRoutes.settings),
-                borderRadius: BorderRadius.circular(8),
-                child: Tooltip(
-                  message: 'Settings',
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: Icon(
-                        Icons.person,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-                ),
+              child: AppIconButton(
+                icon: AppIcons.user,
+                onPressed: () => context.go(AppRoutes.settings),
+                tooltip: 'Settings',
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.surface,
+                size: AppIconButtonSize.medium,
               ),
             ),
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -100,30 +83,18 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: Material(
-        color: isSelected ? colorScheme.primaryContainer : Colors.transparent,
+      child: AppContainer(
+        backgroundColor: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Tooltip(
-            message: label,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
-              ),
-            ),
-          ),
+        child: AppIconButton(
+          icon: icon,
+          onPressed: onTap,
+          tooltip: label,
+          backgroundColor: Colors.transparent,
+          foregroundColor: isSelected ? AppColors.primary : AppColors.textSecondary,
+          size: AppIconButtonSize.medium,
         ),
       ),
     );
