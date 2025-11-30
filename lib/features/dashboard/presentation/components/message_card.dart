@@ -28,9 +28,7 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
-            ? AppColors.primary.withValues(alpha: 0.08)
-            : AppColors.transparent,
+        color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : AppColors.transparent,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -202,6 +200,7 @@ class MessageCard extends StatelessWidget {
 
     return '$displayHour:$minute $period ${date.month}/${date.day}/${date.year % 100}';
   }
+
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
@@ -209,18 +208,18 @@ class MessageCard extends StatelessWidget {
   }
 
   void _handlePlayAudio(BuildContext context, MessageUiModel message) {
-    if (!message.hasPlayableAudio || message.audioUrl == null) return;
+    if (!message.hasPlayableAudio) return;
 
     // Get the audio player BLoC
     final audioBloc = context.read<AudioPlayerBloc>();
 
-    // Load audio
-    audioBloc.add(LoadAudio(
-      messageId: message.id,
-      audioUrl: message.audioUrl!,
-      waveformData: message.playableAudioModel?.waveformData ?? [],
-    ),
-  );
+    // Load audio - let the BLoC fetch the pre-signed URL
+    audioBloc.add(
+      LoadAudio(
+        messageId: message.id,
+        waveformData: message.playableAudioModel?.waveformData ?? [],
+      ),
+    );
 
     // Auto-play after loading
     audioBloc.add(const PlayAudio());

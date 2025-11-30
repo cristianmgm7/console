@@ -5,7 +5,6 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
 class MessagesActionPanel extends StatelessWidget {
-
   const MessagesActionPanel({
     required this.selectedCount,
     required this.onDownloadAudio,

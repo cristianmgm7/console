@@ -38,9 +38,8 @@ class AudioPlayerReady extends AudioPlayerState {
   final List<double> waveformData;
 
   /// Progress percentage (0.0 to 1.0)
-  double get progress => duration.inMilliseconds > 0
-      ? position.inMilliseconds / duration.inMilliseconds
-      : 0.0;
+  double get progress =>
+      duration.inMilliseconds > 0 ? position.inMilliseconds / duration.inMilliseconds : 0.0;
 
   /// Remaining time
   Duration get remaining => duration - position;
@@ -62,14 +61,14 @@ class AudioPlayerReady extends AudioPlayerState {
 
   @override
   List<Object?> get props => [
-        messageId,
-        audioUrl,
-        duration,
-        position,
-        isPlaying,
-        speed,
-        waveformData,
-      ];
+    messageId,
+    audioUrl,
+    duration,
+    position,
+    isPlaying,
+    speed,
+    waveformData,
+  ];
 
   AudioPlayerReady copyWith({
     String? messageId,

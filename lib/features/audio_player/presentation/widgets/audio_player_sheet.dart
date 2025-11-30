@@ -147,8 +147,8 @@ class _PlayerControls extends StatelessWidget {
           max: state.duration.inMilliseconds.toDouble(),
           onChanged: (value) {
             context.read<AudioPlayerBloc>().add(
-                  SeekAudio(Duration(milliseconds: value.toInt())),
-                );
+              SeekAudio(Duration(milliseconds: value.toInt())),
+            );
           },
         ),
 
@@ -169,10 +169,10 @@ class _PlayerControls extends StatelessWidget {
               onPressed: () {
                 final newPosition = state.position - const Duration(seconds: 10);
                 context.read<AudioPlayerBloc>().add(
-                      SeekAudio(
-                        newPosition < Duration.zero ? Duration.zero : newPosition,
-                      ),
-                    );
+                  SeekAudio(
+                    newPosition < Duration.zero ? Duration.zero : newPosition,
+                  ),
+                );
               },
               size: AppIconButtonSize.large,
             ),
@@ -200,10 +200,10 @@ class _PlayerControls extends StatelessWidget {
               onPressed: () {
                 final newPosition = state.position + const Duration(seconds: 10);
                 context.read<AudioPlayerBloc>().add(
-                      SeekAudio(
-                        newPosition > state.duration ? state.duration : newPosition,
-                      ),
-                    );
+                  SeekAudio(
+                    newPosition > state.duration ? state.duration : newPosition,
+                  ),
+                );
               },
               size: AppIconButtonSize.large,
             ),

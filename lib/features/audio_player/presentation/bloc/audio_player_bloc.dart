@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
+import 'package:carbon_voice_console/features/audio_player/domain/usecases/get_audio_presigned_url_usecase.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/services/audio_player_service.dart';
@@ -12,8 +12,8 @@ import 'package:logger/logger.dart';
 class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   AudioPlayerBloc(
     this._playerService,
-    this._authService,
     this._logger,
+    this._getAudioPreSignedUrlUsecase,
   ) : super(const AudioPlayerInitial()) {
     on<LoadAudio>(_onLoadAudio);
     on<PlayAudio>(_onPlayAudio);
@@ -28,8 +28,8 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   }
 
   final AudioPlayerService _playerService;
-  final AuthenticatedHttpService _authService;
   final Logger _logger;
+  final GetAudioPreSignedUrlUsecase _getAudioPreSignedUrlUsecase;
 
   // Current state tracking
   String? _currentMessageId;
@@ -58,11 +58,13 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
 
   void _emitPlayerStateUpdate() {
     if (_currentMessageId != null && _playerService.duration != null) {
-      add(PlayerStateUpdated(
-        duration: _playerService.duration!,
-        position: _playerService.position,
-        isPlaying: _playerService.isPlaying,
-      ),);
+      add(
+        PlayerStateUpdated(
+          duration: _playerService.duration!,
+          position: _playerService.position,
+          isPlaying: _playerService.isPlaying,
+        ),
+      );
     }
   }
 
@@ -80,25 +82,48 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
       }
 
       _currentMessageId = event.messageId;
-      _currentAudioUrl = event.audioUrl;
       _currentWaveformData = event.waveformData;
 
-      // Get auth headers
-      final authHeaders = await _authService.getAuthHeaders();
+      // Fetch pre-signed URL using use case
+      _logger.d('Fetching pre-signed URL for message ${event.messageId}');
 
-      // Load audio
-      await _playerService.loadAudio(event.audioUrl, authHeaders);
+      final result = await _getAudioPreSignedUrlUsecase(event.messageId);
+
+      final audioUrl = result.fold(
+        onSuccess: (url) => url,
+        onFailure: (failure) {
+          final errorMessage = failure.failureOrNull?.details ?? 'Failed to fetch audio URL';
+          _logger.e('Failed to get pre-signed URL: $errorMessage');
+          emit(AudioPlayerError(errorMessage));
+          return null;
+        },
+      );
+
+      if (audioUrl == null) {
+        // Error already emitted in fold
+        return;
+      }
+
+      _currentAudioUrl = audioUrl;
+
+      // Pre-signed URLs don't need auth headers
+      _logger.d('Using pre-signed URL, no auth headers required');
+
+      // Load audio with empty headers (pre-signed URL has auth in the URL itself)
+      await _playerService.loadAudio(audioUrl, {});
 
       // Emit ready state
-      emit(AudioPlayerReady(
-        messageId: _currentMessageId!,
-        audioUrl: _currentAudioUrl!,
-        duration: _playerService.duration ?? Duration.zero,
-        position: _playerService.position,
-        isPlaying: _playerService.isPlaying,
-        speed: _currentSpeed,
-        waveformData: _currentWaveformData,
-      ),);
+      emit(
+        AudioPlayerReady(
+          messageId: _currentMessageId!,
+          audioUrl: _currentAudioUrl!,
+          duration: _playerService.duration ?? Duration.zero,
+          position: _playerService.position,
+          isPlaying: _playerService.isPlaying,
+          speed: _currentSpeed,
+          waveformData: _currentWaveformData,
+        ),
+      );
     } on Exception catch (e) {
       _logger.e('Failed to load audio', error: e);
       emit(AudioPlayerError('Failed to load audio: $e'));
@@ -198,11 +223,13 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   ) {
     final currentState = state;
     if (currentState is AudioPlayerReady) {
-      emit(currentState.copyWith(
-        duration: event.duration,
-        position: event.position,
-        isPlaying: event.isPlaying,
-      ),);
+      emit(
+        currentState.copyWith(
+          duration: event.duration,
+          position: event.position,
+          isPlaying: event.isPlaying,
+        ),
+      );
     }
   }
 

@@ -7,7 +7,10 @@ import 'package:flutter/material.dart';
 
 class DashboardTableHeader extends StatelessWidget {
   const DashboardTableHeader({
-    required this.onToggleSelectAll, required this.messageState, required this.selectAll, super.key,
+    required this.onToggleSelectAll,
+    required this.messageState,
+    required this.selectAll,
+    super.key,
   });
 
   final MessageLoaded messageState;

@@ -87,9 +87,7 @@ class DashboardAppBar extends StatelessWidget {
                       }).toList(),
                       onChanged: (String? newValue) {
                         if (newValue != null) {
-                          context
-                              .read<WorkspaceBloc>()
-                              .add(ws_events.SelectWorkspace(newValue));
+                          context.read<WorkspaceBloc>().add(ws_events.SelectWorkspace(newValue));
                         }
                       },
                     ),
@@ -120,8 +118,7 @@ class DashboardAppBar extends StatelessWidget {
                 child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
                   selector: (state) => state is ConversationLoaded ? state : null,
                   builder: (context, conversationState) {
-                    if (conversationState == null ||
-                        conversationState.conversations.isEmpty) {
+                    if (conversationState == null || conversationState.conversations.isEmpty) {
                       return AppContainer(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -174,41 +171,43 @@ class DashboardAppBar extends StatelessWidget {
                           ],
                         ),
                       ),
-                  itemBuilder: (BuildContext context) {
-                    return conversationState.conversations.map((conversation) {
-                      final isSelected = conversationState.selectedConversationIds.contains(conversation.id);
-                      return PopupMenuItem<String>(
-                        value: conversation.id,
-                        child: Row(
-                          children: [
-                            AppCheckbox(
-                              value: isSelected,
-                              onChanged: null, // Handled by parent onSelected
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                conversation.name,
-                                style: AppTextStyle.bodyMedium.copyWith(
-                                  color: AppColors.textPrimary,
+                      itemBuilder: (BuildContext context) {
+                        return conversationState.conversations.map((conversation) {
+                          final isSelected = conversationState.selectedConversationIds.contains(
+                            conversation.id,
+                          );
+                          return PopupMenuItem<String>(
+                            value: conversation.id,
+                            child: Row(
+                              children: [
+                                AppCheckbox(
+                                  value: isSelected,
+                                  onChanged: null, // Handled by parent onSelected
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    conversation.name,
+                                    style: AppTextStyle.bodyMedium.copyWith(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    }).toList();
+                          );
+                        }).toList();
+                      },
+                      onSelected: (String conversationId) {
+                        context.read<ConversationBloc>().add(ToggleConversation(conversationId));
+                      },
+                    );
                   },
-                  onSelected: (String conversationId) {
-                    context.read<ConversationBloc>().add(ToggleConversation(conversationId));
-                  },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
 
           const SizedBox(width: 16),
 
@@ -219,29 +218,31 @@ class DashboardAppBar extends StatelessWidget {
               child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
                 selector: (state) => state is ConversationLoaded ? state : null,
                 builder: (context, conversationState) {
-                if (conversationState == null || conversationState.selectedConversationIds.isEmpty) {
-                  return const SizedBox.shrink();
-                }
+                  if (conversationState == null ||
+                      conversationState.selectedConversationIds.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
 
-                final selectedConversations = conversationState.conversations
-                    .where((c) => conversationState.selectedConversationIds.contains(c.id))
-                    .toList();
+                  final selectedConversations = conversationState.conversations
+                      .where((c) => conversationState.selectedConversationIds.contains(c.id))
+                      .toList();
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: selectedConversations.map((conversation) {
-                      return ConversationWidget(
-                        
-                        conversation: conversation,
-                        onRemove: () {
-                          context.read<ConversationBloc>().add(ToggleConversation(conversation.id));
-                        },
-                      );
-                    }).toList(),
-                  ),
-                );
-              },
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: selectedConversations.map((conversation) {
+                        return ConversationWidget(
+                          conversation: conversation,
+                          onRemove: () {
+                            context.read<ConversationBloc>().add(
+                              ToggleConversation(conversation.id),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               ),
             ),
           ),

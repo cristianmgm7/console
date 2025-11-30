@@ -49,7 +49,6 @@ class WaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WaveformPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.waveformData != waveformData;
+    return oldDelegate.progress != progress || oldDelegate.waveformData != waveformData;
   }
 }

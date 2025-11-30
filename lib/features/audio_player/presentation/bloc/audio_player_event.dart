@@ -11,16 +11,14 @@ sealed class AudioPlayerEvent extends Equatable {
 class LoadAudio extends AudioPlayerEvent {
   const LoadAudio({
     required this.messageId,
-    required this.audioUrl,
     required this.waveformData,
   });
 
   final String messageId;
-  final String audioUrl;
   final List<double> waveformData;
 
   @override
-  List<Object?> get props => [messageId, audioUrl, waveformData];
+  List<Object?> get props => [messageId, waveformData];
 }
 
 /// Start or resume playback

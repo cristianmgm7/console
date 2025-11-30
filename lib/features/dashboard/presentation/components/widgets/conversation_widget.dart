@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 
 class ConversationWidget extends StatelessWidget {
   const ConversationWidget({
-    required this.conversation, required this.onRemove, super.key,
+    required this.conversation,
+    required this.onRemove,
+    super.key,
   });
 
   final Conversation conversation;
