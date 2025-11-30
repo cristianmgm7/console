@@ -47,7 +47,6 @@ class DownloadAudioMessagesUsecase {
     final skippedMessages = <String>[];
 
     // Fetch metadata for all messages in parallel
-    _logger.d('Fetching metadata for ${messageIds.length} messages');
     final metadataFutures = messageIds.map((messageId) => _messageRepository.getMessage(messageId, includePreSignedUrls: true));
 
     // Wrap Future.wait in try-catch to handle any unexpected exceptions
@@ -56,8 +55,7 @@ class DownloadAudioMessagesUsecase {
       metadataResults = await Future.wait(metadataFutures);
     } on Exception catch (e, stack) {
       _logger.e('Unexpected error during parallel message fetching', error: e, stackTrace: stack);
-      return failure(UnknownFailure(
-        details: 'Failed to fetch message metadata: $e',
+      return failure(UnknownFailure(details: 'Failed to fetch message metadata: $e',
       ),);
     }
 
@@ -84,8 +82,6 @@ class DownloadAudioMessagesUsecase {
         currentMessageId: messageId,
       ),);
 
-      _logger.d('🔄 Processing message $messageIndex/$totalItems: $messageId');
-
       if (result.isSuccess) {
         final message = result.valueOrNull!;
 
@@ -93,15 +89,11 @@ class DownloadAudioMessagesUsecase {
         final hasAudio = message.audioModels.isNotEmpty;
         final presignedUrl = hasAudio ? message.audioModels.first.presignedUrl : null;
 
-        _logger.d('📋 Message ${message.id} hasAudio: $hasAudio, hasPresignedUrl: ${presignedUrl != null}');
-
         if (hasAudio && presignedUrl != null && presignedUrl.isNotEmpty) {
-          _logger.i('🎵 Downloading audio for message ${message.id}');
           try {
             // Presigned URLs already contain authentication in the URL params
             // No need for Bearer token - use plain HTTP client
             final response = await http.get(Uri.parse(presignedUrl));
-            _logger.i('📡 Response status: ${response.statusCode}');
 
             // Process the response and save file
             await _processDownloadResponse(response, message.id, results);
@@ -128,7 +120,6 @@ class DownloadAudioMessagesUsecase {
             ),);
           }
         } else {
-          _logger.w('⏭️ Skipping message ${message.id} - no audio or presigned URL');
           results.add(DownloadResult(
             messageId: message.id,
             status: DownloadStatus.skipped,
@@ -167,7 +158,6 @@ class DownloadAudioMessagesUsecase {
 
   /// Process download response and save the file
   Future<void> _processDownloadResponse(http.Response response, String messageId, List<DownloadResult> results) async {
-    _logger.i('📡 Response status: ${response.statusCode}');
 
     // Check if response contains JSON (indicates API response, not audio data)
     if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
@@ -208,8 +198,6 @@ class DownloadAudioMessagesUsecase {
       return;
     }
 
-    _logger.i('✅ Downloaded ${response.bodyBytes.length} bytes');
-
     final contentType = response.headers['content-type'];
 
     // Save file using repository
@@ -222,7 +210,6 @@ class DownloadAudioMessagesUsecase {
 
     saveResult.fold(
       onSuccess: (result) {
-        _logger.i('💾 File saved successfully: ${result.filePath}');
         results.add(result);
       },
       onFailure: (failure) {
