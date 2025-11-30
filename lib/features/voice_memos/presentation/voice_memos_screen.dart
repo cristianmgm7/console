@@ -1,6 +1,10 @@
-import 'package:carbon_voice_console/features/dashboard/models/audio_message.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:flutter/material.dart';
 
 class VoiceMemosScreen extends StatefulWidget {
@@ -14,79 +18,192 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
 
+
   // Dummy data
-  final List<AudioMessage> _messages = [
-    AudioMessage(
+  final List<MessageUiModel> _messages = [
+    MessageUiModel(
       id: '1',
-      date: DateTime(2023, 10, 26, 15, 45),
-      owner: 'Travis Bogard',
-      message: 'Quick team standup notes and action items.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 15, 45),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(seconds: 18),
+      audioModels: [],
+      textModels: [],
       status: 'Processed',
-      project: 'Team Updates',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Quick team standup notes and action items.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Quick team standup notes and action items.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '2',
-      date: DateTime(2023, 10, 26, 14, 10),
-      owner: 'Travis Bogard',
-      message: 'Client feedback and feature requests discussion.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 14, 10),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(minutes: 1, seconds: 23),
+      audioModels: [],
+      textModels: [],
       status: 'New',
-      project: 'Client Work',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Client feedback and feature requests discussion.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Client feedback and feature requests discussion.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '3',
-      date: DateTime(2023, 10, 26, 11, 55),
-      owner: 'Travis Bogard',
-      message: 'Product roadmap planning for next quarter.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 11, 55),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(seconds: 42),
+      audioModels: [],
+      textModels: [],
       status: 'Processed',
-      project: 'Planning',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Product roadmap planning for next quarter.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Product roadmap planning for next quarter.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '4',
-      date: DateTime(2023, 10, 25, 9, 30),
-      owner: 'Travis Bogard',
-      message: 'Design review and UI/UX feedback session.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 25, 9, 30),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(minutes: 12, seconds: 31),
+      audioModels: [],
+      textModels: [],
       status: 'Processed',
-      project: 'Design',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Design review and UI/UX feedback session.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Design review and UI/UX feedback session.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '5',
-      date: DateTime(2023, 10, 26, 8, 55),
-      owner: 'Travis Bogard',
-      message: 'Bug triage and priority discussion.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 26, 8, 55),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(minutes: 8, seconds: 55),
+      audioModels: [],
+      textModels: [],
       status: 'New',
-      project: 'Development',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Bug triage and priority discussion.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Bug triage and priority discussion.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '6',
-      date: DateTime(2023, 10, 24, 16, 20),
-      owner: 'Travis Bogard',
-      message: 'Interview notes and candidate evaluation.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 24, 16, 20),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(minutes: 45, seconds: 2),
+      audioModels: [],
+      textModels: [],
       status: 'Archived',
-      project: 'HR',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Interview notes and candidate evaluation.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Interview notes and candidate evaluation.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '7',
-      date: DateTime(2023, 10, 23, 14, 15),
-      owner: 'Travis Bogard',
-      message: 'Sprint retrospective and improvement ideas.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 23, 14, 15),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(minutes: 18, seconds: 42),
+      audioModels: [],
+      textModels: [],
       status: 'Processed',
-      project: 'Agile Process',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Sprint retrospective and improvement ideas.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Sprint retrospective and improvement ideas.',
+      transcriptText: null,
+      audioUrl: null,
     ),
-    AudioMessage(
+    MessageUiModel(
       id: '8',
-      date: DateTime(2023, 10, 22, 10, 45),
-      owner: 'Travis Bogard',
-      message: 'Technical architecture discussion and decisions.',
+      creatorId: 'user-1',
+      createdAt: DateTime(2023, 10, 22, 10, 45),
+      workspaceIds: ['workspace-1'],
+      channelIds: ['conv-1'],
       duration: const Duration(minutes: 32, seconds: 18),
+      audioModels: [],
+      textModels: [],
       status: 'Processed',
-      project: 'Architecture',
+      type: 'channel',
+      lastHeardAt: null,
+      heardDuration: null,
+      totalHeardDuration: null,
+      isTextMessage: false,
+      notes: 'Technical architecture discussion and decisions.',
+      lastUpdatedAt: null,
+      conversationId: 'conv-1',
+      userId: 'user-1',
+      text: 'Technical architecture discussion and decisions.',
+      transcriptText: null,
+      audioUrl: null,
     ),
   ];
 
@@ -119,8 +236,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
+    return AppContainer(
+      backgroundColor: AppColors.surface,
       child: Stack(
         children: [
           Column(
@@ -128,28 +245,20 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               // Table Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 64),
-                child: Container(
+                child: AppContainer(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Theme.of(context).dividerColor,
-                      ),
+                  backgroundColor: AppColors.surface.withValues(alpha: 0.3),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppColors.border,
                     ),
                   ),
                   child: Row(
                     children: [
                       // Select All Checkbox
-                      Checkbox(
+                      AppCheckbox(
                         value: _selectAll,
                         onChanged: _toggleSelectAll,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
                       ),
 
                       const SizedBox(width: 8),
@@ -161,11 +270,12 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Date',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: AppTextStyle.titleSmall.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                            const Icon(Icons.arrow_upward, size: 16),
+                            Icon(AppIcons.chevronUp, size: 16, color: AppColors.textSecondary),
                           ],
                         ),
                       ),
@@ -176,9 +286,10 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                         width: 140,
                         child: Text(
                           'Owner',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: AppTextStyle.titleSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
 
@@ -187,9 +298,10 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                       Expanded(
                         child: Text(
                           'Message',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: AppTextStyle.titleSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
 
@@ -205,11 +317,12 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                           children: [
                             Text(
                               'Dur',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: AppTextStyle.titleSmall.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                            const Icon(Icons.unfold_more, size: 16),
+                            Icon(AppIcons.unfoldMore, size: 16, color: AppColors.textSecondary),
                           ],
                         ),
                       ),
@@ -220,9 +333,10 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                         width: 90,
                         child: Text(
                           'Status',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: AppTextStyle.titleSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
 
@@ -261,11 +375,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               child: Center(
                 child: MessagesActionPanel(
                   selectedCount: _selectedMessages.length,
-                  onDownload: () {
-                    // TODO: Implement download
+                  onDownloadAudio: () {
+                    // TODO: Implement download audio
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Downloading ${_selectedMessages.length} messages...'),
+                        content: Text('Downloading audio for ${_selectedMessages.length} messages...'),
+                      ),
+                    );
+                  },
+                  onDownloadTranscript: () {
+                    // TODO: Implement download transcript
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Downloading transcripts for ${_selectedMessages.length} messages...'),
                       ),
                     );
                   },

@@ -1,6 +1,3 @@
-
-
-
 # Refactor Widget Structure
 
 You are tasked with reviewing and refactoring Flutter widget files to ensure proper separation between helper methods and dedicated widgets, following Flutter's best practices for performance, rebuild optimization, and maintainability.
