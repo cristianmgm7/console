@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'dart:math';
-
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
@@ -53,9 +53,9 @@ class DownloadAudioMessagesUsecase {
     final results = <DownloadResult>[];
     final skippedMessages = <String>[];
 
-    // Fetch metadata for all messages in parallel (with pre-signed URLs)
+    // Fetch metadata for all messages in parallel
     _logger.d('Fetching metadata for ${messageIds.length} messages');
-    final metadataFutures = messageIds.map((id) => _messageRepository.getMessage(id, includePreSignedUrls: true));
+    final metadataFutures = messageIds.map(_messageRepository.getMessage);
 
     // Wrap Future.wait in try-catch to handle any unexpected exceptions
     late final List<Result<Message>> metadataResults;
@@ -105,11 +105,14 @@ class DownloadAudioMessagesUsecase {
           _logger.i('🎵 Processing audio for message ${uiMessage.id}');
           try {
             _logger.i('🔗 STARTING PRE-SIGNED URL ATTEMPT for message: ${uiMessage.id}');
-            // Extract signed URL from message metadata (already fetched with pre-signed URLs)
-            final signedUrl = _extractSignedUrlFromMessage(message);
+            // First try to get pre-signed URL from v5 endpoint
+            _logger.d('🔗 Trying to get pre-signed URL for message: ${uiMessage.id}');
+            final signedUrlResult = await _getPreSignedUrl(uiMessage.id);
 
-            if (signedUrl != null) {
-              _logger.i('✅ Got pre-signed URL from metadata: $signedUrl');
+            if (signedUrlResult.isSuccess) {
+              // Use signed URL with authentication headers
+              final signedUrl = signedUrlResult.valueOrNull!;
+              _logger.i('✅ Got pre-signed URL: $signedUrl');
               _logger.i('🎵 Downloading from signed URL with authentication...');
 
               // Use authenticated HTTP service for signed URLs (includes bearer token)
@@ -123,7 +126,7 @@ class DownloadAudioMessagesUsecase {
 
             } else {
               // Fall back to stream endpoint approach
-              _logger.w('⚠️ No pre-signed URL available in metadata, falling back to stream endpoint');
+              _logger.w('⚠️ No pre-signed URL available, falling back to stream endpoint');
 
               // Extract audio ID from the audio URL
               _logger.d('🔗 Audio URL: ${uiMessage.audioUrl}');
@@ -213,30 +216,80 @@ class DownloadAudioMessagesUsecase {
   }
 
   /// Try to get a pre-signed URL for audio download from v5 endpoint
-
-
-  /// Extract signed URL from Message entity
-  String? _extractSignedUrlFromMessage(Message message) {
+  Future<Result<String>> _getPreSignedUrl(String messageId) async {
+    _logger.i('🔗 STARTING PRE-SIGNED URL ATTEMPT for message: $messageId');
     try {
-      _logger.d('🔍 Looking for signed URL in Message entity...');
+      _logger.d('🔍 Requesting pre-signed URL from v5 endpoint for message: $messageId');
 
-      // Check first audio model for signed URL
-      if (message.audioModels.isNotEmpty) {
-        final audioModel = message.audioModels.first;
-        final url = audioModel.url;
+      // Try v5 endpoint with parameter to request pre-signed URLs
+      final response = await _authenticatedHttpService.get(
+        '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId?include_presigned_urls=true',
+      );
 
-        // Check if URL appears to be a signed URL
-        if (_isSignedUrl(url)) {
-          _logger.i('🎯 Found signed URL in audio model: $url');
-          return url;
+      if (response.statusCode == 200) {
+        _logger.i('✅ V5 endpoint returned status 200');
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        _logger.d('📄 V5 response keys: ${data.keys.toList()}');
+
+        // Log the full response structure for debugging
+        _logger.d('🔍 Full V5 response structure:');
+        _logResponseStructure(data);
+
+        // Try to extract signed URL from the response
+        final signedUrl = _extractSignedUrlFromMessageData(data);
+        if (signedUrl != null) {
+          _logger.i('🎯 Found pre-signed URL in v5 response: $signedUrl');
+          return success(signedUrl);
         } else {
-          _logger.d('📋 Audio model URL is not a signed URL: $url');
+          _logger.w('⚠️ No signed URL found in v5 response data');
+        }
+      } else {
+        _logger.w('⚠️ V5 endpoint returned status ${response.statusCode}: ${response.body}');
+      }
+
+      _logger.w('⚠️ No pre-signed URL available, will fallback to stream endpoint');
+      return failure(const UnknownFailure(details: 'No pre-signed URL available'));
+    } catch (e, stack) {
+      _logger.e('❌ Exception in _getPreSignedUrl', error: e, stackTrace: stack);
+      _logger.w('⚠️ Failed to get pre-signed URL, falling back to stream endpoint');
+      return failure(UnknownFailure(details: 'Failed to get pre-signed URL: $e'));
+    }
+  }
+
+  /// Extract signed URL from message data if available
+  String? _extractSignedUrlFromMessageData(Map<String, dynamic> data) {
+    try {
+      _logger.d('🔍 Looking for signed URL in response structure...');
+
+      // Try different possible structures based on API response format
+
+      // Structure 1: data['audio_models'] (original assumption)
+      final audioModels = data['audio_models'] as List<dynamic>?;
+      if (audioModels != null && audioModels.isNotEmpty) {
+        _logger.d('✅ Found audio_models array with ${audioModels.length} items');
+        final firstAudio = audioModels.first as Map<String, dynamic>;
+        return _extractSignedUrlFromAudioObject(firstAudio);
+      }
+
+      // Use the correct structure: data['message']['audio']
+      final messageData = data['message'] as Map<String, dynamic>?;
+      if (messageData != null) {
+        _logger.d('📋 Found message wrapper, checking for audio field...');
+        final audioObject = messageData['audio'] as Map<String, dynamic>?;
+        if (audioObject != null) {
+          _logger.d('✅ Found audio object in message');
+          return _extractSignedUrlFromAudioObject(audioObject);
         }
       }
 
-      _logger.w('⚠️ No signed URL found in message audio models');
+      _logger.w('⚠️ No audio data found in any expected structure');
+      _logger.d('📋 Available top-level keys: ${data.keys.toList()}');
+      if (messageData != null) {
+        _logger.d('📋 Available message keys: ${messageData.keys.toList()}');
+      }
+
     } catch (e) {
-      _logger.w('Error extracting signed URL from message: $e');
+      _logger.w('Error extracting signed URL from message data: $e');
     }
     return null;
   }
@@ -394,7 +447,54 @@ class DownloadAudioMessagesUsecase {
     );
   }
 
+  /// Extract signed URL from a single audio object
+  String? _extractSignedUrlFromAudioObject(Map<String, dynamic> audioObject) {
+    try {
+      _logger.d('🔍 Checking audio object for signed URL fields...');
 
+      // Check for signed_url or presigned_url field
+      final signedUrl = audioObject['signed_url'] ?? audioObject['url'];
+      if (signedUrl is String && signedUrl.isNotEmpty) {
+        _logger.i('🎯 Found signed_url/presigned_url field: $signedUrl');
+        return signedUrl;
+      }
+
+      // Check if the regular url field contains a signed URL (might be different format)
+      final url = audioObject['url'] as String?;
+      if (url != null) {
+        _logger.d('📋 Found regular url field: $url');
+        if (_isSignedUrl(url)) {
+          _logger.i('🎯 Regular url field contains signed URL: $url');
+          return url;
+        }
+      }
+
+      _logger.w('⚠️ No signed URL found in audio object');
+      _logger.d('📋 Available audio object keys: ${audioObject.keys.toList()}');
+
+    } catch (e) {
+      _logger.w('Error extracting signed URL from audio object: $e');
+    }
+    return null;
+  }
+
+  /// Log the structure of the response for debugging
+  void _logResponseStructure(dynamic data, {String prefix = ''}) {
+    if (data is Map<String, dynamic>) {
+      for (final entry in data.entries) {
+        if (entry.value is Map || entry.value is List) {
+          _logger.d('$prefix${entry.key}: ${entry.value.runtimeType}');
+          if (entry.value is Map) {
+            _logResponseStructure(entry.value, prefix: '$prefix  ');
+          } else if (entry.value is List && (entry.value as List).isNotEmpty) {
+            _logger.d('$prefix  [0]: ${(entry.value as List).first.runtimeType}');
+          }
+        } else {
+          _logger.d('$prefix${entry.key}: ${entry.value?.toString()}');
+        }
+      }
+    }
+  }
 
   /// Check if URL looks like a signed URL (contains signature parameters)
   bool _isSignedUrl(String url) {
