@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
-import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_progress.dart';
 import 'package:carbon_voice_console/features/message_download/domain/entities/download_result.dart';
@@ -17,14 +16,12 @@ import 'package:logger/logger.dart';
 class DownloadAudioMessagesUsecase {
   const DownloadAudioMessagesUsecase(
     this._downloadRepository,
-    this._authenticatedHttpService,
     this._messageRepository,
     this._logger,
   );
 
   final MessageRepository _messageRepository;
   final DownloadRepository _downloadRepository;
-  final AuthenticatedHttpService _authenticatedHttpService;
   final Logger _logger;
 
   /// Downloads audio files for the specified messages
@@ -99,10 +96,11 @@ class DownloadAudioMessagesUsecase {
         _logger.d('📋 Message ${message.id} hasAudio: $hasAudio, hasPresignedUrl: ${presignedUrl != null}');
 
         if (hasAudio && presignedUrl != null && presignedUrl.isNotEmpty) {
-          _logger.i('🎵 Downloading audio for message ${message.id} from presigned URL');
+          _logger.i('🎵 Downloading audio for message ${message.id}');
           try {
-            // Use presigned URL directly from the message's audio model
-            final response = await _authenticatedHttpService.get(presignedUrl);
+            // Presigned URLs already contain authentication in the URL params
+            // No need for Bearer token - use plain HTTP client
+            final response = await http.get(Uri.parse(presignedUrl));
             _logger.i('📡 Response status: ${response.statusCode}');
 
             // Process the response and save file
