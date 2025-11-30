@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/message_detail_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -45,9 +45,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
             if (json is! Map<String, dynamic>) {
               throw FormatException('Message item is not a Map: ${json.runtimeType}');
             }
-            // Use JsonNormalizer to handle field normalization including audio models
-            final normalizedJson = JsonNormalizer.normalizeMessage(json);
-            final messageDto = MessageDto.fromJson(normalizedJson);
+            final messageDto = MessageDto.fromJson(json);
             messages.add(messageDto);
           } on Exception catch (e, stack) {
             _logger.e('Failed to parse message in list: $e', error: e, stackTrace: stack);
@@ -72,66 +70,25 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   }
 
   @override
-  Future<MessageDto> getMessage(String messageId) async {
+  Future<MessageDetailDto> getMessage(String messageId) async {
     try {
       // Try v5 endpoint first, fallback to v4
-      var response = await _httpService.get(
+      final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId',
       );
 
-      if (response.statusCode == 404) {
-        response = await _httpService.get(
-          '${OAuthConfig.apiBaseUrl}/v4/messages/$messageId',
-        );
-      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-        // Check if response has a 'message' key with the actual message data
-        if (data.containsKey('message') && data['message'] != null && data['message'] is Map<String, dynamic>) {
-          // Wrapped format: {"message": {...}, ...}
-          final messageData = data['message'] as Map<String, dynamic>;
-
-          // Check if message data is not empty
-          if (messageData.isNotEmpty) {
-            try {
-              // Use JsonNormalizer to handle all field normalization including audio models
-              final normalizedData = JsonNormalizer.normalizeMessage(messageData);
-              final messageDto = MessageDto.fromJson(normalizedData);
-
-              return messageDto;
-            } catch (e, stack) {
-              _logger.e('Failed to parse message JSON: $e', error: e, stackTrace: stack);
-              _logger.d('Message data that failed parsing: $messageData');
-              throw ServerException(statusCode: 422, message: 'Invalid message JSON structure: $e');
-            }
-          } else {
-            _logger.w('Message data is empty');
-            throw ServerException(statusCode: 422, message: 'Message data is empty');
-          }
-        } else {
-          // Direct format: {message object with all fields}
-
-          // Check if data contains message fields (not just wrapper fields)
-          final messageKeys = ['message_id', 'creator_id', 'created_at'];
-          final hasMessageFields = messageKeys.any(data.containsKey);
-
-          if (hasMessageFields) {
-            try {
-              // Use JsonNormalizer to handle all field normalization including audio models
-              final normalizedData = JsonNormalizer.normalizeMessage(data);
-              final messageDto = MessageDto.fromJson(normalizedData);
-              return messageDto;
-            } catch (e, stack) {
-              _logger.e('Failed to parse direct message JSON: $e', error: e, stackTrace: stack);
-              _logger.d('Direct message data that failed parsing: $data');
-              throw ServerException(statusCode: 422, message: 'Invalid direct message JSON structure: $e');
-            }
-          } else {
-            _logger.w('Response does not contain message data');
-            throw ServerException(statusCode: 422, message: 'Response does not contain valid message data');
-          }
+        try {
+          // Parse directly into MessageDetailDto using the exact API response format
+          final messageDetailDto = MessageDetailDto.fromJson(data);
+          return messageDetailDto;
+        } catch (e, stack) {
+          _logger.e('Failed to parse message JSON: $e', error: e, stackTrace: stack);
+          _logger.d('Message data that failed parsing: $data');
+          throw ServerException(statusCode: 422, message: 'Invalid message JSON structure: $e');
         }
       } else {
         _logger.e('Failed to fetch message: ${response.statusCode}');

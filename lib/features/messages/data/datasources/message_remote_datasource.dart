@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/message_detail_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
 
 /// Abstract interface for message remote data operations
@@ -15,6 +16,6 @@ abstract class MessageRemoteDataSource {
   /// Fetches a single message by ID
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
-  Future<MessageDto> getMessage(String messageId);
+  Future<MessageDetailDto> getMessage(String messageId);
 
 }

@@ -83,8 +83,8 @@ class MessageRepositoryImpl implements MessageRepository {
   Future<Result<Message>> getMessage(String messageId) async {
     try {
 
-      final messageDto = await _remoteDataSource.getMessage(messageId);
-      final message = messageDto.toDomain();
+      final messageDetailDto = await _remoteDataSource.getMessage(messageId);
+      final message = messageDetailDto.toDomain();
 
      
       return success(message);
