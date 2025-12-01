@@ -46,6 +46,9 @@ class BlocProviders {
         BlocProvider<MessageDetailBloc>(
           create: (_) => getIt<MessageDetailBloc>(),
         ),
+        BlocProvider<DownloadBloc>(
+          create: (_) => getIt<DownloadBloc>(),
+        ),
       ],
       child: const DashboardScreen(),
     );
