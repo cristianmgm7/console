@@ -144,9 +144,11 @@ class DashboardContent extends StatelessWidget {
           // Mini player - show when audio is ready
           Positioned(
             bottom: selectedMessages.isNotEmpty ? 100 : 24,
-            left: 24,
-            right: 24,
-            child: const AudioMiniPlayerWidget(),
+            left: 0,
+            right: 0,
+            child: const Center(
+              child: AudioMiniPlayerWidget(),
+            ),
           ),
         ],
       ),

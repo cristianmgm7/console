@@ -28,6 +28,8 @@ class MessagesActionPanel extends StatelessWidget {
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       opacity: 0.2,
+      width: 550,
+      height: 80,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
