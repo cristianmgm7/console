@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_borders.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_dimensions.dart';
+import 'package:flutter/material.dart';
 
 class GlassContainer extends StatelessWidget {
   const GlassContainer({
@@ -13,6 +13,8 @@ class GlassContainer extends StatelessWidget {
     this.opacity = 0.5,
     this.borderRadius,
     this.blurStrength = 10.0,
+    this.width,
+    this.height,
   });
 
   final Widget child;
@@ -20,19 +22,21 @@ class GlassContainer extends StatelessWidget {
   final double opacity;
   final BorderRadius? borderRadius;
   final double blurStrength;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
     final radius = borderRadius ?? AppBorders.card;
 
-    return ClipRRect(
+    final container = ClipRRect(
       borderRadius: radius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blurStrength, sigmaY: blurStrength),
         child: Container(
           padding: padding ?? const EdgeInsets.all(AppDimensions.paddingMedium),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
+            color:AppColors.primary.withValues(alpha: opacity),
             borderRadius: radius,
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.2),
@@ -50,5 +54,15 @@ class GlassContainer extends StatelessWidget {
         ),
       ),
     );
+
+    if (width != null || height != null) {
+      return SizedBox(
+        width: width,
+        height: height,
+        child: container,
+      );
+    }
+
+    return container;
   }
 }

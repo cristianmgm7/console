@@ -172,18 +172,20 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                   ),
                 ),
 
-              // Mini player - show when audio is ready
-              BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
-                builder: (context, audioState) {
-                  final bottomOffset = _selectedVoiceMemos.isNotEmpty ? 100.0 : 24.0;
-                  return Positioned(
-                    bottom: bottomOffset,
-                    left: 24,
-                    right: 24,
-                    child: const AudioMiniPlayerWidget(),
-                  );
-                },
-              ),
+            // Mini player - show when audio is ready
+            BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
+              builder: (context, audioState) {
+                final bottomOffset = _selectedVoiceMemos.isNotEmpty ? 100.0 : 24.0;
+                return Positioned(
+                  bottom: bottomOffset,
+                  left: 0,
+                  right: 0,
+                  child: const Center(
+                    child: AudioMiniPlayerWidget(),
+                  ),
+                );
+              },
+            ),
             ],
           );
         },

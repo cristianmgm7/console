@@ -32,12 +32,13 @@ class _MiniPlayerContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppContainer(
-      padding: const EdgeInsets.all(12),
-      backgroundColor: AppColors.surface,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.border),
+    return GlassContainer(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      opacity: 0.2,
+      width: 550,
+      height: 80,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Play/Pause Button
           _buildPlayPauseButton(context),
@@ -45,7 +46,8 @@ class _MiniPlayerContent extends StatelessWidget {
           const SizedBox(width: 12),
 
           // Progress and Time
-          Expanded(
+          SizedBox(
+            width: 350,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
