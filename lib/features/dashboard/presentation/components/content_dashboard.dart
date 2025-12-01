@@ -272,14 +272,6 @@ class DashboardContent extends StatelessWidget {
                     onPressed: () => {}, // TODO: Implement download action
                     size: AppIconButtonSize.small,
                   ),
-                  const SizedBox(width: 4),
-                  AppIconButton(
-                    icon: AppIcons.delete,
-                    tooltip: 'Delete',
-                    onPressed: () => {}, // TODO: Implement delete action
-                    foregroundColor: AppColors.error,
-                    size: AppIconButtonSize.small,
-                  ),
                 ],
               ),
             ],
