@@ -51,28 +51,52 @@ class LoginScreen extends StatelessWidget {
           );
         }
       },
-      child: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Welcome to Carbon Voice',
-                  style: AppTextStyle.titleLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                AppButton(
-                  onPressed: () {
-                    context.read<AuthBloc>().add(const LoginRequested());
-                  },
-                  child: const Text('Login with OAuth'),
-                ),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.gradientPurple,
+              AppColors.gradientPink,
+            ],
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.topCenter,
+              radius: 1.5,
+              colors: [
+                AppColors.gradientPurple.withOpacity(0.3),
+                AppColors.gradientPink.withOpacity(0.2),
+                Colors.transparent,
               ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Welcome to Carbon Voice',
+                    style: AppTextStyle.titleLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  AppButton(
+                    onPressed: () {
+                      context.read<AuthBloc>().add(const LoginRequested());
+                    },
+                    child: const Text('Login with OAuth'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

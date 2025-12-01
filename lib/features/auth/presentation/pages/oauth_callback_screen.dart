@@ -77,49 +77,145 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         } else if (state is ProcessingCallback) {}
 
         if (state is ProcessingCallback) {
-          return const Scaffold(
-            body: Center(
-              child: AppProgressIndicator(),
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.gradientPurple,
+                  AppColors.gradientPink,
+                ],
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.5,
+                  colors: [
+                    AppColors.gradientPurple.withOpacity(0.3),
+                    AppColors.gradientPink.withOpacity(0.2),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+              child: const Center(
+                child: AppProgressIndicator(),
+              ),
             ),
           );
         }
         if (state is Authenticated) {
-          return Scaffold(
-            body: Center(
-              child: Text(
-                'Login successful! Redirecting...',
-                style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textPrimary),
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.gradientPurple,
+                  AppColors.gradientPink,
+                ],
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.5,
+                  colors: [
+                    AppColors.gradientPurple.withOpacity(0.3),
+                    AppColors.gradientPink.withOpacity(0.2),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  'Login successful! Redirecting...',
+                  style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textPrimary),
+                ),
               ),
             ),
           );
         }
         if (state is AuthError) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Error: ${state.message}',
-                    style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
-                  ),
-                  const SizedBox(height: 16),
-                  AppButton(
-                    onPressed: () {
-                      context.go(AppRoutes.login);
-                    },
-                    child: const Text('Try Again'),
-                  ),
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.gradientPurple,
+                  AppColors.gradientPink,
                 ],
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.5,
+                  colors: [
+                    AppColors.gradientPurple.withOpacity(0.3),
+                    AppColors.gradientPink.withOpacity(0.2),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Error: ${state.message}',
+                      style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      onPressed: () {
+                        context.go(AppRoutes.login);
+                      },
+                      child: const Text('Try Again'),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }
-        return Scaffold(
-          body: Center(
-            child: Text(
-              'Processing login...',
-              style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textPrimary),
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.gradientPurple,
+                AppColors.gradientPink,
+              ],
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.5,
+                colors: [
+                  AppColors.gradientPurple.withOpacity(0.3),
+                  AppColors.gradientPink.withOpacity(0.2),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: Center(
+              child: Text(
+                'Processing login...',
+                style: AppTextStyle.bodyLarge.copyWith(color: AppColors.textPrimary),
+              ),
             ),
           ),
         );
