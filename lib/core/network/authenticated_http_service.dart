@@ -31,12 +31,17 @@ class AuthenticatedHttpService {
       throw Exception('Not authenticated');
     }
 
-    // oauth2.Client automáticamente agrega Authorization header
-    // y refresca el token si es necesario
-    return client.get(
-      Uri.parse(path),
-      headers: headers,
-    );
+    try {
+      // oauth2.Client automáticamente agrega Authorization header
+      // y refresca el token si es necesario
+      return await client.get(
+        Uri.parse(path),
+        headers: headers,
+      );
+    } catch (e) {
+      print('❌ HTTP GET failed for $path: $e');
+      rethrow;
+    }
   }
 
   /// POST request autenticado

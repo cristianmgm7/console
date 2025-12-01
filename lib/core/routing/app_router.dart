@@ -1,11 +1,13 @@
 import 'package:carbon_voice_console/core/providers/bloc_providers.dart';
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/core/routing/app_shell.dart';
+import 'package:carbon_voice_console/core/routing/auth_guard.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
 import 'package:carbon_voice_console/features/settings/presentation/settings_screen.dart';
 import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
@@ -14,16 +16,51 @@ import 'package:injectable/injectable.dart';
 class AppRouter {
   AppRouter() {
     // Función para obtener la ruta inicial válida
-    // En macOS/iOS, siempre usar /login como ruta inicial
-    // porque Uri.base.path puede contener rutas del sistema de archivos
     String getInitialLocation() {
       final basePath = Uri.base.path;
       debugPrint('📍 Uri.base.path: $basePath');
-      
-      // En desktop/mobile, siempre empezar en login
-      // Solo en web usamos Uri.base.path
-      debugPrint('📍 Using initial location: ${AppRoutes.login}');
-      return AppRoutes.login;
+
+      // Para web, usar la URL actual (especialmente importante para OAuth callbacks)
+      // Para desktop/mobile, usar login para evitar rutas del sistema de archivos
+      if (kIsWeb) {
+        // Detectar rutas del sistema de archivos y redirigir a login
+        final isFileSystemPath = basePath.contains('/Users/') ||
+            basePath.contains('/Library/') ||
+            basePath.contains('/var/') ||
+            basePath.contains('/private/') ||
+            basePath.contains('/System/') ||
+            basePath.contains('/Applications/') ||
+            (!basePath.startsWith('/') && basePath.isNotEmpty) ||
+            basePath.contains(r'\');
+
+        if (isFileSystemPath) {
+          debugPrint('📍 Detected file system path, using login');
+          return AppRoutes.login;
+        }
+
+        // Si es una ruta válida o OAuth callback, usarla
+        final validRoutes = [
+          AppRoutes.login,
+          AppRoutes.oauthCallback,
+          AppRoutes.dashboard,
+          AppRoutes.users,
+          AppRoutes.voiceMemos,
+          AppRoutes.settings,
+        ];
+
+        if (validRoutes.contains(basePath) || basePath.startsWith('/auth/callback')) {
+          debugPrint('📍 Using current web path: $basePath');
+          return basePath;
+        }
+
+        // Si no es válida, usar login
+        debugPrint('📍 Invalid web path, using login');
+        return AppRoutes.login;
+      } else {
+        // En desktop/mobile, siempre usar login
+        debugPrint('📍 Desktop/mobile app, using login');
+        return AppRoutes.login;
+      }
     }
 
     final initialLoc = getInitialLocation();
@@ -32,8 +69,10 @@ class AppRouter {
     router = GoRouter(
       initialLocation: initialLoc,
       debugLogDiagnostics: true,
-      redirect: (context, state) {
-        final path = state.uri.path;        
+      redirect: (context, state) async {
+        final path = state.uri.path;
+        final authGuard = getAuthGuard();
+
         // Detectar rutas del sistema de archivos y redirigir a login
         final isFileSystemPath = path.contains('/Users/') ||
             path.contains('/Library/') ||
@@ -43,17 +82,17 @@ class AppRouter {
             path.contains('/Applications/') ||
             (!path.startsWith('/') && path.isNotEmpty) ||
             path.contains(r'\');
-        
+
         if (isFileSystemPath) {
           debugPrint('🔀 Redirecting from file system path to /login');
           return AppRoutes.login;
         }
-        
+
         // Si la ruta está vacía o es solo "/", redirigir a login
         if (path.isEmpty || path == '/') {
           return AppRoutes.login;
         }
-        
+
         // Validar que la ruta sea válida
         final validRoutes = [
           AppRoutes.login,
@@ -63,13 +102,20 @@ class AppRouter {
           AppRoutes.voiceMemos,
           AppRoutes.settings,
         ];
-        
+
         // Si no es una ruta válida y no es un callback, redirigir a login
         if (!validRoutes.contains(path) && !path.startsWith('/auth/callback')) {
           return AppRoutes.login;
         }
-        
-        // No redirigir si la ruta es válida
+
+        // Check authentication for protected routes
+        final authRedirect = await authGuard.getRedirect(context, path);
+        if (authRedirect != null) {
+          debugPrint('🔐 Authentication required, redirecting to: $authRedirect');
+          return authRedirect;
+        }
+
+        // No redirigir si la ruta es válida y usuario está autenticado
         return null;
       },
       routes: [
