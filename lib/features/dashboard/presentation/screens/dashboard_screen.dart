@@ -46,9 +46,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   @override
-  void dispose() {
-    _workspaceSubscription.cancel();
-    _conversationSubscription.cancel();
+  Future<void> dispose() async {
+    await _workspaceSubscription.cancel();
+    await _conversationSubscription.cancel();
     _scrollController.dispose();
     super.dispose();
   }

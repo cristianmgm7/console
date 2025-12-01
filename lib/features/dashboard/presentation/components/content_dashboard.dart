@@ -132,7 +132,7 @@ class DashboardContent extends StatelessWidget {
                   width: FlexColumnWidth(),
                 ),
                 AppTableColumn(
-                  title: '',
+                  title: 'Actions',
                   width: FixedColumnWidth(180), // Increased width for horizontal action buttons
                 ),
               ],
@@ -187,50 +187,32 @@ class DashboardContent extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-
-
                     // Horizontal Actions
-                    FittedBox(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppIconButton(
-                            icon: AppIcons.eye,
-                            tooltip: 'View Details',
-                            onPressed: () => onViewDetail?.call(message.id),
-                            size: AppIconButtonSize.small,
-                          ),
-                          const SizedBox(width: 4),
-                          AppIconButton(
-                            icon: AppIcons.edit,
-                            tooltip: 'Edit',
-                            onPressed: () => {}, // TODO: Implement edit action
-                            size: AppIconButtonSize.small,
-                          ),
-                          const SizedBox(width: 4),
-                          AppIconButton(
-                            icon: AppIcons.download,
-                            tooltip: 'Download',
-                            onPressed: () => {}, // TODO: Implement download action
-                            size: AppIconButtonSize.small,
-                          ),
-                          const SizedBox(width: 4),
-                          AppIconButton(
-                            icon: AppIcons.archive,
-                            tooltip: 'Archive',
-                            onPressed: () => {}, // TODO: Implement archive action
-                            size: AppIconButtonSize.small,
-                          ),
-                          const SizedBox(width: 4),
-                          AppIconButton(
-                            icon: AppIcons.delete,
-                            tooltip: 'Delete',
-                            onPressed: () => {}, // TODO: Implement delete action
-                            foregroundColor: AppColors.error,
-                            size: AppIconButtonSize.small,
-                          ),
-                        ],
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppIconButton(
+                          icon: AppIcons.eye,
+                          tooltip: 'View Details',
+                          onPressed: () => onViewDetail?.call(message.id),
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                        AppIconButton(
+                          icon: AppIcons.download,
+                          tooltip: 'Download',
+                          onPressed: () => {}, // TODO: Implement download action
+                          size: AppIconButtonSize.small,
+                        ),
+                        const SizedBox(width: 4),
+                        AppIconButton(
+                          icon: AppIcons.delete,
+                          tooltip: 'Delete',
+                          onPressed: () => {}, // TODO: Implement delete action
+                          foregroundColor: AppColors.error,
+                          size: AppIconButtonSize.small,
+                        ),
+                      ],
                     ),
                   ],
                 );
