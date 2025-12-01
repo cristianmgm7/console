@@ -80,29 +80,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   Widget build(BuildContext context) {
     return AppContainer(
       backgroundColor: AppColors.surface,
-      child: BlocConsumer<DownloadBloc, DownloadState>(
-      listener: (context, downloadState) {
-        if (downloadState is DownloadCompleted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Download completed: ${downloadState.successCount} successful, '
-                '${downloadState.failureCount} failed',
-              ),
-              backgroundColor: downloadState.failureCount > 0
-                  ? AppColors.error
-                  : AppColors.success,
-            ),
-          );
-        } else if (downloadState is DownloadError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Download failed: ${downloadState.message}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      },
+      child: BlocBuilder<DownloadBloc, DownloadState>(
         builder: (context, downloadState) {
           return Stack(
             children: [
