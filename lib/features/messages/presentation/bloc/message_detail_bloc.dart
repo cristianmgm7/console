@@ -1,7 +1,7 @@
 import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
-import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
+import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:equatable/equatable.dart';

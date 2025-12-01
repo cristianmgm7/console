@@ -14,7 +14,7 @@ extension MessageUiMapper on Message {
       (audio) => audio.format == 'mp3',
       orElse: () => audioModels.first,
     );
-    return mp3Audio.url;
+    return mp3Audio.presignedUrl ?? mp3Audio.url;
   }
 
   /// Gets the message text to display, prioritizing summary over transcription

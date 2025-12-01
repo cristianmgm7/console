@@ -2,6 +2,7 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation/components/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -114,17 +115,11 @@ class MessageDetailView extends StatelessWidget {
             if (message.audioUrl != null) ...[
               const SizedBox(height: 16),
               Text(
-                'Audio URL',
+                'Audio',
                 style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              SelectableText(
-                message.audioUrl!,
-                style: AppTextStyle.bodyMedium.copyWith(
-                  color: AppColors.primary,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
+              MiniAudioPlayer(audioUrl: message.audioUrl!),
             ],
           ],
         ),
@@ -166,7 +161,7 @@ class MessageDetailView extends StatelessWidget {
                 message.channelIds.join(', '),
             ),
             _buildInfoRow('Conversation ID', message.conversationId),
-            _buildInfoRow('User ID', message.userId),
+            _buildInfoRow('User', state.user?.name ?? message.userId),
           ],
         ),
       ),
