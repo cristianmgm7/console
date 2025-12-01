@@ -8,7 +8,7 @@ import socketserver
 import os
 import sys
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 65456
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
 # Get directory path and make it absolute
 _dir_path = sys.argv[2] if len(sys.argv) > 2 else "build/web"
 DIRECTORY = os.path.abspath(_dir_path)

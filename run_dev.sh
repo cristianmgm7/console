@@ -11,7 +11,7 @@ fi
 
 # Extract port from redirect URL if it contains a port number
 # Default to 65456 if not specified
-WEB_PORT=${WEB_PORT:-65456}
+WEB_PORT=${WEB_PORT:-3000}
 
 echo "🐛 Running Flutter web app in DEBUG mode..."
 echo ""
