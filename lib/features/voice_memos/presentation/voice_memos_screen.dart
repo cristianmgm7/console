@@ -2,11 +2,13 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_event.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_state.dart';
-import 'package:carbon_voice_console/features/voice_memos/presentation/models/voice_memo_ui_model.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -73,67 +75,101 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
   Widget build(BuildContext context) {
     return AppContainer(
       backgroundColor: AppColors.surface,
-      child: Stack(
-        children: [
-          BlocBuilder<VoiceMemoBloc, VoiceMemoState>(
-            builder: (context, state) {
-              return _buildContent(context, state);
-            },
-          ),
-
-          // Floating Action Panel
-          if (_selectedVoiceMemos.isNotEmpty)
-            Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: MessagesActionPanel(
-                  selectedCount: _selectedVoiceMemos.length,
-                  onDownloadAudio: () {
-                    // TODO: Implement download audio
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Downloading audio for ${_selectedVoiceMemos.length} voice memos...',
-                        ),
-                      ),
-                    );
-                  },
-                  onDownloadTranscript: () {
-                    // TODO: Implement download transcript
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Downloading transcripts for ${_selectedVoiceMemos.length} voice memos...',
-                        ),
-                      ),
-                    );
-                  },
-                  onSummarize: () {
-                    // TODO: Implement summarize
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Summarizing ${_selectedVoiceMemos.length} voice memos...',
-                        ),
-                      ),
-                    );
-                  },
-                  onAIChat: () {
-                    // TODO: Implement AI chat
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Opening AI chat for ${_selectedVoiceMemos.length} voice memos...',
-                        ),
-                      ),
-                    );
-                  },
+      child: BlocConsumer<DownloadBloc, DownloadState>(
+        listener: (context, downloadState) {
+          if (downloadState is DownloadInProgress) {
+            // Show progress notification
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Download progress: ${downloadState.current}/${downloadState.total} '
+                  '(${downloadState.progressPercent.toStringAsFixed(1)}%)',
                 ),
+                duration: const Duration(seconds: 2),
               ),
-            ),
-        ],
+            );
+          } else if (downloadState is DownloadCompleted) {
+            // Show completion notification
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Download completed: ${downloadState.successCount} successful, '
+                  '${downloadState.failureCount} failed',
+                ),
+                backgroundColor: downloadState.failureCount > 0
+                    ? AppColors.error
+                    : AppColors.success,
+              ),
+            );
+          } else if (downloadState is DownloadError) {
+            // Show error notification
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Download failed: ${downloadState.message}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          } else if (downloadState is DownloadCancelled) {
+            // Show cancellation notification
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Download cancelled'),
+              ),
+            );
+          }
+        },
+        builder: (context, downloadState) {
+          return Stack(
+            children: [
+              BlocBuilder<VoiceMemoBloc, VoiceMemoState>(
+                builder: _buildContent,
+              ),
+
+              // Floating Action Panel
+              if (_selectedVoiceMemos.isNotEmpty)
+                Positioned(
+                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: MessagesActionPanel(
+                      selectedCount: _selectedVoiceMemos.length,
+                      onDownloadAudio: () {
+                        context.read<DownloadBloc>().add(
+                          StartDownloadAudio(_selectedVoiceMemos),
+                        );
+                      },
+                      onDownloadTranscript: () {
+                        context.read<DownloadBloc>().add(
+                          StartDownloadTranscripts(_selectedVoiceMemos),
+                        );
+                      },
+                      onSummarize: () {
+                        // TODO: Implement summarize
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Summarizing ${_selectedVoiceMemos.length} voice memos...',
+                            ),
+                          ),
+                        );
+                      },
+                      onAIChat: () {
+                        // TODO: Implement AI chat
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Opening AI chat for ${_selectedVoiceMemos.length} voice memos...',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -177,8 +213,8 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
             width: FixedColumnWidth(80),
           ),
           AppTableColumn(
-            title: 'Name',
-            width: FixedColumnWidth(150),
+            title: 'Play',
+            width: FixedColumnWidth(80),
           ),
           AppTableColumn(
             title: 'Summary',
@@ -190,7 +226,7 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
           ),
           AppTableColumn(
             title: 'Actions',
-            width: FixedColumnWidth(120),
+            width: FixedColumnWidth(100),
           ),
         ],
         rows: state.voiceMemos.map((voiceMemo) {
@@ -218,16 +254,18 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                 ),
               ),
 
-              // Name
-              Text(
-                voiceMemo.name ?? 'Untitled',
-                style: AppTextStyle.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              // Playback
+              if (voiceMemo.hasPlayableAudio)
+                AppIconButton(
+                  icon: AppIcons.play,
+                  tooltip: 'Play audio',
+                  onPressed: () {
+                    // TODO: Implement audio playback
+                  },
+                  size: AppIconButtonSize.small,
+                )
+              else
+                const SizedBox.shrink(),
 
               // Summary
               Text(
@@ -248,28 +286,13 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
               ),
 
               // Actions
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (voiceMemo.hasPlayableAudio)
-                    AppIconButton(
-                      icon: AppIcons.play,
-                      tooltip: 'Play audio',
-                      onPressed: () {
-                        // TODO: Implement audio playback
-                      },
-                      size: AppIconButtonSize.small,
-                    ),
-                  const SizedBox(width: 4),
-                  AppIconButton(
-                    icon: AppIcons.download,
-                    tooltip: 'Download',
-                    onPressed: () {
-                      // TODO: Implement download
-                    },
-                    size: AppIconButtonSize.small,
-                  ),
-                ],
+              AppIconButton(
+                icon: AppIcons.download,
+                tooltip: 'Download',
+                onPressed: () {
+                  // TODO: Implement download
+                },
+                size: AppIconButtonSize.small,
               ),
             ],
           );

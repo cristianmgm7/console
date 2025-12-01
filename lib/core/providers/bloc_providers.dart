@@ -5,6 +5,7 @@ import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.
     as auth_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
@@ -51,8 +52,15 @@ class BlocProviders {
   }
 
   static Widget blocProvidersVoiceMemos() {
-    return BlocProvider<VoiceMemoBloc>(
-      create: (_) => getIt<VoiceMemoBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<VoiceMemoBloc>(
+          create: (_) => getIt<VoiceMemoBloc>(),
+        ),
+        BlocProvider<DownloadBloc>(
+          create: (_) => getIt<DownloadBloc>(),
+        ),
+      ],
       child: const VoiceMemosScreen(),
     );
   }
