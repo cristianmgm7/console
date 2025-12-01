@@ -10,6 +10,7 @@ import 'package:carbon_voice_console/features/dashboard/presentation/components/
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_event.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_state.dart';
@@ -80,48 +81,28 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
     return AppContainer(
       backgroundColor: AppColors.surface,
       child: BlocConsumer<DownloadBloc, DownloadState>(
-        listener: (context, downloadState) {
-          if (downloadState is DownloadInProgress) {
-            // Show progress notification
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Download progress: ${downloadState.current}/${downloadState.total} '
-                  '(${downloadState.progressPercent.toStringAsFixed(1)}%)',
-                ),
-                duration: const Duration(seconds: 2),
+      listener: (context, downloadState) {
+        if (downloadState is DownloadCompleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Download completed: ${downloadState.successCount} successful, '
+                '${downloadState.failureCount} failed',
               ),
-            );
-          } else if (downloadState is DownloadCompleted) {
-            // Show completion notification
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Download completed: ${downloadState.successCount} successful, '
-                  '${downloadState.failureCount} failed',
-                ),
-                backgroundColor: downloadState.failureCount > 0
-                    ? AppColors.error
-                    : AppColors.success,
-              ),
-            );
-          } else if (downloadState is DownloadError) {
-            // Show error notification
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Download failed: ${downloadState.message}'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          } else if (downloadState is DownloadCancelled) {
-            // Show cancellation notification
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Download cancelled'),
-              ),
-            );
-          }
-        },
+              backgroundColor: downloadState.failureCount > 0
+                  ? AppColors.error
+                  : AppColors.success,
+            ),
+          );
+        } else if (downloadState is DownloadError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Download failed: ${downloadState.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
         builder: (context, downloadState) {
           return Stack(
             children: [
@@ -185,6 +166,13 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                   ),
                 );
               },
+            ),
+
+            // Right-side circular progress indicator
+            const Positioned(
+              top: 24,
+              right: 24,
+              child: CircularDownloadProgressWidget(),
             ),
             ],
           );

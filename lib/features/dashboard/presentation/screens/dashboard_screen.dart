@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
@@ -8,7 +9,8 @@ import 'package:carbon_voice_console/features/dashboard/presentation/components/
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
-import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
@@ -173,17 +175,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _selectAll = false;
     });
 
-    // Show download progress bottom sheet with fresh BLoC instance
-    unawaited(showModalBottomSheet<void>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      builder: (sheetContext) => BlocProvider(
-        create: (_) => getIt<DownloadBloc>()
-          ..add(StartDownloadAudio(messagesToDownload)),
-        child: const DownloadProgressSheet(),
-      ),
-    ),);
+    // Start download (no modal shown - progress indicator appears automatically)
+    context.read<DownloadBloc>().add(StartDownloadAudio(messagesToDownload));
   }
 
   void _onDownloadTranscript() {
@@ -207,17 +200,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _selectAll = false;
     });
 
-    // Show download progress bottom sheet with fresh BLoC instance
-    unawaited(showModalBottomSheet<void>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      builder: (sheetContext) => BlocProvider(
-        create: (_) => getIt<DownloadBloc>()
-          ..add(StartDownloadTranscripts(messagesToDownload)),
-        child: const DownloadProgressSheet(),
-      ),
-    ),);
+    // Start download (no modal shown - progress indicator appears automatically)
+    context.read<DownloadBloc>().add(StartDownloadTranscripts(messagesToDownload));
   }
 
   void _onSummarize() {
@@ -238,17 +222,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
-      child: Stack(
-        children: [
-          if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
+    return BlocConsumer<DownloadBloc, DownloadState>(
+      listener: (context, downloadState) {
+        if (downloadState is DownloadCompleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Download completed: ${downloadState.successCount} successful, '
+                '${downloadState.failureCount} failed',
+              ),
+              backgroundColor: downloadState.failureCount > 0
+                  ? AppColors.error
+                  : AppColors.success,
+            ),
+          );
+        } else if (downloadState is DownloadError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Download failed: ${downloadState.message}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      builder: (context, downloadState) {
+        return ColoredBox(
+          color: Theme.of(context).colorScheme.surface,
+          child: Stack(
+            children: [
+              if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
 
+              // Error listeners
+              _buildErrorListeners(),
 
-          // Error listeners
-          _buildErrorListeners(),
-        ],
-      ),
+              // Right-side circular progress indicator
+              Positioned(
+                top: 100,
+                right: 24,
+                child: const CircularDownloadProgressWidget(),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
