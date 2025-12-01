@@ -26,11 +26,11 @@ class VoiceMemoRemoteDataSourceImpl implements VoiceMemoRemoteDataSource {
   }) async {
     try {
       // Build query parameters
-      final queryParams = <String, dynamic>{
-        'limit': limit,
+      final queryParams = <String, String>{
+        'limit': limit.toString(),
         'direction': direction,
         'sort_direction': sortDirection,
-        'include_deleted': includeDeleted,
+        'include_deleted': includeDeleted.toString(),
       };
 
       if (workspaceId != null) queryParams['workspace_id'] = workspaceId;
