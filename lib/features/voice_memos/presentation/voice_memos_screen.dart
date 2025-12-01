@@ -2,7 +2,7 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/message_card.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/message_card.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:flutter/material.dart';

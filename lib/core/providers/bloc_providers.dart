@@ -3,7 +3,7 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart' as auth_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
