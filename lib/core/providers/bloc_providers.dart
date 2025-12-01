@@ -1,13 +1,17 @@
 import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart' as auth_events;
+import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart'
+    as auth_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
+    as ws_events;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,6 +47,13 @@ class BlocProviders {
         ),
       ],
       child: const DashboardScreen(),
+    );
+  }
+
+  static Widget blocProvidersVoiceMemos() {
+    return BlocProvider<VoiceMemoBloc>(
+      create: (_) => getIt<VoiceMemoBloc>(),
+      child: const VoiceMemosScreen(),
     );
   }
 }

@@ -6,7 +6,6 @@ import 'package:carbon_voice_console/features/auth/presentation/pages/login_scre
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
 import 'package:carbon_voice_console/features/settings/presentation/settings_screen.dart';
 import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
-import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -79,8 +78,8 @@ class AppRouter {
             GoRoute(
               path: AppRoutes.voiceMemos,
               name: 'voiceMemos',
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: VoiceMemosScreen(),
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: BlocProviders.blocProvidersVoiceMemos(),
               ),
             ),
             GoRoute(
@@ -94,14 +93,13 @@ class AppRouter {
         ),
       ],
       errorBuilder: (context, state) {
-        
         // Redirigir a login inmediatamente
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted) {
             context.go(AppRoutes.login);
           }
         });
-        
+
         // Mientras tanto, mostrar loading
         return const Scaffold(
           body: Center(

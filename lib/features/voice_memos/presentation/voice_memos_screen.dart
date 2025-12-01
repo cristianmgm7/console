@@ -2,10 +2,13 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
-import 'package:carbon_voice_console/features/voice_memos/presentation/message_card.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_event.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_state.dart';
+import 'package:carbon_voice_console/features/voice_memos/presentation/models/voice_memo_ui_model.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
-import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class VoiceMemosScreen extends StatefulWidget {
   const VoiceMemosScreen({super.key});
@@ -15,223 +18,55 @@ class VoiceMemosScreen extends StatefulWidget {
 }
 
 class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
-  final Set<String> _selectedMessages = {};
+  final Set<String> _selectedVoiceMemos = {};
   bool _selectAll = false;
 
-
-  // Dummy data
-  final List<MessageUiModel> _messages = [
-    MessageUiModel(
-      id: '1',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 26, 15, 45),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(seconds: 18),
-      audioModels: [],
-      textModels: [],
-      status: 'Processed',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Quick team standup notes and action items.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Quick team standup notes and action items.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '2',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 26, 14, 10),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(minutes: 1, seconds: 23),
-      audioModels: [],
-      textModels: [],
-      status: 'New',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Client feedback and feature requests discussion.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Client feedback and feature requests discussion.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '3',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 26, 11, 55),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(seconds: 42),
-      audioModels: [],
-      textModels: [],
-      status: 'Processed',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Product roadmap planning for next quarter.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Product roadmap planning for next quarter.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '4',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 25, 9, 30),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(minutes: 12, seconds: 31),
-      audioModels: [],
-      textModels: [],
-      status: 'Processed',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Design review and UI/UX feedback session.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Design review and UI/UX feedback session.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '5',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 26, 8, 55),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(minutes: 8, seconds: 55),
-      audioModels: [],
-      textModels: [],
-      status: 'New',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Bug triage and priority discussion.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Bug triage and priority discussion.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '6',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 24, 16, 20),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(minutes: 45, seconds: 2),
-      audioModels: [],
-      textModels: [],
-      status: 'Archived',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Interview notes and candidate evaluation.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Interview notes and candidate evaluation.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '7',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 23, 14, 15),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(minutes: 18, seconds: 42),
-      audioModels: [],
-      textModels: [],
-      status: 'Processed',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Sprint retrospective and improvement ideas.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Sprint retrospective and improvement ideas.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-    MessageUiModel(
-      id: '8',
-      creatorId: 'user-1',
-      createdAt: DateTime(2023, 10, 22, 10, 45),
-      workspaceIds: ['workspace-1'],
-      channelIds: ['conv-1'],
-      duration: const Duration(minutes: 32, seconds: 18),
-      audioModels: [],
-      textModels: [],
-      status: 'Processed',
-      type: 'channel',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
-      notes: 'Technical architecture discussion and decisions.',
-      lastUpdatedAt: null,
-      conversationId: 'conv-1',
-      userId: 'user-1',
-      text: 'Technical architecture discussion and decisions.',
-      transcriptText: null,
-      audioUrl: null,
-    ),
-  ];
-
   @override
-  void dispose() {
-    super.dispose();
+  void initState() {
+    super.initState();
+    // Load voice memos when screen initializes
+    context.read<VoiceMemoBloc>().add(const LoadVoiceMemos());
   }
 
-  void _toggleSelectAll(bool? value) {
+  void _toggleSelectAll(bool? value, int totalCount) {
     setState(() {
       _selectAll = value ?? false;
       if (_selectAll) {
-        _selectedMessages.addAll(_messages.map((m) => m.id));
+        // Get all voice memo IDs from current state
+        final state = context.read<VoiceMemoBloc>().state;
+        if (state is VoiceMemoLoaded) {
+          _selectedVoiceMemos.addAll(state.voiceMemos.map((vm) => vm.id));
+        }
       } else {
-        _selectedMessages.clear();
+        _selectedVoiceMemos.clear();
       }
     });
   }
 
-  void _toggleMessageSelection(String messageId, bool? value) {
+  void _toggleVoiceMemoSelection(String voiceMemoId, bool? value, int totalCount) {
     setState(() {
       if (value ?? false) {
-        _selectedMessages.add(messageId);
+        _selectedVoiceMemos.add(voiceMemoId);
       } else {
-        _selectedMessages.remove(messageId);
+        _selectedVoiceMemos.remove(voiceMemoId);
       }
-      _selectAll = _selectedMessages.length == _messages.length;
+      _selectAll = _selectedVoiceMemos.length == totalCount;
     });
+  }
+
+  String _formatDate(DateTime date) {
+    final hour = date.hour;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+
+    return '$displayHour:$minute $period ${date.month}/${date.day}/${date.year % 100}';
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -240,146 +75,28 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
       backgroundColor: AppColors.surface,
       child: Stack(
         children: [
-          Column(
-            children: [
-              // Table Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 64),
-                child: AppContainer(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  backgroundColor: AppColors.surface.withValues(alpha: 0.3),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: AppColors.border,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      // Select All Checkbox
-                      AppCheckbox(
-                        value: _selectAll,
-                        onChanged: _toggleSelectAll,
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Headers
-                      SizedBox(
-                        width: 120,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Date',
-                              style: AppTextStyle.titleSmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            Icon(AppIcons.chevronUp, size: 16, color: AppColors.textSecondary),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      SizedBox(
-                        width: 140,
-                        child: Text(
-                          'Owner',
-                          style: AppTextStyle.titleSmall.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      Expanded(
-                        child: Text(
-                          'Message',
-                          style: AppTextStyle.titleSmall.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      const SizedBox(width: 60), // AI Action space
-
-                      const SizedBox(width: 16),
-
-                      SizedBox(
-                        width: 60,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Dur',
-                              style: AppTextStyle.titleSmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            Icon(AppIcons.unfoldMore, size: 16, color: AppColors.textSecondary),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      SizedBox(
-                        width: 90,
-                        child: Text(
-                          'Status',
-                          style: AppTextStyle.titleSmall.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 56), // Menu space
-                    ],
-                  ),
-                ),
-              ),
-
-              // Messages List
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 64),
-                  child: ListView.builder(
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return MessageCard(
-                        message: message,
-                        isSelected: _selectedMessages.contains(message.id),
-                        onSelected: (value) => _toggleMessageSelection(message.id, value),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+          BlocBuilder<VoiceMemoBloc, VoiceMemoState>(
+            builder: (context, state) {
+              return _buildContent(context, state);
+            },
           ),
 
           // Floating Action Panel
-          if (_selectedMessages.isNotEmpty)
+          if (_selectedVoiceMemos.isNotEmpty)
             Positioned(
               bottom: 24,
               left: 0,
               right: 0,
               child: Center(
                 child: MessagesActionPanel(
-                  selectedCount: _selectedMessages.length,
+                  selectedCount: _selectedVoiceMemos.length,
                   onDownloadAudio: () {
                     // TODO: Implement download audio
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Downloading audio for ${_selectedMessages.length} messages...'),
+                        content: Text(
+                          'Downloading audio for ${_selectedVoiceMemos.length} voice memos...',
+                        ),
                       ),
                     );
                   },
@@ -387,7 +104,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement download transcript
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Downloading transcripts for ${_selectedMessages.length} messages...'),
+                        content: Text(
+                          'Downloading transcripts for ${_selectedVoiceMemos.length} voice memos...',
+                        ),
                       ),
                     );
                   },
@@ -395,7 +114,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement summarize
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
+                        content: Text(
+                          'Summarizing ${_selectedVoiceMemos.length} voice memos...',
+                        ),
                       ),
                     );
                   },
@@ -403,8 +124,9 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     // TODO: Implement AI chat
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text('Opening AI chat for ${_selectedMessages.length} messages...'),
+                        content: Text(
+                          'Opening AI chat for ${_selectedVoiceMemos.length} voice memos...',
+                        ),
                       ),
                     );
                   },
@@ -414,5 +136,148 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildContent(BuildContext context, VoiceMemoState state) {
+    // Loading state
+    if (state is VoiceMemoLoading) {
+      return const Center(child: AppProgressIndicator());
+    }
+
+    // Error state
+    if (state is VoiceMemoError) {
+      return AppEmptyState.error(
+        message: state.message,
+        onRetry: () {
+          context.read<VoiceMemoBloc>().add(const LoadVoiceMemos(forceRefresh: true));
+        },
+      );
+    }
+
+    // Loaded state
+    if (state is VoiceMemoLoaded) {
+      if (state.voiceMemos.isEmpty) {
+        return AppEmptyState.noMessages(
+          onRetry: () {
+            context.read<VoiceMemoBloc>().add(const LoadVoiceMemos(forceRefresh: true));
+          },
+        );
+      }
+
+      return AppTable(
+        selectAll: _selectAll,
+        onSelectAllChanged: (value) => _toggleSelectAll(value, state.voiceMemos.length),
+        columns: const [
+          AppTableColumn(
+            title: 'Date',
+            width: FixedColumnWidth(120),
+          ),
+          AppTableColumn(
+            title: 'Duration',
+            width: FixedColumnWidth(80),
+          ),
+          AppTableColumn(
+            title: 'Name',
+            width: FixedColumnWidth(150),
+          ),
+          AppTableColumn(
+            title: 'Summary',
+            width: FlexColumnWidth(),
+          ),
+          AppTableColumn(
+            title: 'Status',
+            width: FixedColumnWidth(100),
+          ),
+          AppTableColumn(
+            title: 'Actions',
+            width: FixedColumnWidth(120),
+          ),
+        ],
+        rows: state.voiceMemos.map((voiceMemo) {
+          return AppTableRow(
+            selected: _selectedVoiceMemos.contains(voiceMemo.id),
+            onSelectChanged: (selected) => _toggleVoiceMemoSelection(
+              voiceMemo.id,
+              selected,
+              state.voiceMemos.length,
+            ),
+            cells: [
+              // Date
+              Text(
+                _formatDate(voiceMemo.createdAt),
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              // Duration
+              Text(
+                _formatDuration(voiceMemo.duration),
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              // Name
+              Text(
+                voiceMemo.name ?? 'Untitled',
+                style: AppTextStyle.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Summary
+              Text(
+                voiceMemo.displayText,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Status
+              Text(
+                voiceMemo.status,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              // Actions
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (voiceMemo.hasPlayableAudio)
+                    AppIconButton(
+                      icon: AppIcons.play,
+                      tooltip: 'Play audio',
+                      onPressed: () {
+                        // TODO: Implement audio playback
+                      },
+                      size: AppIconButtonSize.small,
+                    ),
+                  const SizedBox(width: 4),
+                  AppIconButton(
+                    icon: AppIcons.download,
+                    tooltip: 'Download',
+                    onPressed: () {
+                      // TODO: Implement download
+                    },
+                    size: AppIconButtonSize.small,
+                  ),
+                ],
+              ),
+            ],
+          );
+        }).toList(),
+      );
+    }
+
+    // Initial state
+    return AppEmptyState.loading();
   }
 }
