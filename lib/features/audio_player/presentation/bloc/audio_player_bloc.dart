@@ -40,6 +40,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   StreamSubscription<Duration>? _durationSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<bool>? _isPlayingSubscription;
+  StreamSubscription<void>? _completionSubscription;
 
   void _subscribeToServiceStreams() {
     // Combine stream updates into single event
@@ -53,6 +54,12 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
 
     _isPlayingSubscription = _playerService.isPlayingStream.listen((_) {
       _emitPlayerStateUpdate();
+    });
+
+    // Listen for playback completion
+    _completionSubscription = _playerService.playbackCompleteStream.listen((_) {
+      _logger.d('Playback completed, resetting to initial state');
+      add(const StopAudio());
     });
   }
 
@@ -238,6 +245,7 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
     await _durationSubscription?.cancel();
     await _positionSubscription?.cancel();
     await _isPlayingSubscription?.cancel();
+    await _completionSubscription?.cancel();
     return super.close();
   }
 }

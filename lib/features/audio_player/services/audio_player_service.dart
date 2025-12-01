@@ -44,6 +44,9 @@ abstract class AudioPlayerService {
   /// Stream of loading state changes
   Stream<bool> get isLoadingStream;
 
+  /// Stream of playback completion events
+  Stream<void> get playbackCompleteStream;
+
   /// Dispose resources
   Future<void> dispose();
 }

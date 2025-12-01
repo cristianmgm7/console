@@ -2,6 +2,10 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
@@ -167,6 +171,19 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     ),
                   ),
                 ),
+
+              // Mini player - show when audio is ready
+              BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
+                builder: (context, audioState) {
+                  final bottomOffset = _selectedVoiceMemos.isNotEmpty ? 100.0 : 24.0;
+                  return Positioned(
+                    bottom: bottomOffset,
+                    left: 24,
+                    right: 24,
+                    child: const AudioMiniPlayerWidget(),
+                  );
+                },
+              ),
             ],
           );
         },
@@ -260,7 +277,12 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                   icon: AppIcons.play,
                   tooltip: 'Play audio',
                   onPressed: () {
-                    // TODO: Implement audio playback
+                    final audioBloc = context.read<AudioPlayerBloc>();
+                    audioBloc.add(LoadAudio(
+                      messageId: voiceMemo.id,
+                      waveformData: voiceMemo.playableAudioModel?.waveformData ?? [],
+                    ));
+                    audioBloc.add(const PlayAudio());
                   },
                   size: AppIconButtonSize.small,
                 )

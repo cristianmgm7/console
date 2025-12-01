@@ -5,7 +5,7 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
-import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
+import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
@@ -103,15 +103,8 @@ class DashboardContent extends StatelessWidget {
       ),
     );
 
-    // Auto-play after loading
+    // Auto-play after loading (no modal shown)
     audioBloc.add(const PlayAudio());
-
-    // Show player modal
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => const AudioPlayerSheet(),
-    );
   }
 
   @override
@@ -147,6 +140,14 @@ class DashboardContent extends StatelessWidget {
                 ),
               ),
             ),
+
+          // Mini player - show when audio is ready
+          Positioned(
+            bottom: selectedMessages.isNotEmpty ? 100 : 24,
+            left: 24,
+            right: 24,
+            child: const AudioMiniPlayerWidget(),
+          ),
         ],
       ),
     );

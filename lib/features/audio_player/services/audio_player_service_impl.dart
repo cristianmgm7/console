@@ -24,6 +24,7 @@ class AudioPlayerServiceImpl implements AudioPlayerService {
   final _positionController = StreamController<Duration>.broadcast();
   final _isPlayingController = StreamController<bool>.broadcast();
   final _isLoadingController = StreamController<bool>.broadcast();
+  final _playbackCompleteController = StreamController<void>.broadcast();
 
   @override
   Stream<Duration> get durationStream => _durationController.stream;
@@ -36,6 +37,9 @@ class AudioPlayerServiceImpl implements AudioPlayerService {
 
   @override
   Stream<bool> get isLoadingStream => _isLoadingController.stream;
+
+  @override
+  Stream<void> get playbackCompleteStream => _playbackCompleteController.stream;
 
   void _initializeStreamSubscriptions() {
     // Duration changes
@@ -52,6 +56,11 @@ class AudioPlayerServiceImpl implements AudioPlayerService {
     _playerStateSubscription = _player.playerStateStream.listen((state) {
       _isPlayingController.add(state.playing);
       _isLoadingController.add(state.processingState == ProcessingState.loading);
+
+      // Emit completion event when playback finishes
+      if (state.processingState == ProcessingState.completed) {
+        _playbackCompleteController.add(null);
+      }
     });
   }
 
@@ -151,6 +160,7 @@ class AudioPlayerServiceImpl implements AudioPlayerService {
     await _positionController.close();
     await _isPlayingController.close();
     await _isLoadingController.close();
+    await _playbackCompleteController.close();
     await _player.dispose();
     _logger.d('AudioPlayerService disposed');
   }
