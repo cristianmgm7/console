@@ -48,7 +48,7 @@ class MessagesActionPanel extends StatelessWidget {
 
           // Download Dropdown
           SizedBox(
-            width: 160,
+            width: 180,
             height: 40,
             child: AppDropdown<String>(
               value: null, // No default selection
