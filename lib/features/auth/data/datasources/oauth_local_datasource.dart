@@ -31,18 +31,44 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
   @override
   Future<void> saveCredentials(oauth2.Credentials credentials) async {
     final json = credentials.toJson();
-    await _storage.write(key: _credentialsKey, value: json);
+
+    if (kIsWeb) {
+      // Use localStorage for web builds (secure storage doesn't work well with WASM)
+      try {
+        web.window.localStorage[_credentialsKey] = json;
+        _logger.d('Credentials saved to localStorage');
+      } on Exception catch (e) {
+        _logger.e('Error saving credentials to localStorage', error: e);
+      }
+    } else {
+      // Use secure storage for desktop/mobile
+      await _storage.write(key: _credentialsKey, value: json);
+    }
   }
 
   @override
   Future<oauth2.Credentials?> loadCredentials() async {
-    final jsonString = await _storage.read(key: _credentialsKey);
+    String? jsonString;
+
+    if (kIsWeb) {
+      // Use localStorage for web builds
+      try {
+        jsonString = web.window.localStorage[_credentialsKey];
+      } on Exception catch (e) {
+        _logger.e('Error loading credentials from localStorage', error: e);
+        return null;
+      }
+    } else {
+      // Use secure storage for desktop/mobile
+      jsonString = await _storage.read(key: _credentialsKey);
+    }
+
     if (jsonString == null) return null;
     try {
       // oauth2.Credentials.fromJson expects a JSON string representing the credentials
       return oauth2.Credentials.fromJson(jsonString);
     } on Exception catch (e) {
-      _logger.e('Error loading credentials', error: e);
+      _logger.e('Error parsing credentials JSON', error: e);
       // Credentials corrupted or old format
       return null;
     }
@@ -50,7 +76,18 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
 
   @override
   Future<void> deleteCredentials() async {
-    await _storage.delete(key: _credentialsKey);
+    if (kIsWeb) {
+      // Use localStorage for web builds
+      try {
+        web.window.localStorage.removeItem(_credentialsKey);
+        _logger.d('Credentials deleted from localStorage');
+      } on Exception catch (e) {
+        _logger.e('Error deleting credentials from localStorage', error: e);
+      }
+    } else {
+      // Use secure storage for desktop/mobile
+      await _storage.delete(key: _credentialsKey);
+    }
   }
 
   @override

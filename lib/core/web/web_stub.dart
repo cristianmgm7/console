@@ -8,12 +8,14 @@ library;
 class _StorageStub {
   String? operator [](String key) => null;
   void operator []=(String key, String value) {}
+  void removeItem(String key) {}
 }
 
 // Stub for web.window
 class _WindowStub {
   final _LocationStub location = _LocationStub();
   final _StorageStub sessionStorage = _StorageStub();
+  final _StorageStub localStorage = _StorageStub();
 }
 
 class _LocationStub {
