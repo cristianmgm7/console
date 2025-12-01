@@ -38,22 +38,14 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
           );
         }
         final messagesJson = data;
-        // Convert each message JSON to DTO
-        final messages = <MessageDto>[];
-        for (final json in messagesJson) {
-          try {
-            if (json is! Map<String, dynamic>) {
-              throw FormatException('Message item is not a Map: ${json.runtimeType}');
-            }
-            final messageDto = MessageDto.fromJson(json);
-            messages.add(messageDto);
-          } on Exception catch (e, stack) {
-            _logger.e('Failed to parse message in list: $e', error: e, stackTrace: stack);
-            throw ServerException(statusCode: 422, message: 'Failed to parse message in list: $e');
-          }
+        // Convert each message JSON to DTO with error handling
+        try {
+          final messagesdto = messagesJson.map((json) => MessageDto.fromJson(json as Map<String, dynamic>)).toList();
+          return messagesdto;
+        } on Exception catch (e, stack) {
+          _logger.e('Failed to parse messages: $e', error: e, stackTrace: stack);
+          throw ServerException(statusCode: 422, message: 'Failed to parse messages: $e');
         }
-
-        return messages;
       } else {
         _logger.e('Failed to fetch messages: ${response.statusCode}');
         throw ServerException(
