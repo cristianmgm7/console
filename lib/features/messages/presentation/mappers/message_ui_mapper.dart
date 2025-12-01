@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 
@@ -9,16 +10,38 @@ extension MessageUiMapper on Message {
   static String? _getPlayableAudioUrl(List<AudioModel> audioModels) {
     if (audioModels.isEmpty) return null;
 
-    try {
-      final mp3Audio = audioModels.firstWhere(
-        (audio) => audio.format == 'mp3',
-      );
-      return mp3Audio.url;
-    } catch (_) {
-      // No MP3 found
-      return null;
-    }
+    final mp3Audio = audioModels.firstWhere(
+      (audio) => audio.format == 'mp3',
+      orElse: () => audioModels.first,
+    );
+    return mp3Audio.url;
   }
+
+  /// Gets the message text to display, prioritizing summary over transcription
+  /// Returns summary if available, otherwise falls back to transcription
+  static String? _getMessageText(List<TextModel> textModels) {
+    if (textModels.isEmpty) return null;
+
+    // Try to find summary first
+    final summary = textModels.cast<TextModel?>().firstWhere(
+      (model) => model?.type.toLowerCase() == 'summary',
+      orElse: () => null,
+    );
+    if (summary != null && summary.text.isNotEmpty) return summary.text;
+
+    // Fall back to transcription
+    final transcription = textModels.cast<TextModel?>().firstWhere(
+      (model) => model?.type.toLowerCase() == 'transcription',
+      orElse: () => null,
+    );
+    if (transcription != null && transcription.text.isNotEmpty) {
+      return transcription.text;
+    }
+
+    // Last resort: return the first text model's text if not empty
+    return textModels.first.text.isNotEmpty ? textModels.first.text : null;
+  }
+
   /// Creates a UI model with optional user enrichment
   MessageUiModel toUiModel([User? creator]) {
     return MessageUiModel(
@@ -44,7 +67,7 @@ extension MessageUiMapper on Message {
       // Computed UI properties
       conversationId: channelIds.isNotEmpty ? channelIds.first : '',
       userId: creatorId,
-      text: notes.isNotEmpty ? notes : null,
+      text: notes.isNotEmpty ? notes : _getMessageText(textModels),
       transcriptText: textModels.isNotEmpty ? textModels.first.text : null,
       audioUrl: audioModels.isNotEmpty ? _getPlayableAudioUrl(audioModels) : null,
     );
