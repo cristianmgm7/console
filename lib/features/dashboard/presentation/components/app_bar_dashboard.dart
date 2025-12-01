@@ -137,70 +137,26 @@ class DashboardAppBar extends StatelessWidget {
                       );
                     }
 
-                    final selectedCount = conversationState.selectedConversationIds.length;
-                    final displayText = selectedCount == 0
-                        ? 'Select conversations'
-                        : '$selectedCount selected';
-
-                    return PopupMenuButton<String>(
-                      child: AppContainer(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        backgroundColor: AppColors.surface,
-                        border: Border.all(
-                          color: AppColors.border,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                displayText,
-                                style: AppTextStyle.bodyMedium.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                    return AppDropdown<String>(
+                      value: conversationState.selectedConversationIds.isNotEmpty
+                          ? conversationState.selectedConversationIds.first
+                          : null,
+                      dropdownKey: const Key('conversation_dropdown'),
+                      items: conversationState.conversations.map((conversation) {
+                        return DropdownMenuItem<String>(
+                          value: conversation.id,
+                          child: Text(
+                            conversation.name,
+                            style: AppTextStyle.bodyMedium.copyWith(
+                              color: AppColors.textPrimary,
                             ),
-                            Icon(
-                              AppIcons.chevronDown,
-                              size: 20,
-                              color: AppColors.textSecondary,
-                            ),
-                          ],
-                        ),
-                      ),
-                      itemBuilder: (BuildContext context) {
-                        return conversationState.conversations.map((conversation) {
-                          final isSelected = conversationState.selectedConversationIds.contains(
-                            conversation.id,
-                          );
-                          return PopupMenuItem<String>(
-                            value: conversation.id,
-                            child: Row(
-                              children: [
-                                AppCheckbox(
-                                  value: isSelected,
-                                  onChanged: null, // Handled by parent onSelected
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    conversation.name,
-                                    style: AppTextStyle.bodyMedium.copyWith(
-                                      color: AppColors.textPrimary,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList();
-                      },
-                      onSelected: (String conversationId) {
-                        context.read<ConversationBloc>().add(ToggleConversation(conversationId));
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          context.read<ConversationBloc>().add(SelectMultipleConversations({newValue}));
+                        }
                       },
                     );
                   },
