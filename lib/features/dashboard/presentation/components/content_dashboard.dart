@@ -113,18 +113,22 @@ class DashboardContent extends StatelessWidget {
               columns: const [
                 AppTableColumn(
                   title: 'Date',
-                  width: FixedColumnWidth(120),
+                  width: FixedColumnWidth(90),
                 ),
                 AppTableColumn(
-                  title: 'Owner',
-                  width: FixedColumnWidth(140),
-                ),
-                AppTableColumn(
-                  title: 'Message',
-                  width: FlexColumnWidth(),
+                  title: 'Play',
+                  width: FixedColumnWidth(60),
                 ),
                 AppTableColumn(
                   title: 'Duration',
+                  width: FixedColumnWidth(80),
+                ),
+                AppTableColumn(
+                  title: 'Owner',
+                  width: FixedColumnWidth(120),
+                ),
+                AppTableColumn(
+                  title: 'Summary',
                   width: FlexColumnWidth(),
                 ),
                 AppTableColumn(
@@ -146,6 +150,25 @@ class DashboardContent extends StatelessWidget {
                       ),
                     ),
 
+                    // Play
+                    if (message.hasPlayableAudio)
+                      AppIconButton(
+                        icon: AppIcons.play,
+                        tooltip: 'Play audio',
+                        onPressed: () => _handlePlayAudio(context, message),
+                        foregroundColor: AppColors.primary,
+                        size: AppIconButtonSize.small,
+                      )
+                    else
+                      const SizedBox.shrink(),
+
+                    // Duration
+                    Text(
+                      _formatDuration(message.duration),
+                      style: AppTextStyle.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     // Owner
                     Text(
                       message.creator?.name ?? message.creatorId,
@@ -156,50 +179,15 @@ class DashboardContent extends StatelessWidget {
                     ),
 
                     // Message
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          message.text ?? 'No content',
-                          style: AppTextStyle.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    Text(
+                      message.text ?? 'No content',
+                      style: AppTextStyle.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
 
-                    // Duration
-                    Row(
-                      children: [
-                        if (message.hasPlayableAudio) ...[
-                          AppIconButton(
-                            icon: AppIcons.play,
-                            tooltip: 'Play audio',
-                            onPressed: () => _handlePlayAudio(context, message),
-                            foregroundColor: AppColors.primary,
-                            size: AppIconButtonSize.small,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Play',
-                            style: AppTextStyle.bodyMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
-                        Text(
-                          _formatDuration(message.duration),
-                          style: AppTextStyle.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
 
                     // Horizontal Actions
                     FittedBox(
