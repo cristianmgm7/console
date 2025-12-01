@@ -35,9 +35,9 @@ A seamless download experience where:
 6. Cancel functionality remains available through the indicator
 
 ### Key User Flows
-1. **Start Download**: Click download → Circular indicator appears on right → Download starts
-2. **During Download**: Continue using app → Indicator shows live progress → Can cancel if needed
-3. **Completion**: Download finishes → Indicator auto-disappears → Success notification shown
+1. **Start Download**: Click download → Square card with circular progress appears on right → Download starts
+2. **During Download**: Continue using app → Progress shows live updates → Can cancel via button below
+3. **Completion**: Download finishes → Indicator auto-disappears
 4. **Multiple Downloads**: Handle concurrent downloads gracefully
 
 ## Implementation Approach
@@ -47,7 +47,7 @@ Create a floating circular progress indicator that integrates with the existing 
 ## Phase 1: Create Circular Download Progress Widget
 
 ### Overview
-Build a new `CircularDownloadProgressWidget` that displays circular progress with percentage text in the center, integrated with the DownloadBloc.
+Build a new `CircularDownloadProgressWidget` that displays a square card containing a circular progress indicator with percentage text in the center, and a separate cancel button below, integrated with the DownloadBloc.
 
 ### Changes Required:
 
@@ -73,11 +73,11 @@ class CircularDownloadProgressWidget extends StatelessWidget {
 
   Widget _buildProgressIndicator(BuildContext context, DownloadInProgress state) {
     return Container(
-      width: 80,
-      height: 80,
+      width: 140,
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
@@ -87,22 +87,79 @@ class CircularDownloadProgressWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Circular progress
-          CircularProgressIndicator(
-            value: state.progressPercent / 100,
-            strokeWidth: 6,
-            backgroundColor: AppColors.border,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          // Circular progress container
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Circular progress
+                CircularProgressIndicator(
+                  value: state.progressPercent / 100,
+                  strokeWidth: 8,
+                  backgroundColor: AppColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+                // Percentage text
+                Text(
+                  '${state.progressPercent.round()}%',
+                  style: AppTextStyle.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-          // Percentage text
-          Text(
-            '${state.progressPercent.round()}%',
-            style: AppTextStyle.bodySmall.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
+
+          const SizedBox(height: 8),
+
+          // Cancel button below the circle
+          GestureDetector(
+            onTap: () {
+              // Show confirmation dialog before cancelling
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Cancel Download'),
+                  content: const Text('Are you sure you want to cancel the download?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('No'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        context.read<DownloadBloc>().add(const CancelDownload());
+                        Navigator.pop(dialogContext);
+                      },
+                      child: const Text('Yes'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Icon(
+                AppIcons.close,
+                size: 16,
+                color: AppColors.error,
+              ),
             ),
           ),
         ],
@@ -122,8 +179,9 @@ class CircularDownloadProgressWidget extends StatelessWidget {
 
 #### Manual Verification:
 - [ ] Widget appears when DownloadInProgress state is active
-- [ ] Circular progress shows correct percentage
+- [ ] Square card contains circular progress with correct percentage
 - [ ] Text displays in center of circle
+- [ ] Cancel button appears below the circle
 - [ ] Widget disappears when download completes
 
 ## Phase 2: Integrate Right-Side Progress in Dashboard
@@ -221,26 +279,26 @@ return BlocConsumer<DownloadBloc, DownloadState>(
       );
     }
   },
-  builder: (context, downloadState) {
-    return ColoredBox(
-      color: Theme.of(context).colorScheme.surface,
-      child: Stack(
-        children: [
-          if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
+        builder: (context, downloadState) {
+          return ColoredBox(
+            color: Theme.of(context).colorScheme.surface,
+            child: Stack(
+              children: [
+                if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
 
-          // Error listeners
-          _buildErrorListeners(),
+                // Error listeners
+                _buildErrorListeners(),
 
-          // Right-side circular progress indicator
-          Positioned(
-            top: 100,
-            right: 24,
-            child: const CircularDownloadProgressWidget(),
-          ),
-        ],
-      ),
-    );
-  },
+                // Right-side circular progress indicator (larger, no snackbars)
+                Positioned(
+                  top: 100,
+                  right: 24,
+                  child: const CircularDownloadProgressWidget(),
+                ),
+              ],
+            ),
+          );
+        },
 );
 ```
 
@@ -253,10 +311,11 @@ return BlocConsumer<DownloadBloc, DownloadState>(
 
 #### Manual Verification:
 - [ ] Download starts without showing modal bottom sheet
-- [ ] Circular progress indicator appears on right side
+- [ ] Square card with circular progress indicator appears on right side
 - [ ] Progress updates in real-time during download
+- [ ] Cancel button below circle functions correctly
 - [ ] Indicator disappears automatically when download completes
-- [ ] Success/error notifications still work via snackbar
+- [ ] No snackbar notifications are shown (replaced by visual indicator)
 
 ## Phase 3: Integrate Right-Side Progress in Voice Memos
 
@@ -353,10 +412,11 @@ listener: (context, downloadState) {
 - [ ] No breaking changes to existing functionality: `flutter test`
 
 #### Manual Verification:
-- [ ] Voice memo downloads show circular progress indicator
+- [ ] Voice memo downloads show square card with circular progress indicator
 - [ ] Progress indicator positioned correctly on right side
+- [ ] Cancel button below circle functions correctly
 - [ ] Auto-disappears when download completes
-- [ ] Success/error notifications still work
+- [ ] No snackbar notifications are shown (replaced by visual indicator)
 
 ## Phase 4: Add Cancellation Support
 
@@ -466,15 +526,14 @@ Widget _buildProgressIndicator(BuildContext context, DownloadInProgress state) {
 - Test cancellation: Tap indicator → Confirm dialog → Download cancels
 
 ### Manual Testing Steps:
-1. [ ] Start audio download in dashboard → Circular indicator appears on right
+1. [ ] Start audio download in dashboard → Square card with circular progress appears on right
 2. [ ] Verify progress updates in real-time during download
 3. [ ] Continue using dashboard (select messages, navigate) while downloading
 4. [ ] Download completes → Indicator disappears automatically
-5. [ ] Success notification appears via snackbar
-6. [ ] Repeat steps 1-5 for voice memos screen
-7. [ ] Test cancellation by tapping indicator → Confirm dialog appears
-8. [ ] Cancel download → Indicator disappears, cancellation notification shows
-9. [ ] Test on different screen sizes → Positioning works correctly
+5. [ ] Repeat steps 1-4 for voice memos screen
+6. [ ] Test cancellation by tapping cancel button below circle → Confirm dialog appears
+7. [ ] Cancel download → Indicator disappears
+8. [ ] Test on different screen sizes → Positioning works correctly
 
 ## Performance Considerations
 

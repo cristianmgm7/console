@@ -43,6 +43,7 @@ extension MessageDtoMapper on MessageDto {
       isTextMessage: isTextMessage ?? false,
       notes: notes ?? '',
       lastUpdatedAt: lastUpdatedAt,
+      parentMessageId: parentMessageId,
     );
   }
 }

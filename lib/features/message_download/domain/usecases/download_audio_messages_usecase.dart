@@ -85,18 +85,16 @@ class DownloadAudioMessagesUsecase {
       if (result.isSuccess) {
         final message = result.valueOrNull!;
 
-        // Check if message has audio with presigned URL
-        final hasAudio = message.audioModels.isNotEmpty;
-        final presignedUrl = hasAudio ? message.audioModels.first.presignedUrl : null;
-
-        if (hasAudio && presignedUrl != null && presignedUrl.isNotEmpty) {
+        // Check if message has downloadable audio
+        if (message.hasDownloadableAudio) {
+          final presignedUrl = message.downloadableAudioModel!.presignedUrl!;
           try {
             // Presigned URLs already contain authentication in the URL params
             // No need for Bearer token - use plain HTTP client
             final response = await http.get(Uri.parse(presignedUrl));
 
             // Process the response and save file
-            await _processDownloadResponse(response, message.id, results);
+            await _processDownloadResponse(response, message, results);
           } on NetworkException catch (e) {
             _logger.e('Network error downloading audio for message ${message.id}', error: e);
             results.add(DownloadResult(
@@ -156,8 +154,18 @@ class DownloadAudioMessagesUsecase {
     ),);
   }
 
+  /// Generate enhanced audio file name with date, channel ID, message ID, and parent ID
+  String _generateAudioFileName(Message message) {
+    final dateStr = '${message.createdAt.year}_${message.createdAt.month.toString().padLeft(2, '0')}_${message.createdAt.day.toString().padLeft(2, '0')}';
+    final channelId = message.conversationId;
+    final messageId = message.id;
+    final parentId = message.parentMessageId ?? 'none';
+
+    return '${dateStr}_cid_${channelId}_${messageId}_pid_${parentId}.mp3';
+  }
+
   /// Process download response and save the file
-  Future<void> _processDownloadResponse(http.Response response, String messageId, List<DownloadResult> results) async {
+  Future<void> _processDownloadResponse(http.Response response, Message message, List<DownloadResult> results) async {
 
     // Check if response contains JSON (indicates API response, not audio data)
     if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
@@ -170,7 +178,7 @@ class DownloadAudioMessagesUsecase {
         _logger.e('❌ Server returned JSON instead of audio binary data!');
         _logger.e('📄 JSON response: ${String.fromCharCodes(response.bodyBytes.take(200))}');
         results.add(DownloadResult(
-          messageId: messageId,
+          messageId: message.id,
           status: DownloadStatus.failed,
           errorMessage: 'Server returned JSON metadata instead of audio data',
         ),);
@@ -181,7 +189,7 @@ class DownloadAudioMessagesUsecase {
     if (response.statusCode != 200) {
       _logger.e('❌ Download failed - Status: ${response.statusCode}');
       results.add(DownloadResult(
-        messageId: messageId,
+        messageId: message.id,
         status: DownloadStatus.failed,
         errorMessage: 'Failed to download file (HTTP ${response.statusCode})',
       ),);
@@ -191,7 +199,7 @@ class DownloadAudioMessagesUsecase {
     if (response.bodyBytes.isEmpty) {
       _logger.e('❌ Downloaded audio data is empty!');
       results.add(DownloadResult(
-        messageId: messageId,
+        messageId: message.id,
         status: DownloadStatus.failed,
         errorMessage: 'Downloaded audio data is empty',
       ),);
@@ -200,11 +208,15 @@ class DownloadAudioMessagesUsecase {
 
     final contentType = response.headers['content-type'];
 
+    // Generate enhanced file name
+    final fileName = _generateAudioFileName(message);
+    _logger.i('📝 Generated enhanced file name: $fileName');
+
     // Save file using repository
     final saveResult = await _downloadRepository.saveAudioFile(
-      messageId,
+      message.id,
       response.bodyBytes,
-      '$messageId.mp3',
+      fileName,
       contentType,
     );
 
@@ -214,11 +226,11 @@ class DownloadAudioMessagesUsecase {
       },
       onFailure: (failure) {
         results.add(DownloadResult(
-          messageId: messageId,
+          messageId: message.id,
           status: DownloadStatus.failed,
           errorMessage: failure.failureOrNull?.details ?? 'Failed to save audio file',
         ),);
-        _logger.e('❌ Failed to save audio file for message $messageId: ${failure.failureOrNull?.details}');
+        _logger.e('❌ Failed to save audio file for message ${message.id}: ${failure.failureOrNull?.details}');
       },
     );
   }

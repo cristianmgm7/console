@@ -21,6 +21,7 @@ class Message extends Equatable {
     this.isTextMessage = false,
     this.notes = '',
     this.lastUpdatedAt,
+    this.parentMessageId,
   });
 
   final String id;
@@ -39,10 +40,23 @@ class Message extends Equatable {
   final bool isTextMessage;
   final String notes;
   final DateTime? lastUpdatedAt;
+  final String? parentMessageId;
 
   // Domain-level computed properties (simple aliases)
   String get conversationId => channelIds.isNotEmpty ? channelIds.first : '';
   String get userId => creatorId;
+
+  // Audio-related computed properties
+  /// Whether this message has audio that can be downloaded
+  bool get hasDownloadableAudio => audioModels.any((audio) => audio.presignedUrl != null && audio.presignedUrl!.isNotEmpty);
+
+  /// Gets the first downloadable audio model, null if none available
+  AudioModel? get downloadableAudioModel {
+    if (!hasDownloadableAudio) return null;
+    return audioModels.firstWhere(
+      (audio) => audio.presignedUrl != null && audio.presignedUrl!.isNotEmpty,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -62,5 +76,6 @@ class Message extends Equatable {
         isTextMessage,
         notes,
         lastUpdatedAt,
+        parentMessageId,
       ];
 }
