@@ -23,71 +23,97 @@ class CircularDownloadProgressWidget extends StatelessWidget {
   }
 
   Widget _buildProgressIndicator(BuildContext context, DownloadInProgress state) {
-    return GestureDetector(
-      onTap: () {
-        // Show confirmation dialog before cancelling
-        showDialog(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Cancel Download'),
-            content: const Text('Are you sure you want to cancel the download?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () {
-                  context.read<DownloadBloc>().add(const CancelDownload());
-                  Navigator.pop(dialogContext);
-                },
-                child: const Text('Yes'),
-              ),
-            ],
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-        );
-      },
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Circular progress container
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
             ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Circular progress
-            CircularProgressIndicator(
-              value: state.progressPercent / 100,
-              strokeWidth: 6,
-              backgroundColor: AppColors.border,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Circular progress
+                CircularProgressIndicator(
+                  value: state.progressPercent / 100,
+                  strokeWidth: 8,
+                  backgroundColor: AppColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+                // Percentage text
+                Text(
+                  '${state.progressPercent.round()}%',
+                  style: AppTextStyle.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-            // Cancel icon overlay
-            Icon(
-              AppIcons.close,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-            // Percentage text
-            Text(
-              '${state.progressPercent.round()}%',
-              style: AppTextStyle.bodySmall.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Cancel button below the circle
+          GestureDetector(
+            onTap: () {
+              // Show confirmation dialog before cancelling
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Cancel Download'),
+                  content: const Text('Are you sure you want to cancel the download?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('No'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        context.read<DownloadBloc>().add(const CancelDownload());
+                        Navigator.pop(dialogContext);
+                      },
+                      child: const Text('Yes'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+              ),
+              child: Icon(
+                AppIcons.close,
+                size: 16,
+                color: AppColors.error,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

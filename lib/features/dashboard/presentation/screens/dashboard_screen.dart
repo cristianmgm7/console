@@ -222,29 +222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<DownloadBloc, DownloadState>(
-      listener: (context, downloadState) {
-        if (downloadState is DownloadCompleted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Download completed: ${downloadState.successCount} successful, '
-                '${downloadState.failureCount} failed',
-              ),
-              backgroundColor: downloadState.failureCount > 0
-                  ? AppColors.error
-                  : AppColors.success,
-            ),
-          );
-        } else if (downloadState is DownloadError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Download failed: ${downloadState.message}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      },
+    return BlocBuilder<DownloadBloc, DownloadState>(
       builder: (context, downloadState) {
         return ColoredBox(
           color: Theme.of(context).colorScheme.surface,
