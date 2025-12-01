@@ -6,6 +6,7 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_player_sheet.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
@@ -24,6 +25,10 @@ class DashboardContent extends StatelessWidget {
     required this.onToggleSelectAll,
     required this.selectAll,
     this.onViewDetail,
+    this.onDownloadAudio,
+    this.onDownloadTranscript,
+    this.onSummarize,
+    this.onAIChat,
     super.key,
   });
 
@@ -34,6 +39,10 @@ class DashboardContent extends StatelessWidget {
   final bool selectAll;
   final bool Function(BuildContext context) isAnyBlocLoading;
   final ValueChanged<String>? onViewDetail;
+  final VoidCallback? onDownloadAudio;
+  final VoidCallback? onDownloadTranscript;
+  final VoidCallback? onSummarize;
+  final VoidCallback? onAIChat;
 
   String _formatDate(DateTime date) {
     final hour = date.hour;
@@ -109,14 +118,36 @@ class DashboardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppContainer(
       backgroundColor: AppColors.surface,
-      child: BlocBuilder<MessageBloc, MessageState>(
-        builder: (context, messageState) {
-          return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
-            builder: (context, audioState) {
-              return _buildContent(context, messageState, audioState);
+      child: Stack(
+        children: [
+          // Main content
+          BlocBuilder<MessageBloc, MessageState>(
+            builder: (context, messageState) {
+              return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
+                builder: (context, audioState) {
+                  return _buildContent(context, messageState, audioState);
+                },
+              );
             },
-          );
-        },
+          ),
+
+          // Action panel - only show when messages are selected
+          if (selectedMessages.isNotEmpty && onDownloadAudio != null)
+            Positioned(
+              bottom: 24,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: MessagesActionPanel(
+                  selectedCount: selectedMessages.length,
+                  onDownloadAudio: onDownloadAudio!,
+                  onDownloadTranscript: onDownloadTranscript ?? () {},
+                  onSummarize: onSummarize ?? () {},
+                  onAIChat: onAIChat ?? () {},
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

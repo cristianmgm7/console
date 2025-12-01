@@ -6,7 +6,6 @@ import 'package:carbon_voice_console/features/conversations/presentation/bloc/co
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/content_dashboard.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/download_progress_sheet.dart';
@@ -153,6 +152,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _onDownloadAudio() {
+    // Check for empty selection
+    if (_selectedMessages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No messages selected'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Create a copy of selected messages for the download
+    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+    // Clear selection after capturing the messages to download
+    setState(() {
+      _selectedMessages.clear();
+      _selectAll = false;
+    });
+
+    // Show download progress bottom sheet with fresh BLoC instance
+    unawaited(showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (sheetContext) => BlocProvider(
+        create: (_) => getIt<DownloadBloc>()
+          ..add(StartDownloadAudio(messagesToDownload)),
+        child: const DownloadProgressSheet(),
+      ),
+    ),);
+  }
+
+  void _onDownloadTranscript() {
+    // Check for empty selection
+    if (_selectedMessages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No messages selected'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Create a copy of selected messages for the download
+    final messagesToDownload = Set<String>.from(_selectedMessages);
+
+    // Clear selection after capturing the messages to download
+    setState(() {
+      _selectedMessages.clear();
+      _selectAll = false;
+    });
+
+    // Show download progress bottom sheet with fresh BLoC instance
+    unawaited(showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (sheetContext) => BlocProvider(
+        create: (_) => getIt<DownloadBloc>()
+          ..add(StartDownloadTranscripts(messagesToDownload)),
+        child: const DownloadProgressSheet(),
+      ),
+    ),);
+  }
+
+  void _onSummarize() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Summarizing ${_selectedMessages.length} messages...'),
+      ),
+    );
+  }
+
+  void _onAIChat() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
@@ -161,101 +244,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
 
-          // Floating Action Panel - only show when no detail is selected
-          if (_selectedMessages.isNotEmpty && _selectedMessageForDetail == null)
-
-          // Floating Action Panel
-          if (_selectedMessages.isNotEmpty)
-            Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: MessagesActionPanel(
-                  selectedCount: _selectedMessages.length,
-                  onDownloadAudio: () {
-                    // Check for empty selection
-                    if (_selectedMessages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('No messages selected'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                      return;
-                    }
-
-                    // Create a copy of selected messages for the download
-                    final messagesToDownload = Set<String>.from(_selectedMessages);
-
-                    // Clear selection after capturing the messages to download
-                    setState(() {
-                      _selectedMessages.clear();
-                      _selectAll = false;
-                    });
-
-                    // Show download progress bottom sheet with fresh BLoC instance
-                    unawaited(showModalBottomSheet<void>(
-                      context: context,
-                      isDismissible: false,
-                      enableDrag: false,
-                      builder: (sheetContext) => BlocProvider(
-                        create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownloadAudio(messagesToDownload)),
-                        child: const DownloadProgressSheet(),
-                      ),
-                    ),);
-                  },
-                  onDownloadTranscript: () {
-                    // Check for empty selection
-                    if (_selectedMessages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('No messages selected'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                      return;
-                    }
-
-                    // Create a copy of selected messages for the download
-                    final messagesToDownload = Set<String>.from(_selectedMessages);
-
-                    // Clear selection after capturing the messages to download
-                    setState(() {
-                      _selectedMessages.clear();
-                      _selectAll = false;
-                    });
-
-                    // Show download progress bottom sheet with fresh BLoC instance
-                    unawaited(showModalBottomSheet<void>(
-                      context: context,
-                      isDismissible: false,
-                      enableDrag: false,
-                      builder: (sheetContext) => BlocProvider(
-                        create: (_) => getIt<DownloadBloc>()
-                          ..add(StartDownloadTranscripts(messagesToDownload)),
-                        child: const DownloadProgressSheet(),
-                      ),
-                    ),);
-                  },
-                  onSummarize: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Summarizing ${_selectedMessages.length} messages...'),
-                      ),
-                    );
-                  },
-                  onAIChat: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
 
           // Error listeners
           _buildErrorListeners(),
@@ -297,6 +285,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onToggleSelectAll: _toggleSelectAll,
                 selectAll: _selectAll,
                 onViewDetail: _onViewDetail,
+                onDownloadAudio: _onDownloadAudio,
+                onDownloadTranscript: _onDownloadTranscript,
+                onSummarize: _onSummarize,
+                onAIChat: _onAIChat,
               );
             },
           ),
@@ -330,6 +322,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onToggleSelectAll: _toggleSelectAll,
                     selectAll: _selectAll,
                     onViewDetail: _onViewDetail,
+                    onDownloadAudio: _onDownloadAudio,
+                    onDownloadTranscript: _onDownloadTranscript,
+                    onSummarize: _onSummarize,
+                    onAIChat: _onAIChat,
                   );
                 },
               ),
