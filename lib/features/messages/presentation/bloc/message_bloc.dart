@@ -129,9 +129,6 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         }
       }
 
-      // Sort all messages by date (newest first)
-      allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
       // Calculate overall oldest timestamp
       final oldestTimestamp = allMessages.isNotEmpty
           ? allMessages.map((m) => m.createdAt).reduce((a, b) => a.isBefore(b) ? a : b)

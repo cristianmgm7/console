@@ -19,55 +19,25 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   Future<List<MessageDto>> getRecentMessages({
     required String conversationId,
     int count = 50,
-    String direction = 'newer',  // Use 'newer' for initial load to get most recent messages
+    String direction = 'older',  // Use 'older' to get most recent messages (newest → oldest)
     String? beforeTimestamp,
   }) async {
     try {
       // Build request body according to actual API specification
       final requestBody = {
+        'date': beforeTimestamp,
         'channel_id': conversationId,
         'limit': count,
         'direction': direction,
         'use_last_updated': true,
       };
-
-      // Add optional date for pagination cursor (ISO8601 timestamp)
-      if (beforeTimestamp != null) {
-        requestBody['date'] = beforeTimestamp;
-      }
-
-      _logger.d('🔵 Fetching recent messages with params: $requestBody');
-      _logger.d('🔵 IMPORTANT: Requesting messages for channel_id: ${requestBody['channel_id']}');
-
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
         body: requestBody, // AuthenticatedHttpService handles JSON encoding
       );
 
-      _logger.d('🔵 Response status: ${response.statusCode}');
-      _logger.d('🔵 Response body length: ${response.body.length}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-
-        // DEBUG: Log the actual response structure
-        _logger.d('🔵 Response type: ${data.runtimeType}');
-
-        if (data is Map<String, dynamic>) {
-          _logger.d('🔵 Response keys: ${data.keys.join(", ")}');
-          data.forEach((key, value) {
-            if (value is List) {
-              _logger.d('🔵   $key: List with ${value.length} items');
-            } else if (value is Map) {
-              _logger.d('🔵   $key: Map with keys ${(value as Map).keys.join(", ")}');
-            } else {
-              _logger.d('🔵   $key: ${value.runtimeType} = $value');
-            }
-          });
-        } else if (data is List) {
-          _logger.d('🔵 Response is List with ${data.length} items');
-        }
-
         // API returns: [{message}, {message}, ...]
         // But might be wrapped in an object like {messages: [...]} or {items: [...]}
         List<dynamic> messagesList;
@@ -104,14 +74,16 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
 
           _logger.d('Successfully parsed ${messageDtos.length} messages');
 
-          // DEBUG: Log the channel IDs from the response to verify filtering
+          // DEBUG: Log message order from API
           if (messageDtos.isNotEmpty) {
-            final channelIds = messageDtos.map((dto) {
-              final json = messagesList[messageDtos.indexOf(dto)] as Map<String, dynamic>;
-              return json['channel_ids'] ?? json['channel_id'] ?? 'unknown';
-            }).toSet();
-            _logger.d('🔵 Unique channel IDs in response: $channelIds');
-            _logger.d('🔵 Expected channel_guid: $conversationId');
+            _logger.d('🔵 Message order from API (direction: $direction):');
+            for (var i = 0; i < messageDtos.length && i < 3; i++) {
+              final dto = messageDtos[i];
+              _logger.d('🔵   Position $i: ${dto.createdAt} (ID: ${dto.messageId})');
+            }
+            if (messageDtos.length > 3) {
+              _logger.d('🔵   ... (${messageDtos.length - 3} more messages)');
+            }
           }
 
           return messageDtos;

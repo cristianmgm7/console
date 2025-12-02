@@ -26,17 +26,14 @@ class MessageRepositoryImpl implements MessageRepository {
     DateTime? beforeTimestamp,
   }) async {
     try {
-      // Convert DateTime to ISO8601 string if provided
-      final beforeTimestampStr = beforeTimestamp?.toIso8601String();
 
-      // Use 'newer' for initial load (no timestamp) to get most recent messages
-      // Use 'older' for pagination (with timestamp) to get older messages
-      final direction = beforeTimestamp == null ? 'newer' : 'older';
+      // If no timestamp provided, use current time as starting point
+      final effectiveTimestamp = beforeTimestamp ?? DateTime.now();
+      final beforeTimestampStr = effectiveTimestamp.toIso8601String();
 
       final messageDtos = await _remoteDataSource.getRecentMessages(
         conversationId: conversationId,
         count: count,
-        direction: direction,
         beforeTimestamp: beforeTimestampStr,
       );
 
@@ -51,9 +48,6 @@ class MessageRepositoryImpl implements MessageRepository {
           allMessages.add(message);
         }
       }
-
-      // Sort by date (newest first)
-      allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       // Update cache
       _cachedMessages[conversationId] = allMessages;
