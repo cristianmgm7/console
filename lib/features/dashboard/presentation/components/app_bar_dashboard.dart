@@ -138,24 +138,49 @@ class DashboardAppBar extends StatelessWidget {
                     }
 
                     return AppDropdown<String>(
-                      value: conversationState.selectedConversationIds.isNotEmpty
-                          ? conversationState.selectedConversationIds.first
-                          : null,
+                      value: null, // No single value since we allow multiple selections
+                      hint: Text(
+                        conversationState.selectedConversationIds.isEmpty
+                            ? 'Select conversations...'
+                            : '${conversationState.selectedConversationIds.length} selected',
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       dropdownKey: const Key('conversation_dropdown'),
                       items: conversationState.conversations.map((conversation) {
+                        final isSelected = conversationState.selectedConversationIds.contains(conversation.id);
                         return DropdownMenuItem<String>(
                           value: conversation.id,
-                          child: Text(
-                            conversation.name,
-                            style: AppTextStyle.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected ? AppIcons.check : AppIcons.add,
+                                size: 16,
+                                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                conversation.name,
+                                style: AppTextStyle.bodyMedium.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
                         if (newValue != null) {
-                          context.read<ConversationBloc>().add(SelectMultipleConversations({newValue}));
+                          final currentSelected = Set<String>.from(conversationState.selectedConversationIds);
+                          if (currentSelected.contains(newValue)) {
+                            // Remove if already selected (toggle off)
+                            currentSelected.remove(newValue);
+                          } else {
+                            // Add if not selected (toggle on)
+                            currentSelected.add(newValue);
+                          }
+                          context.read<ConversationBloc>().add(SelectMultipleConversations(currentSelected));
                         }
                       },
                     );
