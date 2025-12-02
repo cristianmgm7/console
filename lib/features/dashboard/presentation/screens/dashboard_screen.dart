@@ -226,10 +226,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildErrorListeners(),
 
               // Right-side circular progress indicator
-              Positioned(
+              const Positioned(
                 top: 100,
                 right: 24,
-                child: const CircularDownloadProgressWidget(),
+                child: CircularDownloadProgressWidget(),
               ),
             ],
           ),

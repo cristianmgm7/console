@@ -144,7 +144,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       );
     } on Exception catch (e, stack) {
       _logger.e('Error loading messages from multiple conversations', error: e, stackTrace: stack);
-      emit(MessageError('Failed to load messages: ${e.toString()}'));
+      emit(MessageError('Failed to load messages: $e'));
     }
   }
 
@@ -245,7 +245,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     } on Exception catch (e, stack) {
       _logger.e('Error loading more messages', error: e, stackTrace: stack);
       emit(currentState.copyWith(isLoadingMore: false));
-      emit(MessageError('Failed to load more messages: ${e.toString()}'));
+      emit(MessageError('Failed to load more messages: $e')); 
     }
   }
 
