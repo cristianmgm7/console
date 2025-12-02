@@ -196,6 +196,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context.read<DownloadBloc>().add(StartDownloadTranscripts(messagesToDownload));
   }
 
+  void _onDownloadMessage(String messageId) {
+    // Start download for single message
+    context.read<DownloadBloc>().add(StartDownloadAudio({messageId}));
+  }
+
   void _onSummarize() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -271,6 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 selectAll: _selectAll,
                 onManualLoadMore: _onManualLoadMore,
                 onViewDetail: _onViewDetail,
+                onDownloadMessage: _onDownloadMessage,
                 onDownloadAudio: _onDownloadAudio,
                 onDownloadTranscript: _onDownloadTranscript,
                 onSummarize: _onSummarize,
@@ -308,6 +314,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     selectAll: _selectAll,
                     onManualLoadMore: _onManualLoadMore,
                     onViewDetail: _onViewDetail,
+                    onDownloadMessage: _onDownloadMessage,
                     onDownloadAudio: _onDownloadAudio,
                     onDownloadTranscript: _onDownloadTranscript,
                     onSummarize: _onSummarize,

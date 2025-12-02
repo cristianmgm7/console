@@ -6,6 +6,7 @@ export 'buttons/app_button.dart';
 export 'buttons/app_icon_button.dart';
 export 'buttons/app_outlined_button.dart';
 export 'buttons/app_text_button.dart';
+export 'buttons/message_play_button.dart';
 // Cards
 export 'cards/app_card.dart';
 export 'cards/app_interactive_card.dart';
