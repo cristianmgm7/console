@@ -33,3 +33,4 @@ class VoiceMemoError extends VoiceMemoState {
   @override
   List<Object?> get props => [message];
 }
+

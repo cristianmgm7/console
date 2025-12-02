@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
-import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
+import 'package:carbon_voice_console/features/messages/domain/usecases/get_messages_from_conversations_usecase.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart';
 // Remove LoadMessageDetail import - now handled by MessageDetailBloc
 // import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_event.dart';
@@ -14,8 +14,8 @@ import 'package:logger/logger.dart';
 @injectable
 class MessageBloc extends Bloc<MessageEvent, MessageState> {
   MessageBloc(
-    this._messageRepository,
     this._userRepository,
+    this._getMessagesFromConversationsUsecase,
     this._logger,
   ) : super(const MessageInitial()) {
     on<LoadMessages>(_onLoadMessages);
@@ -24,8 +24,8 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     on<ConversationSelectedEvent>(_onConversationSelected);
   }
 
-  final MessageRepository _messageRepository;
   final UserRepository _userRepository;
+  final GetMessagesFromConversationsUsecase _getMessagesFromConversationsUsecase;
   final Logger _logger;
   final int _messagesPerPage = 50;
   Set<String> _currentConversationIds = {};
@@ -106,7 +106,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       // Initialize cursors for new conversations (null = start from now)
       final cursors = {for (final id in event.conversationIds) id: null};
 
-      final result = await _messageRepository.getMessagesFromConversations(
+      final result = await _getMessagesFromConversationsUsecase(
         conversationCursors: cursors,
         count: _messagesPerPage,
       );
@@ -186,7 +186,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
 
     try {
       // Use current cursors for pagination
-      final result = await _messageRepository.getMessagesFromConversations(
+      final result = await _getMessagesFromConversationsUsecase(
         conversationCursors: _conversationCursors,
         count: _messagesPerPage,
       );
