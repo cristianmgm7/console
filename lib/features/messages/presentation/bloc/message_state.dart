@@ -22,23 +22,27 @@ class MessageLoaded extends MessageState {
     required this.messages,
     this.isLoadingMore = false,
     this.hasMoreMessages = true,
+    this.oldestMessageTimestamp,
   });
   final List<MessageUiModel> messages;
   final bool isLoadingMore;
   final bool hasMoreMessages;
+  final DateTime? oldestMessageTimestamp;
 
   @override
-  List<Object?> get props => [messages, isLoadingMore, hasMoreMessages];
+  List<Object?> get props => [messages, isLoadingMore, hasMoreMessages, oldestMessageTimestamp];
 
   MessageLoaded copyWith({
     List<MessageUiModel>? messages,
     bool? isLoadingMore,
     bool? hasMoreMessages,
+    DateTime? oldestMessageTimestamp,
   }) {
     return MessageLoaded(
       messages: messages ?? this.messages,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMoreMessages: hasMoreMessages ?? this.hasMoreMessages,
+      oldestMessageTimestamp: oldestMessageTimestamp ?? this.oldestMessageTimestamp,
     );
   }
 }

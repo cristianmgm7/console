@@ -72,8 +72,12 @@ This document tracks the API endpoints used in the application and their require
 - API returns `201 Created` for successful POST requests (not just `200 OK`)
 - Response is a direct array, not wrapped in an object
 
-### Get Messages (Sequential)
+### Get Messages (Sequential) - DEPRECATED
 **Endpoint:** `GET /v3/messages/{conversationId}/sequential/{start}/{stop}`
+
+**Status:** ⚠️ DEPRECATED - Use `POST /v3/messages/recent` instead
+
+This endpoint is no longer used in the application. Use the `POST /v3/messages/recent` endpoint for proper reverse-chronological ordering and cursor-based pagination.
 
 **Parameters:**
 - `conversationId`: Channel/conversation ID

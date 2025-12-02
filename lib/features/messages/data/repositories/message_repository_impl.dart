@@ -18,38 +18,27 @@ class MessageRepositoryImpl implements MessageRepository {
   // In-memory cache: conversationId -> messages (ordered)
   final Map<String, List<Message>> _cachedMessages = {};
 
-  // Track loaded ranges per conversation: conversationId -> Set<(start, stop)>
-  final Map<String, Set<String>> _loadedRanges = {};
 
   @override
-  Future<Result<List<Message>>> getMessages({
+  Future<Result<List<Message>>> getRecentMessages({
     required String conversationId,
-    required int start,
-    required int count,
+    int count = 50,
+    DateTime? beforeTimestamp,
   }) async {
     try {
-      final stop = start + count;
-      final rangeKey = '$start-$stop';
+      // Convert DateTime to ISO8601 string if provided
+      final beforeTimestampStr = beforeTimestamp?.toIso8601String();
 
-      // Check if we already loaded this range
-      if (_loadedRanges[conversationId]?.contains(rangeKey) ?? false) {
-        final cached = _cachedMessages[conversationId] ?? [];
-        return success(cached.where((m) {
-          // Filter messages in the requested range
-          // This is a simple filter; you may need sequence numbers from API
-          return true; // For now, return all cached
-        }).toList(),);
-      }
-
-      final messageDtos = await _remoteDataSource.getMessages(
+      final messageDtos = await _remoteDataSource.getRecentMessages(
         conversationId: conversationId,
-        start: start,
         count: count,
+        direction: 'older',
+        beforeTimestamp: beforeTimestampStr,
       );
 
       final messages = messageDtos.map((dto) => dto.toDomain()).toList();
 
-      // Merge with cache, removing duplicates
+      // Merge with cache
       final existingMessages = _cachedMessages[conversationId] ?? [];
       final allMessages = <Message>[...existingMessages];
 
@@ -62,19 +51,18 @@ class MessageRepositoryImpl implements MessageRepository {
       // Sort by date (newest first)
       allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-      // Cache the result
+      // Update cache
       _cachedMessages[conversationId] = allMessages;
-      _loadedRanges.putIfAbsent(conversationId, () => {}).add(rangeKey);
 
       return success(messages);
     } on ServerException catch (e) {
-      _logger.e('Server error fetching messages', error: e);
+      _logger.e('Server error fetching recent messages', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
     } on NetworkException catch (e) {
-      _logger.e('Network error fetching messages', error: e);
+      _logger.e('Network error fetching recent messages', error: e);
       return failure(NetworkFailure(details: e.message));
     } on Exception catch (e, stack) {
-      _logger.e('Unknown error fetching messages', error: e, stackTrace: stack);
+      _logger.e('Unknown error fetching recent messages', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
     }
   }
@@ -118,20 +106,22 @@ class MessageRepositoryImpl implements MessageRepository {
       final removedConversations = cachedConversationIds.difference(conversationIds);
       for (final removedId in removedConversations) {
         _cachedMessages.remove(removedId);
-        _loadedRanges.remove(removedId);
       }
 
-      // Fetch messages from each conversation using sequential pagination
+      // Fetch messages from each conversation using recent endpoint
       for (final conversationId in conversationIds) {
         try {
-          final messageDtos = await _remoteDataSource.getMessages(
+          final result = await getRecentMessages(
             conversationId: conversationId,
-            start: 0, // Start from the beginning (most recent)
             count: count,
           );
 
-          final messages = messageDtos.map((dto) => dto.toDomain()).toList();
-          allMessages.addAll(messages);
+          if (result.isSuccess) {
+            final messages = result.valueOrNull!;
+            allMessages.addAll(messages);
+          } else {
+            _logger.w('Failed to fetch messages from $conversationId: ${result.failureOrNull}');
+          }
         } on Exception catch (e) {
           // Log warning but continue with other conversations
           _logger.e('Failed to fetch messages from $conversationId: $e');
@@ -151,12 +141,10 @@ class MessageRepositoryImpl implements MessageRepository {
   /// Clears message cache for a specific conversation
   void clearCacheForConversation(String conversationId) {
     _cachedMessages.remove(conversationId);
-    _loadedRanges.remove(conversationId);
   }
 
   /// Clears all message cache
   void clearCache() {
     _cachedMessages.clear();
-    _loadedRanges.clear();
   }
 }

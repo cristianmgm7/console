@@ -16,48 +16,61 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<List<MessageDto>> getMessages({
+  Future<List<MessageDto>> getRecentMessages({
     required String conversationId,
-    required int start,
-    required int count,
+    int count = 50,
+    String direction = 'older',
+    String? beforeTimestamp,
   }) async {
     try {
-      final stop = start + count;
+      // Build request body
+      final requestBody = {
+        'channel_guid': conversationId,
+        'count': count,
+        'direction': direction,
+      };
 
-      final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/v3/messages/$conversationId/sequential/$start/$stop',
+      // Add optional beforeTimestamp for pagination cursor
+      if (beforeTimestamp != null) {
+        requestBody['before'] = beforeTimestamp;
+      }
+
+      final response = await _httpService.post(
+        '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
+        body: jsonEncode(requestBody),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
 
         // API returns: [{message}, {message}, ...]
         if (data is! List) {
           throw FormatException(
-            'Expected List but got ${data.runtimeType} for messages endpoint',
+            'Expected List but got ${data.runtimeType} for recent messages endpoint',
           );
         }
-        final messagesJson = data;
-        // Convert each message JSON to DTO with error handling
+
         try {
-          final messagesdto = messagesJson.map((json) => MessageDto.fromJson(json as Map<String, dynamic>)).toList();
-          return messagesdto;
+          final messageDtos = data
+              .map((json) => MessageDto.fromJson(json as Map<String, dynamic>))
+              .toList();
+          return messageDtos;
         } on Exception catch (e, stack) {
-          _logger.e('Failed to parse messages: $e', error: e, stackTrace: stack);
+          _logger.e('Failed to parse recent messages: $e', error: e, stackTrace: stack);
           throw ServerException(statusCode: 422, message: 'Failed to parse messages: $e');
         }
       } else {
-        _logger.e('Failed to fetch messages: ${response.statusCode}');
+        _logger.e('Failed to fetch recent messages: ${response.statusCode}');
         throw ServerException(
           statusCode: response.statusCode,
-          message: 'Failed to fetch messages',
+          message: 'Failed to fetch recent messages',
         );
       }
     } on ServerException {
       rethrow;
     } on Exception catch (e, stack) {
-      _logger.e('Network error fetching messages', error: e, stackTrace: stack);
-      throw NetworkException(message: 'Failed to fetch messages: $e');
+      _logger.e('Network error fetching recent messages', error: e, stackTrace: stack);
+      throw NetworkException(message: 'Failed to fetch recent messages: $e');
     }
   }
 

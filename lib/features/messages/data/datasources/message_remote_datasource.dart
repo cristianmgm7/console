@@ -4,13 +4,18 @@ import 'package:carbon_voice_console/features/messages/data/models/api/message_d
 
 /// Abstract interface for message remote data operations
 abstract class MessageRemoteDataSource {
-  /// Fetches messages using sequential pagination from the API
+  /// Fetches recent messages for a conversation using cursor-based pagination
+  /// [conversationId] - The conversation/channel ID
+  /// [count] - Number of messages to fetch (default: 50)
+  /// [direction] - "older" or "newer" (default: "older")
+  /// [beforeTimestamp] - Optional ISO8601 timestamp to fetch messages before this time (for pagination)
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
-  Future<List<MessageDto>> getMessages({
+  Future<List<MessageDto>> getRecentMessages({
     required String conversationId,
-    required int start,
-    required int count,
+    int count = 50,
+    String direction = 'older',
+    String? beforeTimestamp,
   });
 
   /// Fetches a single message by ID
