@@ -1,7 +1,4 @@
 import 'dart:async';
-
-import 'package:carbon_voice_console/core/di/injection.dart';
-import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
@@ -32,7 +29,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final Set<String> _selectedMessages = {};
   bool _selectAll = false;
-  final ScrollController _scrollController = ScrollController();
   late final StreamSubscription<WorkspaceState> _workspaceSubscription;
   late final StreamSubscription<ConversationState> _conversationSubscription;
 
@@ -42,7 +38,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     _setupBlocCommunication();
   }
 
@@ -50,7 +45,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _workspaceSubscription.cancel();
     _conversationSubscription.cancel();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -114,12 +108,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.9) {
-      // Near bottom, load more
-      context.read<MessageBloc>().add(const msg_events.LoadMoreMessages());
-    }
-  }
 
   void _toggleSelectAll(int messageCount, {bool? value}) {
     setState(() {
@@ -152,6 +140,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _selectedMessages.clear();
       _selectAll = false;
     });
+  }
+
+  void _onManualLoadMore() {
+    context.read<MessageBloc>().add(const msg_events.LoadMoreMessages());
   }
 
   void _onDownloadAudio() {
@@ -273,11 +265,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             builder: (context, messageState) {
               return DashboardContent(
                 isAnyBlocLoading: _isAnyBlocLoading,
-                scrollController: _scrollController,
                 selectedMessages: _selectedMessages,
                 onToggleMessageSelection: _toggleMessageSelection,
                 onToggleSelectAll: _toggleSelectAll,
                 selectAll: _selectAll,
+                onManualLoadMore: _onManualLoadMore,
                 onViewDetail: _onViewDetail,
                 onDownloadAudio: _onDownloadAudio,
                 onDownloadTranscript: _onDownloadTranscript,
@@ -310,11 +302,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 builder: (context, messageState) {
                   return DashboardContent(
                     isAnyBlocLoading: _isAnyBlocLoading,
-                    scrollController: _scrollController,
                     selectedMessages: _selectedMessages,
                     onToggleMessageSelection: _toggleMessageSelection,
                     onToggleSelectAll: _toggleSelectAll,
                     selectAll: _selectAll,
+                    onManualLoadMore: _onManualLoadMore,
                     onViewDetail: _onViewDetail,
                     onDownloadAudio: _onDownloadAudio,
                     onDownloadTranscript: _onDownloadTranscript,

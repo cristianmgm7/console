@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart';
@@ -30,6 +29,9 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   final Logger _logger;
   final int _messagesPerPage = 50;
   Set<String> _currentConversationIds = {};
+
+  // Track oldest timestamp per conversation for pagination
+  final Map<String, DateTime> _conversationCursors = {};
 
   /// Cache for user profiles to avoid repeated API calls
   final Map<String, User> _profileCache = {};
@@ -71,9 +73,10 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     ConversationSelectedEvent event,
     Emitter<MessageState> emit,
   ) async {
-    // If no conversations are selected, clear the messages immediately
+    // If no conversations are selected, clear everything
     if (event.conversationIds.isEmpty) {
       _currentConversationIds = {};
+      _conversationCursors.clear(); // Clear cursors
       emit(const MessageLoaded(messages: []));
       return;
     }
@@ -81,6 +84,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     // Only load messages if the conversation selection has actually changed
     if (_currentConversationIds != event.conversationIds) {
       _currentConversationIds = event.conversationIds;
+      _conversationCursors.clear(); // Clear cursors on conversation change
       add(LoadMessages(event.conversationIds));
     }
   }
@@ -91,25 +95,64 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   ) async {
     emit(const MessageLoading());
     _currentConversationIds = event.conversationIds;
+    _conversationCursors.clear(); // Reset cursors on new load
 
-    final result = await _messageRepository.getMessagesFromConversations(
-      conversationIds: event.conversationIds,
-      count: _messagesPerPage,
-    );
+    if (event.conversationIds.isEmpty) {
+      emit(const MessageLoaded(messages: []));
+      return;
+    }
 
-    if (result.isSuccess) {
-      final messages = result.valueOrNull!;
-      await _loadUsersAndEmit(messages, emit);
-    } else {
-      _logger.e('Failed to load messages: ${result.failureOrNull}');
-      emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
+    try {
+      final allMessages = <Message>[];
+
+      // Fetch from each conversation using recent endpoint
+      for (final conversationId in event.conversationIds) {
+        final result = await _messageRepository.getRecentMessages(
+          conversationId: conversationId,
+          count: _messagesPerPage,
+        );
+
+        if (result.isSuccess) {
+          final messages = result.valueOrNull!;
+          allMessages.addAll(messages);
+
+          // Track oldest timestamp for this conversation
+          if (messages.isNotEmpty) {
+            final oldestInConversation = messages
+                .map((m) => m.createdAt)
+                .reduce((a, b) => a.isBefore(b) ? a : b);
+            _conversationCursors[conversationId] = oldestInConversation;
+          }
+        } else {
+          _logger.w('Failed to fetch messages from $conversationId: ${result.failureOrNull}');
+          // Continue with other conversations
+        }
+      }
+
+      // Sort all messages by date (newest first)
+      allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      // Calculate overall oldest timestamp
+      final oldestTimestamp = allMessages.isNotEmpty
+          ? allMessages.map((m) => m.createdAt).reduce((a, b) => a.isBefore(b) ? a : b)
+          : null;
+
+      await _loadUsersAndEmit(
+        allMessages,
+        emit,
+        oldestTimestamp: oldestTimestamp,
+      );
+    } on Exception catch (e, stack) {
+      _logger.e('Error loading messages from multiple conversations', error: e, stackTrace: stack);
+      emit(MessageError('Failed to load messages: ${e.toString()}'));
     }
   }
 
   Future<void> _loadUsersAndEmit(
     List<Message> messages,
-    Emitter<MessageState> emit,
-  ) async {
+    Emitter<MessageState> emit, {
+    DateTime? oldestTimestamp,
+  }) async {
     final userIds = messages.map((m) => m.userId).toSet();
     final userMap = await _getUsersWithCache(userIds);
 
@@ -121,6 +164,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     emit(MessageLoaded(
       messages: enrichedMessages,
       hasMoreMessages: messages.length == _messagesPerPage,
+      oldestMessageTimestamp: oldestTimestamp,
     ),);
   }
 
@@ -135,23 +179,52 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
 
     emit(currentState.copyWith(isLoadingMore: true));
 
-    // For pagination with multiple conversations, we load more from all selected conversations
-    final result = await _messageRepository.getMessagesFromConversations(
-      conversationIds: _currentConversationIds,
-      count: _messagesPerPage,
-    );
+    try {
+      final newMessages = <Message>[];
 
-    if (result.isSuccess) {
-      final newMessages = result.valueOrNull!;
+      // Fetch next page from each conversation using its cursor
+      for (final conversationId in _currentConversationIds) {
+        final beforeTimestamp = _conversationCursors[conversationId];
+
+        final result = await _messageRepository.getRecentMessages(
+          conversationId: conversationId,
+          count: _messagesPerPage,
+          beforeTimestamp: beforeTimestamp,
+        );
+
+        if (result.isSuccess) {
+          final messages = result.valueOrNull!;
+          newMessages.addAll(messages);
+
+          // Update cursor for this conversation
+          if (messages.isNotEmpty) {
+            final oldestInConversation = messages
+                .map((m) => m.createdAt)
+                .reduce((a, b) => a.isBefore(b) ? a : b);
+            _conversationCursors[conversationId] = oldestInConversation;
+          }
+        } else {
+          _logger.w('Failed to fetch more messages from $conversationId: ${result.failureOrNull}');
+        }
+      }
+
       if (newMessages.isEmpty) {
         emit(currentState.copyWith(
           isLoadingMore: false,
           hasMoreMessages: false,
-        ),);
+        ));
         return;
       }
 
-      // Load new users and enrich messages
+      // Sort new messages by date (newest first)
+      newMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      // Calculate new overall oldest timestamp
+      final newOldestTimestamp = newMessages.isNotEmpty
+          ? newMessages.map((m) => m.createdAt).reduce((a, b) => a.isBefore(b) ? a : b)
+          : currentState.oldestMessageTimestamp;
+
+      // Load users and enrich messages
       final newUserIds = newMessages.map((m) => m.userId).toSet();
       final newUserMap = await _getUsersWithCache(newUserIds);
 
@@ -160,17 +233,19 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
         return message.toUiModel(creator);
       }).toList();
 
+      // Append to existing messages
       final allMessages = [...currentState.messages, ...newEnrichedMessages];
 
       emit(currentState.copyWith(
         messages: allMessages,
         isLoadingMore: false,
-        hasMoreMessages: newMessages.length == _messagesPerPage,
+        hasMoreMessages: newMessages.length >= _messagesPerPage,
+        oldestMessageTimestamp: newOldestTimestamp,
       ));
-    } else {
+    } on Exception catch (e, stack) {
+      _logger.e('Error loading more messages', error: e, stackTrace: stack);
       emit(currentState.copyWith(isLoadingMore: false));
-      _logger.e('Failed to load more messages: ${result.failureOrNull}');
-      emit(MessageError(FailureMapper.mapToMessage(result.failureOrNull!)));
+      emit(MessageError('Failed to load more messages: ${e.toString()}'));
     }
   }
 

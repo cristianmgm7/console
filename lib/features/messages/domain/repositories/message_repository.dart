@@ -3,14 +3,15 @@ import 'package:carbon_voice_console/features/messages/domain/entities/message.d
 
 /// Repository interface for message operations
 abstract class MessageRepository {
-  /// Fetches messages for a conversation using sequential pagination
+  /// Fetches recent messages for a conversation using cursor-based pagination
   /// [conversationId] - The conversation/channel ID
-  /// [start] - Starting sequence number (0-based)
-  /// [count] - Number of messages to fetch
-  Future<Result<List<Message>>> getMessages({
+  /// [count] - Number of messages to fetch (default: 50)
+  /// [beforeTimestamp] - Optional timestamp to fetch messages before (for pagination)
+  /// Returns messages sorted by createdAt (newest first)
+  Future<Result<List<Message>>> getRecentMessages({
     required String conversationId,
-    required int start,
-    required int count,
+    int count = 50,
+    DateTime? beforeTimestamp,
   });
 
   /// Fetches a single message by ID
@@ -24,5 +25,5 @@ abstract class MessageRepository {
   Future<Result<List<Message>>> getMessagesFromConversations({
     required Set<String> conversationIds,
     int count = 50,
-  }); 
+  });
 }

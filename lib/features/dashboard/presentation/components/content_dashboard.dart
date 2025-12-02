@@ -7,6 +7,7 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/dashboard/presentation/components/pagination_controls.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
@@ -19,11 +20,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class DashboardContent extends StatelessWidget {
   const DashboardContent({
     required this.isAnyBlocLoading,
-    required this.scrollController,
     required this.selectedMessages,
     required this.onToggleMessageSelection,
     required this.onToggleSelectAll,
     required this.selectAll,
+    required this.onManualLoadMore,
     this.onViewDetail,
     this.onDownloadAudio,
     this.onDownloadTranscript,
@@ -32,12 +33,12 @@ class DashboardContent extends StatelessWidget {
     super.key,
   });
 
-  final ScrollController scrollController;
   final Set<String> selectedMessages;
   final void Function(String, {bool? value}) onToggleMessageSelection;
   final void Function(int length, {bool? value}) onToggleSelectAll;
   final bool selectAll;
   final bool Function(BuildContext context) isAnyBlocLoading;
+  final VoidCallback onManualLoadMore;
   final ValueChanged<String>? onViewDetail;
   final VoidCallback? onDownloadAudio;
   final VoidCallback? onDownloadTranscript;
@@ -279,20 +280,17 @@ class DashboardContent extends StatelessWidget {
         }).toList(),
       );
 
-      // Add loading indicator below the table if loading more
-      if (messageState.isLoadingMore) {
-        return Column(
-          children: [
-            tableWidget,
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: AppProgressIndicator()),
-            ),
-          ],
-        );
-      }
-
-      return tableWidget;
+      // Always show pagination controls below the table (replaces loading indicator)
+      return Column(
+        children: [
+          tableWidget,
+          PaginationControls(
+            onLoadMore: onManualLoadMore,
+            hasMore: messageState.hasMoreMessages,
+            isLoading: messageState.isLoadingMore,
+          ),
+        ],
+      );
     }
 
     // Show initial state with progressive loading hints
