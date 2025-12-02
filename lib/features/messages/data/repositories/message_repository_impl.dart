@@ -18,7 +18,6 @@ class MessageRepositoryImpl implements MessageRepository {
   // In-memory cache: conversationId -> messages (ordered)
   final Map<String, List<Message>> _cachedMessages = {};
 
-
   @override
   Future<Result<List<Message>>> getRecentMessages({
     required String conversationId,
@@ -26,7 +25,6 @@ class MessageRepositoryImpl implements MessageRepository {
     DateTime? beforeTimestamp,
   }) async {
     try {
-
       // If no timestamp provided, use current time as starting point
       final effectiveTimestamp = beforeTimestamp ?? DateTime.now();
       final beforeTimestampStr = effectiveTimestamp.toIso8601String();
@@ -38,6 +36,9 @@ class MessageRepositoryImpl implements MessageRepository {
       );
 
       final messages = messageDtos.map((dto) => dto.toDomain()).toList();
+
+      // Ensure messages are sorted by date (newest first)
+      messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       // Merge with cache
       final existingMessages = _cachedMessages[conversationId] ?? [];
@@ -68,10 +69,11 @@ class MessageRepositoryImpl implements MessageRepository {
   @override
   Future<Result<Message>> getMessage(String messageId, {bool includePreSignedUrls = false}) async {
     try {
-
-      final messageDetailDto = await _remoteDataSource.getMessage(messageId, includePreSignedUrls: includePreSignedUrls);
+      final messageDetailDto = await _remoteDataSource.getMessage(
+        messageId,
+        includePreSignedUrls: includePreSignedUrls,
+      );
       final message = messageDetailDto.toDomain();
-
 
       return success(message);
     } on ServerException catch (e) {
@@ -82,17 +84,23 @@ class MessageRepositoryImpl implements MessageRepository {
       return failure(NetworkFailure(details: e.message));
     } on FormatException catch (e) {
       _logger.w('Invalid message data from API: ${e.message}');
-      final serverFailure = ServerFailure(statusCode: 422, details: 'Invalid message data received from server: ${e.message}');
+      final serverFailure = ServerFailure(
+        statusCode: 422,
+        details: 'Invalid message data received from server: ${e.message}',
+      );
       return failure<Message>(serverFailure);
     } on Exception catch (e, stack) {
-      _logger.e('Unknown error fetching message - Exception caught: ${e.runtimeType}: $e', stackTrace: stack);
+      _logger.e(
+        'Unknown error fetching message - Exception caught: ${e.runtimeType}: $e',
+        stackTrace: stack,
+      );
       return failure(UnknownFailure(details: e.toString()));
     }
   }
 
   @override
   Future<Result<List<Message>>> getMessagesFromConversations({
-    required Set<String> conversationIds,
+    required Map<String, DateTime?> conversationCursors,
     int count = 50,
   }) async {
     try {
@@ -101,15 +109,20 @@ class MessageRepositoryImpl implements MessageRepository {
       // Clear cache for conversations that are no longer selected
       // This ensures we don't show stale data when switching conversations
       final cachedConversationIds = _cachedMessages.keys.toSet();
-      final removedConversations = cachedConversationIds.difference(conversationIds);
+      final requestedConversationIds = conversationCursors.keys.toSet();
+      final removedConversations = cachedConversationIds.difference(requestedConversationIds);
       removedConversations.forEach(_cachedMessages.remove);
 
       // Fetch messages from each conversation using recent endpoint
-      for (final conversationId in conversationIds) {
+      for (final entry in conversationCursors.entries) {
+        final conversationId = entry.key;
+        final beforeTimestamp = entry.value;
+
         try {
           final result = await getRecentMessages(
             conversationId: conversationId,
             count: count,
+            beforeTimestamp: beforeTimestamp,
           );
 
           if (result.isSuccess) {
