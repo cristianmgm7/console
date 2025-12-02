@@ -1,23 +1,22 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/utils/date_time_formatters.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
-import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/pagination_controls.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class DashboardContent extends StatelessWidget {
+class DashboardContent extends StatefulWidget {
   const DashboardContent({
     required this.isAnyBlocLoading,
     required this.selectedMessages,
@@ -26,6 +25,7 @@ class DashboardContent extends StatelessWidget {
     required this.selectAll,
     required this.onManualLoadMore,
     this.onViewDetail,
+    this.onDownloadMessage,
     this.onDownloadAudio,
     this.onDownloadTranscript,
     this.onSummarize,
@@ -40,73 +40,26 @@ class DashboardContent extends StatelessWidget {
   final bool Function(BuildContext context) isAnyBlocLoading;
   final VoidCallback onManualLoadMore;
   final ValueChanged<String>? onViewDetail;
+  final ValueChanged<String>? onDownloadMessage;
   final VoidCallback? onDownloadAudio;
   final VoidCallback? onDownloadTranscript;
   final VoidCallback? onSummarize;
   final VoidCallback? onAIChat;
 
-  String _formatDate(DateTime date) {
-    final hour = date.hour;
-    final minute = date.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+  @override
+  State<DashboardContent> createState() => _DashboardContentState();
+}
 
-    return '$displayHour:$minute $period ${date.month}/${date.day}/${date.year % 100}';
+class _DashboardContentState extends State<DashboardContent> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
 
-  Widget _buildPlayButton(BuildContext context, MessageUiModel message, AudioPlayerState audioState) {
-    final isCurrentMessage = audioState is AudioPlayerReady && audioState.messageId == message.id;
-    final isPlaying = isCurrentMessage && audioState.isPlaying;
-
-    return AppIconButton(
-      icon: isPlaying ? AppIcons.pause : AppIcons.play,
-      tooltip: isPlaying ? 'Pause audio' : 'Play audio',
-      onPressed: () => _handleAudioAction(context, message, audioState),
-      foregroundColor: isCurrentMessage ? AppColors.primary : AppColors.primary.withValues(alpha: 0.7),
-      size: AppIconButtonSize.small,
-    );
-  }
-
-  Future<void> _handleAudioAction(BuildContext context, MessageUiModel message, AudioPlayerState audioState) async {
-    final audioBloc = context.read<AudioPlayerBloc>();
-    final isCurrentMessage = audioState is AudioPlayerReady && audioState.messageId == message.id;
-
-    if (isCurrentMessage) {
-      // Toggle play/pause for current message
-      if (audioState.isPlaying) {
-        audioBloc.add(const PauseAudio());
-      } else {
-        audioBloc.add(const PlayAudio());
-      }
-    } else {
-      // Load and play new message
-      await _handlePlayAudio(context, message);
-    }
-  }
-
-  Future<void> _handlePlayAudio(BuildContext context, MessageUiModel message) async {
-    if (!message.hasPlayableAudio || message.audioUrl == null) return;
-
-    // Get the audio player BLoC
-    final audioBloc = context.read<AudioPlayerBloc>();
-
-    // Load audio - let the BLoC fetch the pre-signed URL
-    audioBloc.add(
-      LoadAudio(
-        messageId: message.id,
-        waveformData: message.playableAudioModel?.waveformData ?? [],
-      ),
-    );
-
-    // Auto-play after loading (no modal shown)
-    audioBloc.add(const PlayAudio());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,25 +79,25 @@ class DashboardContent extends StatelessWidget {
           ),
 
           // Action panel - only show when messages are selected
-          if (selectedMessages.isNotEmpty && onDownloadAudio != null)
+          if (widget.selectedMessages.isNotEmpty && widget.onDownloadAudio != null)
             Positioned(
               bottom: 24,
               left: 0,
               right: 0,
               child: Center(
                 child: MessagesActionPanel(
-                  selectedCount: selectedMessages.length,
-                  onDownloadAudio: onDownloadAudio!,
-                  onDownloadTranscript: onDownloadTranscript ?? () {},
-                  onSummarize: onSummarize ?? () {},
-                  onAIChat: onAIChat ?? () {},
+                  selectedCount: widget.selectedMessages.length,
+                  onDownloadAudio: widget.onDownloadAudio!,
+                  onDownloadTranscript: widget.onDownloadTranscript ?? () {},
+                  onSummarize: widget.onSummarize ?? () {},
+                  onAIChat: widget.onAIChat ?? () {},
                 ),
               ),
             ),
 
           // Mini player - show when audio is ready
           Positioned(
-            bottom: selectedMessages.isNotEmpty ? 100 : 24,
+            bottom: widget.selectedMessages.isNotEmpty ? 100 : 24,
             left: 0,
             right: 0,
             child: const Center(
@@ -158,7 +111,7 @@ class DashboardContent extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, MessageState messageState, AudioPlayerState audioState) {
     // Show loading when any bloc is loading
-    if (isAnyBlocLoading(context)) {
+    if (widget.isAnyBlocLoading(context)) {
       return const Center(child: AppProgressIndicator());
     }
 
@@ -184,9 +137,9 @@ class DashboardContent extends StatelessWidget {
       }
 
       final tableWidget = AppTable(
-        selectAll: selectAll,
+        selectAll: widget.selectAll,
         onSelectAllChanged: (value) =>
-            onToggleSelectAll(messageState.messages.length, value: value),
+            widget.onToggleSelectAll(messageState.messages.length, value: value),
         columns: const [
           AppTableColumn(
             title: 'Date',
@@ -215,25 +168,25 @@ class DashboardContent extends StatelessWidget {
         ],
         rows: messageState.messages.map((message) {
           return AppTableRow(
-            selected: selectedMessages.contains(message.id),
+            selected: widget.selectedMessages.contains(message.id),
             onSelectChanged: (selected) =>
-                onToggleMessageSelection(message.id, value: selected),
+                widget.onToggleMessageSelection(message.id, value: selected),
             cells: [
               // Date
               Text(
-                _formatDate(message.createdAt),
+                DateTimeFormatters.formatDate(message.createdAt),
                 style: AppTextStyle.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
                 ),
               ),
 
               // Play
-              if (message.hasPlayableAudio) _buildPlayButton(context, message, audioState)
+              if (message.hasPlayableAudio) MessagePlayButton(message: message, audioState: audioState)
               else const SizedBox.shrink(),
 
               // Duration
               Text(
-                _formatDuration(message.duration),
+                DateTimeFormatters.formatDuration(message.duration),
                 style: AppTextStyle.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
                 ),
@@ -263,14 +216,14 @@ class DashboardContent extends StatelessWidget {
                   AppIconButton(
                     icon: AppIcons.eye,
                     tooltip: 'View Details',
-                    onPressed: () => onViewDetail?.call(message.id),
+                    onPressed: () => widget.onViewDetail?.call(message.id),
                     size: AppIconButtonSize.small,
                   ),
                   const SizedBox(width: 4),
                   AppIconButton(
                     icon: AppIcons.download,
                     tooltip: 'Download',
-                    onPressed: () => {}, // TODO: Implement download action
+                    onPressed: () => widget.onDownloadMessage?.call(message.id),
                     size: AppIconButtonSize.small,
                   ),
                 ],
@@ -283,9 +236,15 @@ class DashboardContent extends StatelessWidget {
       // Always show pagination controls below the table (replaces loading indicator)
       return Column(
         children: [
-          tableWidget,
+          // Make the table scrollable
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: tableWidget,
+            ),
+          ),
           PaginationControls(
-            onLoadMore: onManualLoadMore,
+            onLoadMore: widget.onManualLoadMore,
             hasMore: messageState.hasMoreMessages,
             isLoading: messageState.isLoadingMore,
           ),
