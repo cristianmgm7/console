@@ -32,7 +32,6 @@ class MessageRepositoryImpl implements MessageRepository {
       final messageDtos = await _remoteDataSource.getRecentMessages(
         conversationId: conversationId,
         count: count,
-        direction: 'older',
         beforeTimestamp: beforeTimestampStr,
       );
 
@@ -104,9 +103,7 @@ class MessageRepositoryImpl implements MessageRepository {
       // This ensures we don't show stale data when switching conversations
       final cachedConversationIds = _cachedMessages.keys.toSet();
       final removedConversations = cachedConversationIds.difference(conversationIds);
-      for (final removedId in removedConversations) {
-        _cachedMessages.remove(removedId);
-      }
+      removedConversations.forEach(_cachedMessages.remove);
 
       // Fetch messages from each conversation using recent endpoint
       for (final conversationId in conversationIds) {
