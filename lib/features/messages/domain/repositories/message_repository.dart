@@ -17,13 +17,12 @@ abstract class MessageRepository {
   /// Fetches a single message by ID
   Future<Result<Message>> getMessage(String messageId, {bool includePreSignedUrls = false});
 
-
   /// Fetches messages from multiple conversations, merged and sorted by date
-  /// [conversationIds] - Set of conversation IDs to fetch from
+  /// [conversationCursors] - Map of conversation ID to the last loaded message timestamp (or null for first page)
   /// [count] - Number of messages to fetch per conversation (default: 50)
   /// Returns merged list sorted by createdAt (newest first)
   Future<Result<List<Message>>> getMessagesFromConversations({
-    required Set<String> conversationIds,
+    required Map<String, DateTime?> conversationCursors,
     int count = 50,
   });
 }
