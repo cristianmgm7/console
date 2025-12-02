@@ -57,7 +57,7 @@ class CircularDownloadProgressWidget extends StatelessWidget {
                   value: state.progressPercent / 100,
                   strokeWidth: 8,
                   backgroundColor: AppColors.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
                 // Percentage text
                 Text(

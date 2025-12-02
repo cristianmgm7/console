@@ -42,30 +42,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         // But might be wrapped in an object like {messages: [...]} or {items: [...]}
         List<dynamic> messagesList;
 
-        if (data is List) {
-          messagesList = data;
-        } else if (data is Map<String, dynamic>) {
-          // Check for common wrapper keys
-          if (data.containsKey('messages')) {
-            messagesList = data['messages'] as List<dynamic>;
-            _logger.d('🔵 Found messages array with ${messagesList.length} items');
-          } else if (data.containsKey('items')) {
-            messagesList = data['items'] as List<dynamic>;
-            _logger.d('🔵 Found items array with ${messagesList.length} items');
-          } else if (data.containsKey('data')) {
-            messagesList = data['data'] as List<dynamic>;
-            _logger.d('🔵 Found data array with ${messagesList.length} items');
-          } else {
-            _logger.e('🔴 Unknown response structure. Keys found: ${data.keys.join(", ")}');
-            throw FormatException(
-              'Expected array or object with messages/items/data key, got: ${data.keys.join(", ")}',
-            );
-          }
-        } else {
-          throw FormatException(
-            'Expected List or Map but got ${data.runtimeType} for recent messages endpoint',
-          );
-        }
+        messagesList = data as List<dynamic>;
 
         try {
           final messageDtos = messagesList

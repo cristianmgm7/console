@@ -98,54 +98,6 @@ class MessageRepositoryImpl implements MessageRepository {
     }
   }
 
-  @override
-  Future<Result<List<Message>>> getMessagesFromConversations({
-    required Map<String, DateTime?> conversationCursors,
-    int count = 50,
-  }) async {
-    try {
-      final allMessages = <Message>[];
-
-      // Clear cache for conversations that are no longer selected
-      // This ensures we don't show stale data when switching conversations
-      final cachedConversationIds = _cachedMessages.keys.toSet();
-      final requestedConversationIds = conversationCursors.keys.toSet();
-      final removedConversations = cachedConversationIds.difference(requestedConversationIds);
-      removedConversations.forEach(_cachedMessages.remove);
-
-      // Fetch messages from each conversation using recent endpoint
-      for (final entry in conversationCursors.entries) {
-        final conversationId = entry.key;
-        final beforeTimestamp = entry.value;
-
-        try {
-          final result = await getRecentMessages(
-            conversationId: conversationId,
-            count: count,
-            beforeTimestamp: beforeTimestamp,
-          );
-
-          if (result.isSuccess) {
-            final messages = result.valueOrNull!;
-            allMessages.addAll(messages);
-          } else {
-            _logger.w('Failed to fetch messages from $conversationId: ${result.failureOrNull}');
-          }
-        } on Exception catch (e) {
-          // Log warning but continue with other conversations
-          _logger.e('Failed to fetch messages from $conversationId: $e');
-        }
-      }
-
-      // Sort all messages by date (newest first)
-      allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      return success(allMessages);
-    } on Exception catch (e, stack) {
-      _logger.e('Error fetching messages from multiple conversations', error: e, stackTrace: stack);
-      return failure(UnknownFailure(details: e.toString()));
-    }
-  }
 
   /// Clears message cache for a specific conversation
   void clearCacheForConversation(String conversationId) {
