@@ -28,6 +28,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
   final GetMessagesFromConversationsUsecase _getMessagesFromConversationsUsecase;
   final Logger _logger;
   final int _messagesPerPage = 50;
+  
   Set<String> _currentConversationIds = {};
 
   // Track oldest timestamp per conversation for pagination

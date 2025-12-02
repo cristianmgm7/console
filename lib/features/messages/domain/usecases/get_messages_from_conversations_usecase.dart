@@ -53,10 +53,18 @@ class GetMessagesFromConversationsUsecase {
         }
       }
 
-      // Sort all messages by date (newest first)
-      allMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      // Filter out deleted and inactive messages
+      final activeMessages = allMessages.where((message) {
+        // Filter out messages that have been deleted or are not active
+        return message.deletedAt == null && message.status.toLowerCase() == 'active';
+      }).toList();
 
-      return success(allMessages);
+      _logger.d('Filtered ${allMessages.length - activeMessages.length} deleted/inactive messages, keeping ${activeMessages.length} active messages');
+
+      // Sort all messages by date (newest first)
+      activeMessages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return success(activeMessages);
     } on Exception catch (e, stack) {
       _logger.e('Error fetching messages from multiple conversations', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
