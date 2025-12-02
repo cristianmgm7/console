@@ -19,41 +19,101 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   Future<List<MessageDto>> getRecentMessages({
     required String conversationId,
     int count = 50,
-    String direction = 'older',
+    String direction = 'newer',  // Use 'newer' for initial load to get most recent messages
     String? beforeTimestamp,
   }) async {
     try {
-      // Build request body
+      // Build request body according to actual API specification
       final requestBody = {
-        'channel_guid': conversationId,
-        'count': count,
+        'channel_id': conversationId,
+        'limit': count,
         'direction': direction,
+        'use_last_updated': true,
       };
 
-      // Add optional beforeTimestamp for pagination cursor
+      // Add optional date for pagination cursor (ISO8601 timestamp)
       if (beforeTimestamp != null) {
-        requestBody['before'] = beforeTimestamp;
+        requestBody['date'] = beforeTimestamp;
       }
+
+      _logger.d('🔵 Fetching recent messages with params: $requestBody');
+      _logger.d('🔵 IMPORTANT: Requesting messages for channel_id: ${requestBody['channel_id']}');
 
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
-        body: jsonEncode(requestBody),
+        body: requestBody, // AuthenticatedHttpService handles JSON encoding
       );
+
+      _logger.d('🔵 Response status: ${response.statusCode}');
+      _logger.d('🔵 Response body length: ${response.body.length}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
 
+        // DEBUG: Log the actual response structure
+        _logger.d('🔵 Response type: ${data.runtimeType}');
+
+        if (data is Map<String, dynamic>) {
+          _logger.d('🔵 Response keys: ${data.keys.join(", ")}');
+          data.forEach((key, value) {
+            if (value is List) {
+              _logger.d('🔵   $key: List with ${value.length} items');
+            } else if (value is Map) {
+              _logger.d('🔵   $key: Map with keys ${(value as Map).keys.join(", ")}');
+            } else {
+              _logger.d('🔵   $key: ${value.runtimeType} = $value');
+            }
+          });
+        } else if (data is List) {
+          _logger.d('🔵 Response is List with ${data.length} items');
+        }
+
         // API returns: [{message}, {message}, ...]
-        if (data is! List) {
+        // But might be wrapped in an object like {messages: [...]} or {items: [...]}
+        List<dynamic> messagesList;
+
+        if (data is List) {
+          messagesList = data;
+        } else if (data is Map<String, dynamic>) {
+          // Check for common wrapper keys
+          if (data.containsKey('messages')) {
+            messagesList = data['messages'] as List<dynamic>;
+            _logger.d('🔵 Found messages array with ${messagesList.length} items');
+          } else if (data.containsKey('items')) {
+            messagesList = data['items'] as List<dynamic>;
+            _logger.d('🔵 Found items array with ${messagesList.length} items');
+          } else if (data.containsKey('data')) {
+            messagesList = data['data'] as List<dynamic>;
+            _logger.d('🔵 Found data array with ${messagesList.length} items');
+          } else {
+            _logger.e('🔴 Unknown response structure. Keys found: ${data.keys.join(", ")}');
+            throw FormatException(
+              'Expected array or object with messages/items/data key, got: ${data.keys.join(", ")}',
+            );
+          }
+        } else {
           throw FormatException(
-            'Expected List but got ${data.runtimeType} for recent messages endpoint',
+            'Expected List or Map but got ${data.runtimeType} for recent messages endpoint',
           );
         }
 
         try {
-          final messageDtos = data
+          final messageDtos = messagesList
               .map((json) => MessageDto.fromJson(json as Map<String, dynamic>))
               .toList();
+
+          _logger.d('Successfully parsed ${messageDtos.length} messages');
+
+          // DEBUG: Log the channel IDs from the response to verify filtering
+          if (messageDtos.isNotEmpty) {
+            final channelIds = messageDtos.map((dto) {
+              final json = messagesList[messageDtos.indexOf(dto)] as Map<String, dynamic>;
+              return json['channel_ids'] ?? json['channel_id'] ?? 'unknown';
+            }).toSet();
+            _logger.d('🔵 Unique channel IDs in response: $channelIds');
+            _logger.d('🔵 Expected channel_guid: $conversationId');
+          }
+
           return messageDtos;
         } on Exception catch (e, stack) {
           _logger.e('Failed to parse recent messages: $e', error: e, stackTrace: stack);

@@ -10,9 +10,11 @@ This document tracks the API endpoints used in the application and their require
 **Request Body:**
 ```json
 {
-  "channel_guid": "string (required)",
-  "count": "number (optional, default: 50)",
-  "direction": "string (required) - must be 'older' or 'newer'"
+  "channel_id": "string (required)",
+  "limit": "number (optional, default: 50)",
+  "direction": "string (required) - must be 'older' or 'newer'",
+  "date": "ISO8601 string (optional) - cursor for pagination",
+  "use_last_updated": "boolean (required) - must be true"
 }
 ```
 
@@ -66,7 +68,10 @@ This document tracks the API endpoints used in the application and their require
 - `duration_ms` → `duration` (convert milliseconds to seconds)
 
 **Notes:**
-- `channel_guid` uses snake_case (not `channelId`)
+- `channel_id` uses snake_case (not `channelId` or `channel_guid`)
+- `limit` parameter replaces `count` in API specification
+- `date` parameter replaces `before` for pagination cursor (ISO8601 timestamp)
+- `use_last_updated` must be set to `true`
 - `direction` is required and must be either "older" or "newer"
 - For recent messages, use `direction: "newer"` to get the most recent messages first
 - API returns `201 Created` for successful POST requests (not just `200 OK`)
