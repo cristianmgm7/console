@@ -44,6 +44,7 @@ extension MessageDtoMapper on MessageDto {
       notes: notes ?? '',
       lastUpdatedAt: lastUpdatedAt,
       parentMessageId: parentMessageId,
+      deletedAt: deletedAt,
     );
   }
 }
@@ -131,6 +132,7 @@ extension MessageDetailDtoMapper on MessageDetailDto {
       isTextMessage: false,
       notes: (aiSummary?.isNotEmpty ?? false) ? aiSummary! : (transcript ?? ''),
       lastUpdatedAt: updatedAt,
+      deletedAt: null, // MessageDetailDto doesn't include deletedAt
     );
   }
 }

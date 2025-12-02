@@ -22,6 +22,7 @@ class Message extends Equatable {
     this.notes = '',
     this.lastUpdatedAt,
     this.parentMessageId,
+    this.deletedAt,
   });
 
   final String id;
@@ -41,6 +42,7 @@ class Message extends Equatable {
   final String notes;
   final DateTime? lastUpdatedAt;
   final String? parentMessageId;
+  final DateTime? deletedAt;
 
   // Domain-level computed properties (simple aliases)
   String get conversationId => channelIds.isNotEmpty ? channelIds.first : '';
