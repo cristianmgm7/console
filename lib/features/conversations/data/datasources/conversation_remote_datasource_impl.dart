@@ -3,8 +3,8 @@ import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
+import 'package:carbon_voice_console/dtos/conversation_dto.dart';
 import 'package:carbon_voice_console/features/conversations/data/datasources/conversation_remote_datasource.dart';
-import 'package:carbon_voice_console/features/conversations/data/models/conversation_model.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -16,7 +16,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<List<ConversationModel>> getConversations(String workspaceId) async {
+  Future<List<ConversationDto>> getConversations(String workspaceId) async {
     try {
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/channels/$workspaceId',
@@ -30,7 +30,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         if (data is List) {
           conversationsJson = data;
         } else if (data is Map<String, dynamic>) {
-          conversationsJson = data['channels'] as List<dynamic>? ?? data['data'] as List<dynamic>;
+          conversationsJson = data['channels'] as List<dynamic>? ?? data['data'] as List<dynamic>? ?? [];
         } else {
           throw const FormatException('Unexpected response format');
         }
@@ -38,7 +38,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         final conversations = conversationsJson
             .map((json) {
               final normalized = JsonNormalizer.normalizeConversation(json as Map<String, dynamic>);
-              return ConversationModel.fromJson(normalized);
+              return ConversationDto.fromJson(normalized);
             })
             .toList();
 
@@ -60,7 +60,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   }
 
   @override
-  Future<ConversationModel> getConversation(String conversationId) async {
+  Future<ConversationDto> getConversation(String conversationId) async {
     try {
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/channel/$conversationId',
@@ -69,7 +69,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final normalized = JsonNormalizer.normalizeConversation(data);
-        final conversation = ConversationModel.fromJson(normalized);
+        final conversation = ConversationDto.fromJson(normalized);
         return conversation;
       } else {
         // Log only errors or exceptions
