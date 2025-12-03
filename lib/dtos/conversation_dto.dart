@@ -293,6 +293,8 @@ class ConversationCollaboratorDto {
     this.primaryLanguage,
   });
 
+  factory ConversationCollaboratorDto.fromJson(Map<String, dynamic> json) => _$ConversationCollaboratorDtoFromJson(json);
+
   @JsonKey(name: 'user_guid')
   final String? userGuid;
 
@@ -322,8 +324,6 @@ class ConversationCollaboratorDto {
   @JsonKey(name: 'primary_language')
   final String? primaryLanguage;
 
-  factory ConversationCollaboratorDto.fromJson(Map<String, dynamic> json) => _$ConversationCollaboratorDtoFromJson(json);
-
   Map<String, dynamic> toJson() => _$ConversationCollaboratorDtoToJson(this);
 }
 
@@ -336,6 +336,8 @@ class ConversationAvatarsDto {
     this.numColumns,
   });
 
+  factory ConversationAvatarsDto.fromJson(Map<String, dynamic> json) => _$ConversationAvatarsDtoFromJson(json);
+
   final List<ConversationAvatarDto>? avatars;
 
   @JsonKey(name: 'numRows')
@@ -343,8 +345,6 @@ class ConversationAvatarsDto {
 
   @JsonKey(name: 'numColumns')
   final int? numColumns;
-
-  factory ConversationAvatarsDto.fromJson(Map<String, dynamic> json) => _$ConversationAvatarsDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationAvatarsDtoToJson(this);
 }
@@ -359,6 +359,8 @@ class ConversationAvatarDto {
     this.text,
   });
 
+  factory ConversationAvatarDto.fromJson(Map<String, dynamic> json) => _$ConversationAvatarDtoFromJson(json);
+
   final List<String>? children;
   final String? type;
 
@@ -366,8 +368,6 @@ class ConversationAvatarDto {
   final String? imageUrl;
 
   final String? text;
-
-  factory ConversationAvatarDto.fromJson(Map<String, dynamic> json) => _$ConversationAvatarDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationAvatarDtoToJson(this);
 }
@@ -389,6 +389,8 @@ class ConversationAttachmentDto {
     this.lengthInBytes,
     this.location,
   });
+
+  factory ConversationAttachmentDto.fromJson(Map<String, dynamic> json) => _$ConversationAttachmentDtoFromJson(json);
 
   @JsonKey(name: '_id')
   final String? id;
@@ -421,8 +423,6 @@ class ConversationAttachmentDto {
 
   final ConversationLocationDto? location;
 
-  factory ConversationAttachmentDto.fromJson(Map<String, dynamic> json) => _$ConversationAttachmentDtoFromJson(json);
-
   Map<String, dynamic> toJson() => _$ConversationAttachmentDtoToJson(this);
 }
 
@@ -434,10 +434,10 @@ class ConversationLocationDto {
     this.longitude,
   });
 
+  factory ConversationLocationDto.fromJson(Map<String, dynamic> json) => _$ConversationLocationDtoFromJson(json);
+
   final double? latitude;
   final double? longitude;
-
-  factory ConversationLocationDto.fromJson(Map<String, dynamic> json) => _$ConversationLocationDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationLocationDtoToJson(this);
 }
@@ -455,6 +455,8 @@ class ConversationChannelSpanDto {
     this.topic,
   });
 
+  factory ConversationChannelSpanDto.fromJson(Map<String, dynamic> json) => _$ConversationChannelSpanDtoFromJson(json);
+
   final String? id;
   final String? begin;
   final String? end;
@@ -468,8 +470,6 @@ class ConversationChannelSpanDto {
   final String? type;
   final String? topic;
 
-  factory ConversationChannelSpanDto.fromJson(Map<String, dynamic> json) => _$ConversationChannelSpanDtoFromJson(json);
-
   Map<String, dynamic> toJson() => _$ConversationChannelSpanDtoToJson(this);
 }
 
@@ -482,6 +482,8 @@ class ConversationSummaryDto {
     this.items,
   });
 
+  factory ConversationSummaryDto.fromJson(Map<String, dynamic> json) => _$ConversationSummaryDtoFromJson(json);
+
   @JsonKey(name: 'channel_id')
   final String? channelId;
 
@@ -489,8 +491,6 @@ class ConversationSummaryDto {
   final String? spanId;
 
   final List<ConversationSummaryItemDto>? items;
-
-  factory ConversationSummaryDto.fromJson(Map<String, dynamic> json) => _$ConversationSummaryDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationSummaryDtoToJson(this);
 }
@@ -504,13 +504,13 @@ class ConversationSummaryItemDto {
     this.type,
   });
 
+  factory ConversationSummaryItemDto.fromJson(Map<String, dynamic> json) => _$ConversationSummaryItemDtoFromJson(json);
+
   @JsonKey(name: 'user_id')
   final String? userId;
 
   final String? text;
   final String? type;
-
-  factory ConversationSummaryItemDto.fromJson(Map<String, dynamic> json) => _$ConversationSummaryItemDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationSummaryItemDtoToJson(this);
 }
@@ -523,14 +523,14 @@ class ConversationAsyncStatsDto {
     this.userStats,
   });
 
+  factory ConversationAsyncStatsDto.fromJson(Map<String, dynamic> json) => _$ConversationAsyncStatsDtoFromJson(json);
+
   @JsonKey(name: 'channel_stats')
   final ConversationChannelStatsDto? channelStats;
 
   @JsonKey(name: 'user_stats')
   @UserStatsListConverter()
   final List<ConversationUserStatsDto>? userStats;
-
-  factory ConversationAsyncStatsDto.fromJson(Map<String, dynamic> json) => _$ConversationAsyncStatsDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationAsyncStatsDtoToJson(this);
 }
@@ -545,6 +545,8 @@ class ConversationChannelStatsDto {
     this.totalMessagesPosted,
     this.totalUsers,
   });
+
+  factory ConversationChannelStatsDto.fromJson(Map<String, dynamic> json) => _$ConversationChannelStatsDtoFromJson(json);
 
   @JsonKey(name: 'total_duration_milliseconds')
   final int? totalDurationMilliseconds;
@@ -561,8 +563,6 @@ class ConversationChannelStatsDto {
   @JsonKey(name: 'total_users')
   final int? totalUsers;
 
-  factory ConversationChannelStatsDto.fromJson(Map<String, dynamic> json) => _$ConversationChannelStatsDtoFromJson(json);
-
   Map<String, dynamic> toJson() => _$ConversationChannelStatsDtoToJson(this);
 }
 
@@ -578,6 +578,8 @@ class ConversationUserStatsDto {
     this.totalHeardMessages,
     this.totalUnheardMessages,
   });
+
+  factory ConversationUserStatsDto.fromJson(Map<String, dynamic> json) => _$ConversationUserStatsDtoFromJson(json);
 
   @JsonKey(name: 'user_id')
   final String? userId;
@@ -600,8 +602,6 @@ class ConversationUserStatsDto {
   @JsonKey(name: 'total_unheard_messages')
   final int? totalUnheardMessages;
 
-  factory ConversationUserStatsDto.fromJson(Map<String, dynamic> json) => _$ConversationUserStatsDtoFromJson(json);
-
   Map<String, dynamic> toJson() => _$ConversationUserStatsDtoToJson(this);
 }
 
@@ -613,10 +613,10 @@ class ConversationSourceDto {
     this.value,
   });
 
+  factory ConversationSourceDto.fromJson(Map<String, dynamic> json) => _$ConversationSourceDtoFromJson(json);
+
   final String? type;
   final String? value;
-
-  factory ConversationSourceDto.fromJson(Map<String, dynamic> json) => _$ConversationSourceDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ConversationSourceDtoToJson(this);
 }
