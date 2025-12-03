@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_animations.dart';
 import 'package:carbon_voice_console/core/theme/app_borders.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:flutter/material.dart';
 
 enum AppOutlinedButtonSize { small, medium, large }
 

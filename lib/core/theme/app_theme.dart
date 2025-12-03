@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
-import 'app_text_style.dart';
-import 'app_borders.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/theme/app_borders.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {

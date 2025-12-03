@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_borders.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_dimensions.dart';
+import 'package:flutter/material.dart';
 
 class AppContainer extends StatelessWidget {
   const AppContainer({

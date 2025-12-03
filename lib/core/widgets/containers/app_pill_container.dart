@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:flutter/material.dart';
 
 class AppPillContainer extends StatelessWidget {
   const AppPillContainer({

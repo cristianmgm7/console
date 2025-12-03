@@ -54,7 +54,6 @@ class SideNavigationBar extends StatelessWidget {
                 tooltip: 'Settings',
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.surface,
-                size: AppIconButtonSize.medium,
               ),
             ),
           ),
@@ -94,7 +93,6 @@ class _NavigationItem extends StatelessWidget {
           tooltip: label,
           backgroundColor: Colors.transparent,
           foregroundColor: isSelected ? AppColors.primary : AppColors.textSecondary,
-          size: AppIconButtonSize.medium,
         ),
       ),
     );

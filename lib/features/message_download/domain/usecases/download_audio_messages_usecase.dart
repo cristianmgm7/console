@@ -161,7 +161,7 @@ class DownloadAudioMessagesUsecase {
     final messageId = message.id;
     final parentId = message.parentMessageId ?? 'none';
 
-    return '${dateStr}_cid_${channelId}_${messageId}_pid_${parentId}.mp3';
+    return '${dateStr}_cid_${channelId}_${messageId}_pid_$parentId.mp3';
   }
 
   /// Process download response and save the file

@@ -5,14 +5,8 @@ class AudioModel extends Equatable {
   const AudioModel({
     required this.id,
     required this.url,
-    this.presignedUrl,
+    required this.isStreaming, required this.language, required this.duration, required this.waveformData, required this.isOriginal, required this.format, this.presignedUrl,
     this.presignedUrlExpiration,
-    required this.isStreaming,
-    required this.language,
-    required this.duration,
-    required this.waveformData,
-    required this.isOriginal,
-    required this.format,
   });
 
   final String id;

@@ -6,13 +6,10 @@ part 'audio_model_dto.g.dart';
 @JsonSerializable()
 class AudioModelDto {
   const AudioModelDto({
-    this.id,
-    required this.url,
+    required this.url, required this.durationMs, required this.waveformPercentages, this.id,
     this.streamingUrl,
     this.presignedUrl,
     this.presignedUrlExpiration,
-    required this.durationMs,
-    required this.waveformPercentages,
     this.language,
     this.isOriginalAudio,
     this.extension,
