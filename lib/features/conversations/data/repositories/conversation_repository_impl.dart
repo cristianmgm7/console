@@ -2,6 +2,7 @@ import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/conversations/data/datasources/conversation_remote_datasource.dart';
+import 'package:carbon_voice_console/features/conversations/data/mappers/conversation_dto_mapper.dart';
 import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 import 'package:carbon_voice_console/features/conversations/domain/repositories/conversation_repository.dart';
 import 'package:injectable/injectable.dart';
@@ -26,14 +27,10 @@ class ConversationRepositoryImpl implements ConversationRepository {
         return success(_cachedConversations[workspaceId]!);
       }
 
-      final conversationModels = await _remoteDataSource.getConversations(workspaceId);
+      final conversationDtos = await _remoteDataSource.getConversations(workspaceId);
 
-      // Assign color indices to conversations (0-9 for 10 distinct colors)
-      final conversations = conversationModels
-          .asMap()
-          .entries
-          .map((entry) => entry.value.toEntity(assignedColorIndex: entry.key % 10))
-          .toList();
+      // Convert DTOs to domain entities
+      final conversations = conversationDtos.map((dto) => dto.toDomain()).toList();
 
       // Cache the result
       _cachedConversations[workspaceId] = conversations;
@@ -63,8 +60,9 @@ class ConversationRepositoryImpl implements ConversationRepository {
         }
       }
 
-      final conversationModel = await _remoteDataSource.getConversation(conversationId);
-      return success(conversationModel.toEntity());
+      final conversationDto = await _remoteDataSource.getConversation(conversationId);
+      final conversation = conversationDto.toDomain();
+      return success(conversation);
     } on ServerException catch (e) {
       _logger.e('Server error fetching conversation', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));

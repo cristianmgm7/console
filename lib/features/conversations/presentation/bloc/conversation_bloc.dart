@@ -50,17 +50,10 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
         final selected = conversations.first;
 
-        final colorMap = <String, int>{};
-        for (final conversation in conversations) {
-          if (conversation.colorIndex != null) {
-            colorMap[conversation.id] = conversation.colorIndex!;
-          }
-        }
-
         emit(ConversationLoaded(
           conversations: conversations,
           selectedConversationIds: {selected.id},
-          conversationColorMap: colorMap,
+          conversationColorMap: {},
         ),);
         // State change will trigger dashboard screen to notify MessageBloc
       },
