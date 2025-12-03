@@ -361,7 +361,7 @@ class ConversationAvatarDto {
 
   factory ConversationAvatarDto.fromJson(Map<String, dynamic> json) => _$ConversationAvatarDtoFromJson(json);
 
-  final List<String>? children;
+  final List<ConversationAvatarDto>? children;
   final String? type;
 
   @JsonKey(name: 'image_url')

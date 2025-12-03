@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/dtos/conversation_dto.dart';
 import 'package:carbon_voice_console/features/conversations/data/datasources/conversation_remote_datasource.dart';
 import 'package:injectable/injectable.dart';
@@ -36,10 +35,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         }
 
         final conversations = conversationsJson
-            .map((json) {
-              final normalized = JsonNormalizer.normalizeConversation(json as Map<String, dynamic>);
-              return ConversationDto.fromJson(normalized);
-            })
+            .map((json) => ConversationDto.fromJson(json as Map<String, dynamic>))
             .toList();
 
         return conversations;
@@ -68,8 +64,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final normalized = JsonNormalizer.normalizeConversation(data);
-        final conversation = ConversationDto.fromJson(normalized);
+        final conversation = ConversationDto.fromJson(data);
         return conversation;
       } else {
         // Log only errors or exceptions

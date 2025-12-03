@@ -357,7 +357,7 @@ class ConversationAvatar extends Equatable {
     this.text,
   });
 
-  final List<String>? children;
+  final List<ConversationAvatar>? children;
   final String? type;
   final String? imageUrl;
   final String? text;

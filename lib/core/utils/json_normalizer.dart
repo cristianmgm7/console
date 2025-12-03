@@ -12,17 +12,12 @@ class JsonNormalizer {
   }
 
   /// Normalizes conversation JSON from API format to our expected format
-  /// Note: With the new DTO-based approach, most normalization is handled by json_serializable.
-  /// This method now mainly ensures backward compatibility and handles any remaining edge cases.
+  /// @deprecated Use ConversationDto.fromJson() directly instead.
+  /// DTOs with json_serializable now handle field mapping automatically.
+  @Deprecated('Use ConversationDto.fromJson() directly - DTOs handle field mapping now')
   static Map<String, dynamic> normalizeConversation(Map<String, dynamic> json) {
-    // For the new DTO approach, we mainly need to ensure the JSON is in a format
-    // that json_serializable can handle. Most field mapping is done via @JsonKey annotations.
-    final normalized = Map<String, dynamic>.from(json);
-
-    // Handle any backward compatibility mappings that might still be needed
-    // The DTOs handle most of this now via json_serializable annotations
-
-    return normalized;
+    // Pass through unchanged - DTOs handle the mapping now
+    return Map<String, dynamic>.from(json);
   }
 
   /// Normalizes message JSON from API format to our expected format

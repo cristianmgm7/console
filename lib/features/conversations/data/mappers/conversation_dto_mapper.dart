@@ -4,14 +4,14 @@ import 'package:carbon_voice_console/features/conversations/domain/entities/conv
 /// Extension methods to convert ConversationDto to domain entities
 extension ConversationDtoMapper on ConversationDto {
   Conversation toDomain() {
-    // Use channelGuid as primary ID, fallback to channel_guid or a default
-    final id = channelGuid ?? channelGuid ?? 'unknown';
+    // Use channelGuid as primary ID
+    final id = channelGuid ?? 'unknown';
 
-    // Use channelName as primary name, fallback to channel_name
-    final name = channelName ?? channelName ?? 'Unknown Conversation';
+    // Use channelName as primary name
+    final name = channelName ?? 'Unknown Conversation';
 
-    // Use workspaceGuid as workspaceId, fallback to workspace_guid
-    final workspaceId = workspaceGuid ?? workspaceGuid ?? 'unknown';
+    // Use workspaceGuid as workspaceId
+    final workspaceId = workspaceGuid ?? 'unknown';
 
     return Conversation(
       id: id,
@@ -103,7 +103,7 @@ extension ConversationAvatarsDtoMapper on ConversationAvatarsDto {
 extension ConversationAvatarDtoMapper on ConversationAvatarDto {
   ConversationAvatar toDomain() {
     return ConversationAvatar(
-      children: children,
+      children: children?.map((dto) => dto.toDomain()).toList(),
       type: type,
       imageUrl: imageUrl,
       text: text,
