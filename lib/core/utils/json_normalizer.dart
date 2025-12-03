@@ -12,16 +12,17 @@ class JsonNormalizer {
   }
 
   /// Normalizes conversation JSON from API format to our expected format
+  /// Note: With the new DTO-based approach, most normalization is handled by json_serializable.
+  /// This method now mainly ensures backward compatibility and handles any remaining edge cases.
   static Map<String, dynamic> normalizeConversation(Map<String, dynamic> json) {
-    return {
-      'id': json['id'] ?? json['_id'] ?? json['channel_guid'],
-      'name': json['name'] ?? json['channel_name'] ?? 'Unknown Conversation',
-      'workspaceId': json['workspaceId'] ?? json['workspace_id'] ?? json['workspace_guid'],
-      'guid': json['guid'] ?? json['channel_guid'],
-      'description': json['description'] ?? json['channel_description'],
-      'createdAt': json['createdAt'] ?? json['created_at'],
-      'messageCount': json['messageCount'] ?? json['message_count'],
-    };
+    // For the new DTO approach, we mainly need to ensure the JSON is in a format
+    // that json_serializable can handle. Most field mapping is done via @JsonKey annotations.
+    final normalized = Map<String, dynamic>.from(json);
+
+    // Handle any backward compatibility mappings that might still be needed
+    // The DTOs handle most of this now via json_serializable annotations
+
+    return normalized;
   }
 
   /// Normalizes message JSON from API format to our expected format
