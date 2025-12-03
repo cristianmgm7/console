@@ -126,7 +126,7 @@ class _AppIconButtonState extends State<AppIconButton>
 
     if (widget.tooltip != null) {
       return Tooltip(
-        message: widget.tooltip!,
+        message: widget.tooltip,
         child: button,
       );
     }

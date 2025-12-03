@@ -37,6 +37,8 @@ class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, M
 /// DTO for message from API response
 @JsonSerializable()
 class MessageDto {
+
+  factory MessageDto.fromJson(Map<String, dynamic> json) => _$MessageDtoFromJson(json);
   const MessageDto({
     required this.reactionSummary,
     required this.utmData,
@@ -177,8 +179,6 @@ class MessageDto {
 
   @JsonKey(name: 'folder_id')
   final String? folderId;
-
-  factory MessageDto.fromJson(Map<String, dynamic> json) => _$MessageDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$MessageDtoToJson(this);
 }

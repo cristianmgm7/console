@@ -274,7 +274,7 @@ class _SpeedButton extends StatelessWidget {
           ),
         ),
         PopupMenuItem(
-          value: 1.0,
+          value: 1,
           child: Text(
             '1.0x',
             style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
@@ -302,7 +302,7 @@ class _SpeedButton extends StatelessWidget {
           ),
         ),
         PopupMenuItem(
-          value: 2.0,
+          value: 2,
           child: Text(
             '2.0x',
             style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),

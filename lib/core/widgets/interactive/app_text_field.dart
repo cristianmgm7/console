@@ -48,7 +48,7 @@ class AppTextField extends StatefulWidget {
     this.selectionHeightStyle = ui.BoxHeightStyle.tight,
     this.selectionWidthStyle = ui.BoxWidthStyle.tight,
     this.keyboardAppearance,
-    this.scrollPadding = const EdgeInsets.all(20.0),
+    this.scrollPadding = const EdgeInsets.all(20),
     this.dragStartBehavior = DragStartBehavior.start,
     this.enableInteractiveSelection,
     this.selectionControls,
@@ -216,28 +216,26 @@ class _AppTextFieldState extends State<AppTextField> {
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.borderColor ?? AppColors.border,
-          width: 1.0,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.borderColor ?? AppColors.primary,
-          width: 2.0,
+          width: 2,
         ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.errorColor ?? AppColors.error,
-          width: 1.0,
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.errorColor ?? AppColors.error,
-          width: 2.0,
+          width: 2,
         ),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -273,28 +271,26 @@ class _AppTextFieldState extends State<AppTextField> {
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.borderColor ?? AppColors.border,
-          width: 1.0,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.borderColor ?? AppColors.primary,
-          width: 2.0,
+          width: 2,
         ),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.errorColor ?? AppColors.error,
-          width: 1.0,
         ),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: AppBorders.small,
         borderSide: BorderSide(
           color: widget.errorColor ?? AppColors.error,
-          width: 2.0,
+          width: 2,
         ),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

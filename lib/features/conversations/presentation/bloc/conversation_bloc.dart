@@ -53,7 +53,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
         emit(ConversationLoaded(
           conversations: conversations,
           selectedConversationIds: {selected.id},
-          conversationColorMap: {},
+          conversationColorMap: const {},
         ),);
         // State change will trigger dashboard screen to notify MessageBloc
       },

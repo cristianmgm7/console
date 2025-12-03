@@ -126,13 +126,8 @@ extension MessageDetailDtoMapper on MessageDetailDto {
       textModels: textModels,
       status: status ?? 'unknown',
       type: type ?? 'unknown',
-      lastHeardAt: null,
-      heardDuration: null,
-      totalHeardDuration: null,
-      isTextMessage: false,
       notes: (aiSummary?.isNotEmpty ?? false) ? aiSummary! : (transcript ?? ''),
       lastUpdatedAt: updatedAt,
-      deletedAt: null, // MessageDetailDto doesn't include deletedAt
     );
   }
 }

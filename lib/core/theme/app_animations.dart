@@ -18,11 +18,11 @@ class AppAnimations {
   // Scale values for micro-interactions
   static const double scaleDown = 0.95;
   static const double scaleUp = 1.05;
-  static const double scaleNormal = 1.0;
+  static const double scaleNormal = 1;
   
   // Fade values
-  static const double fadeIn = 1.0;
-  static const double fadeOut = 0.0;
+  static const double fadeIn = 1;
+  static const double fadeOut = 0;
   static const double fadePartial = 0.5;
   
   // Slide offsets

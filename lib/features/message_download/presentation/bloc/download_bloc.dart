@@ -71,7 +71,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     } catch (e, stack) {
       _logger.e('Unexpected error in audio download', error: e, stackTrace: stack);
       emit(DownloadError(
-        'Unexpected error: ${e.toString()}',
+        'Unexpected error: ${e}',
       ),);
     }
   }
@@ -122,7 +122,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     } catch (e, stack) {
       _logger.e('Unexpected error in transcript download', error: e, stackTrace: stack);
       emit(DownloadError(
-        'Unexpected error: ${e.toString()}',
+        'Unexpected error: ${e}',
       ),);
     }
   }

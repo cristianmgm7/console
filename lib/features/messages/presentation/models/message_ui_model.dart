@@ -23,14 +23,9 @@ class MessageUiModel extends Equatable {
     required this.isTextMessage,
     required this.notes,
     required this.lastUpdatedAt,
-    // User profile data
-    this.creator,
     // Computed properties for UI
-    required this.conversationId,
-    required this.userId,
-    required this.text,
-    required this.transcriptText,
-    required this.audioUrl,
+    required this.conversationId, required this.userId, required this.text, required this.transcriptText, required this.audioUrl, // User profile data
+    this.creator,
   });
 
   // Original message properties
