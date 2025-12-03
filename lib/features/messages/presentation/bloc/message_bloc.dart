@@ -113,7 +113,9 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       );
 
       if (result.isSuccess) {
-        final allMessages = result.valueOrNull!;
+        final resultData = result.valueOrNull!;
+        final allMessages = resultData.messages;
+        final hasMoreMessages = resultData.hasMoreMessages;
 
         // Update cursors for each conversation based on the oldest message received for that conversation
         for (final conversationId in event.conversationIds) {
@@ -137,6 +139,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
           allMessages,
           emit,
           oldestTimestamp: oldestTimestamp,
+          hasMoreMessages: hasMoreMessages,
         );
       } else {
         _logger.e('Failed to load messages: ${result.failureOrNull}');
@@ -156,6 +159,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     List<Message> messages,
     Emitter<MessageState> emit, {
     DateTime? oldestTimestamp,
+    bool? hasMoreMessages,
   }) async {
     final userIds = messages.map((m) => m.userId).toSet();
     final userMap = await _getUsersWithCache(userIds);
@@ -168,7 +172,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
     emit(
       MessageLoaded(
         messages: enrichedMessages,
-        hasMoreMessages: messages.length == _messagesPerPage,
+        hasMoreMessages: hasMoreMessages ?? messages.length == _messagesPerPage,
         oldestMessageTimestamp: oldestTimestamp,
       ),
     );
@@ -193,7 +197,9 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       );
 
       if (result.isSuccess) {
-        final newMessages = result.valueOrNull!;
+        final resultData = result.valueOrNull!;
+        final newMessages = resultData.messages;
+        final hasMoreMessages = resultData.hasMoreMessages;
 
         // Update cursors for each conversation
         for (final conversationId in _currentConversationIds) {
@@ -208,6 +214,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
           }
         }
 
+        // If no new messages were fetched, we've reached the end
         if (newMessages.isEmpty) {
           emit(
             currentState.copyWith(
@@ -245,7 +252,7 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
           currentState.copyWith(
             messages: allMessages,
             isLoadingMore: false,
-            hasMoreMessages: newMessages.length >= _messagesPerPage,
+            hasMoreMessages: hasMoreMessages,
             oldestMessageTimestamp: newOldestTimestamp,
           ),
         );
