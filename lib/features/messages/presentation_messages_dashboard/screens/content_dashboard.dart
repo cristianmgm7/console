@@ -7,6 +7,7 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_content.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/components/inline_message_composition_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,6 +20,8 @@ class DashboardContent extends StatefulWidget {
     required this.onToggleSelectAll,
     required this.selectAll,
     required this.onManualLoadMore,
+    required this.hasMoreMessages,
+    required this.isLoadingMore,
     this.onViewDetail,
     this.onReply,
     this.onDownloadMessage,
@@ -42,6 +45,8 @@ class DashboardContent extends StatefulWidget {
   final bool selectAll;
   final bool Function(BuildContext context) isAnyBlocLoading;
   final VoidCallback onManualLoadMore;
+  final bool hasMoreMessages;
+  final bool isLoadingMore;
   final ValueChanged<String>? onViewDetail;
   final void Function(String messageId, String channelId)? onReply;
   final ValueChanged<String>? onDownloadMessage;
@@ -107,6 +112,24 @@ class _DashboardContentState extends State<DashboardContent> {
                 onAIChat: widget.onAIChat ?? () {},
               ),
             ),
+
+          // Pagination controls - positioned on the left side
+          Positioned(
+            bottom: 0,
+            left: 24,
+            child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+              selector: (state) => state is MessageLoaded ? state : null,
+              builder: (context, messageState) {
+                if (messageState == null) return const SizedBox.shrink();
+
+                return PaginationControls(
+                  onLoadMore: widget.onManualLoadMore,
+                  hasMore: widget.hasMoreMessages,
+                  isLoading: widget.isLoadingMore,
+                );
+              },
+            ),
+          ),
 
           // Mini player - positioned at bottom, moves up when composition panel is open
           Positioned(
