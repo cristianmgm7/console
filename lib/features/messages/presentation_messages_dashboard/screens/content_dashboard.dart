@@ -110,6 +110,7 @@ class _DashboardContentState extends State<DashboardContent> {
                 onDownloadTranscript: widget.onDownloadTranscript ?? () {},
                 onSummarize: widget.onSummarize ?? () {},
                 onAIChat: widget.onAIChat ?? () {},
+                onCancel: () => widget.onToggleSelectAll(0, value: false),
               ),
             ),
 

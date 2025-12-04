@@ -15,12 +15,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardAppBar extends StatelessWidget {
   const DashboardAppBar({
-    required this.onRefresh,
     this.onSendMessage,
     super.key,
   });
 
-  final VoidCallback onRefresh;
   final VoidCallback? onSendMessage;
 
   @override
@@ -194,35 +192,6 @@ class DashboardAppBar extends StatelessWidget {
 
           const SizedBox(width: 16),
 
-          // Send Message Button - only show when exactly one conversation is selected
-          if (onSendMessage != null)
-            BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
-              selector: (state) => state is ConversationLoaded ? state : null,
-              builder: (context, conversationState) {
-                if (conversationState == null ||
-                    conversationState.selectedConversationIds.length != 1) {
-                  return const SizedBox.shrink();
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.only(top: 24),
-                  child: AppButton(
-                    onPressed: onSendMessage,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(AppIcons.add, size: 16),
-                        const SizedBox(width: 6),
-                        const Text('Send Message'),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-
-          const SizedBox(width: 16),
-
           // Selected Conversations Display
           Expanded(
             child: Padding(
@@ -258,19 +227,33 @@ class DashboardAppBar extends StatelessWidget {
               ),
             ),
           ),
-          // Refresh button - only show when any bloc is loaded
-          BlocBuilder<WorkspaceBloc, WorkspaceState>(
-            builder: (context, workspaceState) {
-              final hasData = workspaceState is WorkspaceLoaded;
-              if (!hasData) return const SizedBox.shrink();
 
-              return AppIconButton(
-                icon: AppIcons.refresh,
-                onPressed: onRefresh,
-                tooltip: 'Refresh',
-              );
-            },
-          ),
+          // Send Message Button - only show when exactly one conversation is selected
+          if (onSendMessage != null)
+            BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+              selector: (state) => state is ConversationLoaded ? state : null,
+              builder: (context, conversationState) {
+                if (conversationState == null ||
+                    conversationState.selectedConversationIds.length != 1) {
+                  return const SizedBox.shrink();
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 24),
+                  child: AppButton(
+                    onPressed: onSendMessage,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(AppIcons.add, size: 16),
+                        const SizedBox(width: 6),
+                        const Text('Send Message'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
