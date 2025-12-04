@@ -5,7 +5,6 @@ import 'package:carbon_voice_console/core/utils/date_time_formatters.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
@@ -69,126 +68,114 @@ class MessagesContent extends StatelessWidget {
         );
       }
 
-      final tableWidget = AppTable(
-        selectAll: selectAll,
-        onSelectAllChanged: (value) =>
-            onToggleSelectAll(loadedState.messages.length, value: value),
-        columns: const [
-          AppTableColumn(
-            title: 'Date',
-            width: FixedColumnWidth(90),
-          ),
-          AppTableColumn(
-            title: 'Play',
-            width: FixedColumnWidth(60),
-          ),
-          AppTableColumn(
-            title: 'Duration',
-            width: FixedColumnWidth(80),
-          ),
-          AppTableColumn(
-            title: 'Owner',
-            width: FixedColumnWidth(120),
-          ),
-          AppTableColumn(
-            title: 'Summary',
-            width: FlexColumnWidth(),
-          ),
-          AppTableColumn(
-            title: 'Actions',
-            width: FixedColumnWidth(180), // Increased width for horizontal action buttons
-          ),
-        ],
-        rows: loadedState.messages.map((message) {
-          return AppTableRow(
-            selected: selectedMessages.contains(message.id),
-            onSelectChanged: (selected) =>
-                onToggleMessageSelection(message.id, value: selected),
-            cells: [
-              // Date
-              Text(
-                DateTimeFormatters.formatDate(message.createdAt),
-                style: AppTextStyle.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-
-              // Play
-              if (message.hasPlayableAudio) MessagePlayButton(message: message, audioState: audioState)
-              else const SizedBox.shrink(),
-
-              // Duration
-              Text(
-                DateTimeFormatters.formatDuration(message.duration),
-                style: AppTextStyle.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              // Owner
-              Text(
-                message.creator?.name ?? message.creatorId,
-                style: AppTextStyle.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-
-              // Message
-              Text(
-                message.text ?? 'No content',
-                style: AppTextStyle.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              // Horizontal Actions
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AppIconButton(
-                    icon: AppIcons.eye,
-                    tooltip: 'View Details',
-                    onPressed: () => onViewDetail?.call(message.id),
-                    size: AppIconButtonSize.small,
-                  ),
-                  const SizedBox(width: 4),
-                  AppIconButton(
-                    icon: AppIcons.reply,
-                    tooltip: 'Reply',
-                    onPressed: () => onReply?.call(message.id, message.conversationId),
-                    size: AppIconButtonSize.small,
-                  ),
-                  const SizedBox(width: 4),
-                  AppIconButton(
-                    icon: AppIcons.download,
-                    tooltip: 'Download',
-                    onPressed: () => onDownloadMessage?.call(message.id),
-                    size: AppIconButtonSize.small,
-                  ),
-                ],
-              ),
-            ],
-          );
-        }).toList(),
-      );
-
-      // Always show pagination controls below the table (replaces loading indicator)
-      return Column(
-        children: [
-          // Make the table scrollable
-          Expanded(
-            child: SingleChildScrollView(
-              child: tableWidget,
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 60),
+        child: AppTable(
+          selectAll: selectAll,
+          onSelectAllChanged: (value) =>
+              onToggleSelectAll(loadedState.messages.length, value: value),
+          columns: const [
+            AppTableColumn(
+              title: 'Date',
+              width: FixedColumnWidth(90),
             ),
-          ),
-          PaginationControls(
-            onLoadMore: onManualLoadMore,
-            hasMore: loadedState.hasMoreMessages,
-            isLoading: loadedState.isLoadingMore,
-          ),
-        ],
+            AppTableColumn(
+              title: 'Play',
+              width: FixedColumnWidth(60),
+            ),
+            AppTableColumn(
+              title: 'Duration',
+              width: FixedColumnWidth(80),
+            ),
+            AppTableColumn(
+              title: 'Owner',
+              width: FixedColumnWidth(120),
+            ),
+            AppTableColumn(
+              title: 'Summary',
+              width: FlexColumnWidth(),
+            ),
+            AppTableColumn(
+              title: 'Actions',
+              width: FixedColumnWidth(180), // Increased width for horizontal action buttons
+            ),
+          ],
+          rows: loadedState.messages.map((message) {
+            return AppTableRow(
+              selected: selectedMessages.contains(message.id),
+              onSelectChanged: (selected) =>
+                  onToggleMessageSelection(message.id, value: selected),
+              cells: [
+                // Date
+                Text(
+                  DateTimeFormatters.formatDate(message.createdAt),
+                  style: AppTextStyle.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+        
+                // Play
+                if (message.hasPlayableAudio) MessagePlayButton(message: message, audioState: audioState)
+                else const SizedBox.shrink(),
+        
+                // Duration
+                Text(
+                  DateTimeFormatters.formatDuration(message.duration),
+                  style: AppTextStyle.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                // Owner
+                Text(
+                  message.creator?.name ?? message.creatorId,
+                  style: AppTextStyle.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+        
+                // Message
+                Text(
+                  message.text ?? 'No content',
+                  style: AppTextStyle.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Horizontal Actions
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppIconButton(
+                      icon: AppIcons.eye,
+                      tooltip: 'View Details',
+                      onPressed: () => onViewDetail?.call(message.id),
+                      size: AppIconButtonSize.small,
+                    ),
+                    const SizedBox(width: 4),
+                    AppIconButton(
+                      icon: AppIcons.reply,
+                      tooltip: 'Reply',
+                      onPressed: () => onReply?.call(message.id, message.conversationId),
+                      size: AppIconButtonSize.small,
+                    ),
+                    const SizedBox(width: 4),
+                    AppIconButton(
+                      icon: AppIcons.download,
+                      tooltip: 'Download',
+                      onPressed: () => onDownloadMessage?.call(message.id),
+                      size: AppIconButtonSize.small,
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }).toList(),
+        ),
       );
+
+      // Always show paginat
     }
 
     // Show initial state with progressive loading hints
