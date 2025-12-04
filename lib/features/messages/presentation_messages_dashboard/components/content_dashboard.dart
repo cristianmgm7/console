@@ -32,6 +32,7 @@ class DashboardContent extends StatefulWidget {
     this.compositionReplyToMessageId,
     this.onCloseMessageComposition,
     this.onMessageCompositionSuccess,
+    this.onCancelReply,
     super.key,
   });
 
@@ -56,6 +57,7 @@ class DashboardContent extends StatefulWidget {
   final String? compositionReplyToMessageId;
   final VoidCallback? onCloseMessageComposition;
   final VoidCallback? onMessageCompositionSuccess;
+  final VoidCallback? onCancelReply;
 
   @override
   State<DashboardContent> createState() => _DashboardContentState();
@@ -131,6 +133,7 @@ class _DashboardContentState extends State<DashboardContent> {
                   replyToMessageId: widget.compositionReplyToMessageId,
                   onClose: widget.onCloseMessageComposition,
                   onSuccess: widget.onMessageCompositionSuccess,
+                  onCancelReply: widget.onCancelReply,
                 ),
               ),
             ),

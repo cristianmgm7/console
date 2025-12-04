@@ -16,10 +16,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class DashboardAppBar extends StatelessWidget {
   const DashboardAppBar({
     required this.onRefresh,
+    this.onSendMessage,
     super.key,
   });
 
   final VoidCallback onRefresh;
+  final VoidCallback? onSendMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +191,35 @@ class DashboardAppBar extends StatelessWidget {
               ),
             ],
           ),
+
+          const SizedBox(width: 16),
+
+          // Send Message Button - only show when exactly one conversation is selected
+          if (onSendMessage != null)
+            BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+              selector: (state) => state is ConversationLoaded ? state : null,
+              builder: (context, conversationState) {
+                if (conversationState == null ||
+                    conversationState.selectedConversationIds.length != 1) {
+                  return const SizedBox.shrink();
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: AppButton(
+                    onPressed: onSendMessage,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(AppIcons.add, size: 16),
+                        const SizedBox(width: 6),
+                        const Text('Send Message'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
 
           const SizedBox(width: 16),
 
