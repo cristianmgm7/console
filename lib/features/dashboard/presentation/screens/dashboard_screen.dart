@@ -8,12 +8,12 @@ import 'package:carbon_voice_console/features/message_download/presentation/bloc
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
-import 'package:carbon_voice_console/features/messages/presentation/components/reply_message_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_event.dart' as msg_events;
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/components/message_detail_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/components/reply_message_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';

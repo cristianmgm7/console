@@ -1,8 +1,7 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/components/mini_audio_player.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -119,7 +118,6 @@ class MessageDetailView extends StatelessWidget {
                 style: AppTextStyle.titleMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              MiniAudioPlayer(audioUrl: message.audioUrl!),
             ],
           ],
         ),

@@ -56,7 +56,7 @@ extension AudioModelDtoMapper on AudioModelDto {
       url: url,
       presignedUrl: presignedUrl,
       presignedUrlExpiration: presignedUrlExpiration,
-      isStreaming: streamingUrl != null,
+      isStreaming: streaming ?? (streamingUrl != null),
       language: language ?? 'unknown',
       duration: Duration(milliseconds: durationMs),
       waveformData: waveformPercentages,
@@ -67,13 +67,18 @@ extension AudioModelDtoMapper on AudioModelDto {
 }
 
 extension TextModelDtoMapper on TextModelDto {
-  TextModel toDomain() {
+  TextModel? toDomain() {
+    // Only create domain entity if required fields are not null
+    if (type == null || audioId == null || languageId == null || value == null || timecodes == null) {
+      return null;
+    }
+
     return TextModel(
-      type: type,
-      audioId: audioId,
-      language: languageId,
-      text: value,
-      timecodes: timecodes.map((dto) => dto.toDomain()).toList(),
+      type: type!,
+      audioId: audioId!,
+      language: languageId!,
+      text: value!,
+      timecodes: timecodes!.map((dto) => dto.toDomain()).toList(),
     );
   }
 }
