@@ -5,6 +5,7 @@ import 'package:carbon_voice_console/core/network/authenticated_http_service.dar
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_detail_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/send_message_request_dto.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -127,6 +128,41 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
     } on Exception catch (e, stack) {
       _logger.e('Network error fetching message', error: e, stackTrace: stack);
       throw NetworkException(message: 'Failed to fetch message: $e');
+    }
+  }
+
+  @override
+  Future<MessageDto> sendMessage(SendMessageRequestDto request) async {
+    try {
+      final response = await _httpService.post(
+        '${OAuthConfig.apiBaseUrl}/v3/messages/start',
+        body: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        try {
+          // API returns the full message DTO structure
+          final messageDto = MessageDto.fromJson(data);
+          _logger.d('Successfully sent message: ${messageDto.messageId}');
+          return messageDto;
+        } on Exception catch (e, stack) {
+          _logger.e('Failed to parse send message response: $e', error: e, stackTrace: stack);
+          throw ServerException(statusCode: 422, message: 'Failed to parse response: $e');
+        }
+      } else {
+        _logger.e('Failed to send message: ${response.statusCode}');
+        throw ServerException(
+          statusCode: response.statusCode,
+          message: 'Failed to send message: ${response.body}',
+        );
+      }
+    } on ServerException {
+      rethrow;
+    } on Exception catch (e, stack) {
+      _logger.e('Network error sending message', error: e, stackTrace: stack);
+      throw NetworkException(message: 'Failed to send message: $e');
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
 
 /// Repository interface for message operations
 abstract class MessageRepository {
@@ -16,4 +17,8 @@ abstract class MessageRepository {
 
   /// Fetches a single message by ID
   Future<Result<Message>> getMessage(String messageId, {bool includePreSignedUrls = false});
+
+  /// Sends a new message or reply to a conversation
+  /// Returns the created message as a Message entity
+  Future<Result<Message>> sendMessage(SendMessageRequest request);
 }

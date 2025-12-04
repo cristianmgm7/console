@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_detail_dto.dart';
 import 'package:carbon_voice_console/features/messages/data/models/api/message_dto.dart';
+import 'package:carbon_voice_console/features/messages/data/models/api/send_message_request_dto.dart';
 
 /// Abstract interface for message remote data operations
 abstract class MessageRemoteDataSource {
@@ -22,5 +23,11 @@ abstract class MessageRemoteDataSource {
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
   Future<MessageDetailDto> getMessage(String messageId, {bool includePreSignedUrls = false});
+
+  /// Sends a new message or reply
+  /// Returns the created message as MessageDto
+  /// Throws [ServerException] on API errors
+  /// Throws [NetworkException] on network errors
+  Future<MessageDto> sendMessage(SendMessageRequestDto request);
 
 }

@@ -17,7 +17,7 @@ This plan implements the ability to send new messages and reply to existing mess
 
 ### Key Discoveries:
 - API endpoint: `POST /v3/messages/start` requires specific payload structure
-- Existing `MessageDto` is designed for **reading** messages (has fromJson), needs separate DTO for **sending**
+- **API returns the same `MessageDto` structure** for both reading and sending messages - we can reuse it!
 - Table actions are implemented as inline buttons in `AppTableRow` cells
 - Clean architecture enforced: domain → data → presentation layers
 - Authentication handled automatically via `AuthenticatedHttpService`
@@ -41,7 +41,7 @@ This plan implements the ability to send new messages and reply to existing mess
 3. New repository method `sendMessage` in `MessageRepository`
 4. New datasource method in `MessageRemoteDataSource`
 5. New `SendMessageRequestDto` for outgoing payload
-6. New `SendMessageResponseDto` for API response
+6. **Reuse existing `MessageDto`** for API response (matches response schema exactly)
 7. Reply panel UI component with form
 
 ### Verification Criteria:
@@ -78,7 +78,7 @@ This plan implements the ability to send new messages and reply to existing mess
 
 We'll follow the clean architecture pattern used throughout the codebase:
 1. **Bottom-up approach**: Data layer → Domain layer → Presentation layer
-2. **DTOs**: Create separate request/response DTOs for sending messages
+2. **DTOs**: Create `SendMessageRequestDto` for request payload, reuse existing `MessageDto` for response
 3. **BLoC**: Dedicated bloc for send operation (isolated from MessageBloc)
 4. **UI**: Reusable panel component that can be invoked from table actions
 5. **Error Handling**: Consistent with existing patterns (ServerException → ServerFailure → user message)
@@ -185,78 +185,32 @@ class CreateForwardDto {
 
 **Implementation Note**: After creating this file, run code generation to create the `.g.dart` file.
 
-#### 2. Create Send Message Response DTO
-**File**: `lib/features/messages/data/models/api/send_message_response_dto.dart`
-
-```dart
-import 'package:json_annotation/json_annotation.dart';
-
-part 'send_message_response_dto.g.dart';
-
-/// DTO for the response after sending a message
-/// Note: We're only capturing essential fields, not the entire message response
-@JsonSerializable()
-class SendMessageResponseDto {
-  const SendMessageResponseDto({
-    required this.messageId,
-    required this.createdAt,
-    this.creatorId,
-    this.channelIds,
-    this.workspaceIds,
-    this.parentMessageId,
-  });
-
-  factory SendMessageResponseDto.fromJson(Map<String, dynamic> json) =>
-      _$SendMessageResponseDtoFromJson(json);
-
-  @JsonKey(name: 'message_id')
-  final String messageId;
-
-  @JsonKey(name: 'creator_id')
-  final String? creatorId;
-
-  @JsonKey(name: 'created_at')
-  final DateTime createdAt;
-
-  @JsonKey(name: 'workspace_ids')
-  final List<String>? workspaceIds;
-
-  @JsonKey(name: 'channel_ids')
-  final List<String>? channelIds;
-
-  @JsonKey(name: 'parent_message_id')
-  final String? parentMessageId;
-
-  Map<String, dynamic> toJson() => _$SendMessageResponseDtoToJson(this);
-}
-```
-
-#### 3. Update Message Remote Datasource Interface
+#### 2. Update Message Remote Datasource Interface
 **File**: `lib/features/messages/data/datasources/message_remote_datasource.dart`
 
 Add new method to the abstract interface (after line 24):
 
 ```dart
   /// Sends a new message or reply
+  /// Returns the created message as MessageDto
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
-  Future<SendMessageResponseDto> sendMessage(SendMessageRequestDto request);
+  Future<MessageDto> sendMessage(SendMessageRequestDto request);
 ```
 
-#### 4. Implement Send Message in Datasource
+#### 3. Implement Send Message in Datasource
 **File**: `lib/features/messages/data/datasources/message_remote_datasource_impl.dart`
 
 Add import at top:
 ```dart
 import 'package:carbon_voice_console/features/messages/data/models/api/send_message_request_dto.dart';
-import 'package:carbon_voice_console/features/messages/data/models/api/send_message_response_dto.dart';
 ```
 
 Add method implementation (after the `getMessage` method, around line 132):
 
 ```dart
   @override
-  Future<SendMessageResponseDto> sendMessage(SendMessageRequestDto request) async {
+  Future<MessageDto> sendMessage(SendMessageRequestDto request) async {
     try {
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/start',
@@ -267,9 +221,10 @@ Add method implementation (after the `getMessage` method, around line 132):
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
         try {
-          final responseDto = SendMessageResponseDto.fromJson(data);
-          _logger.d('Successfully sent message: ${responseDto.messageId}');
-          return responseDto;
+          // API returns the full message DTO structure
+          final messageDto = MessageDto.fromJson(data);
+          _logger.d('Successfully sent message: ${messageDto.messageId}');
+          return messageDto;
         } on Exception catch (e, stack) {
           _logger.e('Failed to parse send message response: $e', error: e, stackTrace: stack);
           throw ServerException(statusCode: 422, message: 'Failed to parse response: $e');
@@ -314,43 +269,7 @@ Create domain entities and business logic for sending messages, following clean 
 
 ### Changes Required:
 
-#### 1. Create Send Message Result Entity
-**File**: `lib/features/messages/domain/entities/send_message_result.dart`
-
-```dart
-import 'package:equatable/equatable.dart';
-
-/// Domain entity representing the result of sending a message
-class SendMessageResult extends Equatable {
-  const SendMessageResult({
-    required this.messageId,
-    required this.createdAt,
-    this.creatorId,
-    this.channelIds,
-    this.workspaceIds,
-    this.parentMessageId,
-  });
-
-  final String messageId;
-  final String? creatorId;
-  final DateTime createdAt;
-  final List<String>? channelIds;
-  final List<String>? workspaceIds;
-  final String? parentMessageId;
-
-  @override
-  List<Object?> get props => [
-        messageId,
-        creatorId,
-        createdAt,
-        channelIds,
-        workspaceIds,
-        parentMessageId,
-      ];
-}
-```
-
-#### 2. Create Send Message Request Entity
+#### 1. Create Send Message Request Entity
 **File**: `lib/features/messages/domain/entities/send_message_request.dart`
 
 ```dart
@@ -375,14 +294,12 @@ class SendMessageRequest extends Equatable {
 }
 ```
 
-#### 3. Create DTO Mapper for Send Message
-**File**: `lib/features/messages/data/mappers/send_message_mapper.dart`
+#### 2. Create DTO Mapper for Send Message Request
+**File**: `lib/features/messages/data/mappers/send_message_request_mapper.dart`
 
 ```dart
 import 'package:carbon_voice_console/features/messages/data/models/api/send_message_request_dto.dart';
-import 'package:carbon_voice_console/features/messages/data/models/api/send_message_response_dto.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/send_message_result.dart';
 import 'package:uuid/uuid.dart';
 
 /// Maps domain SendMessageRequest to DTO
@@ -402,64 +319,53 @@ extension SendMessageRequestMapper on SendMessageRequest {
     );
   }
 }
-
-/// Maps DTO SendMessageResponseDto to domain
-extension SendMessageResponseMapper on SendMessageResponseDto {
-  SendMessageResult toDomain() {
-    return SendMessageResult(
-      messageId: messageId,
-      createdAt: createdAt,
-      creatorId: creatorId,
-      channelIds: channelIds,
-      workspaceIds: workspaceIds,
-      parentMessageId: parentMessageId,
-    );
-  }
-}
 ```
 
-**Note**: Add `uuid: ^4.5.1` to `pubspec.yaml` dependencies for unique client ID generation.
+**Note**:
+- Add `uuid: ^4.5.1` to `pubspec.yaml` dependencies for unique client ID generation
+- Response uses existing `MessageDto` and `MessageDtoMapper` (already exists at `lib/features/messages/data/mappers/message_dto_mapper.dart`)
 
-#### 4. Update Message Repository Interface
+#### 3. Update Message Repository Interface
 **File**: `lib/features/messages/domain/repositories/message_repository.dart`
 
 Add import at top:
 ```dart
 import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/send_message_result.dart';
 ```
 
 Add method to interface (after line 18):
 
 ```dart
   /// Sends a new message or reply to a conversation
-  Future<Result<SendMessageResult>> sendMessage(SendMessageRequest request);
+  /// Returns the created message as a Message entity
+  Future<Result<Message>> sendMessage(SendMessageRequest request);
 ```
 
-#### 5. Implement Send Message in Repository
+#### 4. Implement Send Message in Repository
 **File**: `lib/features/messages/data/repositories/message_repository_impl.dart`
 
 Add imports at top:
 ```dart
-import 'package:carbon_voice_console/features/messages/data/mappers/send_message_mapper.dart';
+import 'package:carbon_voice_console/features/messages/data/mappers/send_message_request_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/send_message_result.dart';
 ```
 
 Add method implementation (after `getMessage`, around line 100):
 
 ```dart
   @override
-  Future<Result<SendMessageResult>> sendMessage(SendMessageRequest request) async {
+  Future<Result<Message>> sendMessage(SendMessageRequest request) async {
     try {
       final requestDto = request.toDto();
-      final responseDto = await _remoteDataSource.sendMessage(requestDto);
-      final result = responseDto.toDomain();
+      final messageDto = await _remoteDataSource.sendMessage(requestDto);
+
+      // Convert DTO to domain entity using existing mapper
+      final message = messageDto.toDomain();
 
       // Invalidate cache for the conversation to reflect new message
       clearCacheForConversation(request.channelId);
 
-      return success(result);
+      return success(message);
     } on ServerException catch (e) {
       _logger.e('Server error sending message', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
@@ -473,13 +379,13 @@ Add method implementation (after `getMessage`, around line 100):
   }
 ```
 
-#### 6. Create Send Message Use Case
+#### 5. Create Send Message Use Case
 **File**: `lib/features/messages/domain/usecases/send_message_usecase.dart`
 
 ```dart
 import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
-import 'package:carbon_voice_console/features/messages/domain/entities/send_message_result.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:injectable/injectable.dart';
 
@@ -490,7 +396,7 @@ class SendMessageUseCase {
 
   final MessageRepository _repository;
 
-  Future<Result<SendMessageResult>> call(SendMessageRequest request) {
+  Future<Result<Message>> call(SendMessageRequest request) {
     return _repository.sendMessage(request);
   }
 }

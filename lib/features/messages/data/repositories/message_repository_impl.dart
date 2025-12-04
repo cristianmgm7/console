@@ -3,7 +3,9 @@ import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/messages/data/datasources/message_remote_datasource.dart';
 import 'package:carbon_voice_console/features/messages/data/mappers/message_dto_mapper.dart';
+import 'package:carbon_voice_console/features/messages/data/mappers/send_message_request_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -98,6 +100,30 @@ class MessageRepositoryImpl implements MessageRepository {
     }
   }
 
+  @override
+  Future<Result<Message>> sendMessage(SendMessageRequest request) async {
+    try {
+      final requestDto = request.toDto();
+      final messageDto = await _remoteDataSource.sendMessage(requestDto);
+
+      // Convert DTO to domain entity using existing mapper
+      final message = messageDto.toDomain();
+
+      // Invalidate cache for the conversation to reflect new message
+      clearCacheForConversation(request.channelId);
+
+      return success(message);
+    } on ServerException catch (e) {
+      _logger.e('Server error sending message', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error sending message', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } on Exception catch (e, stack) {
+      _logger.e('Unknown error sending message', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: e.toString()));
+    }
+  }
 
   /// Clears message cache for a specific conversation
   void clearCacheForConversation(String conversationId) {
