@@ -134,10 +134,16 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   @override
   Future<MessageDto> sendMessage(SendMessageRequestDto request) async {
     try {
+      final requestBody = request.toJson();
+      _logger.d('Sending message request payload: $requestBody');
+
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/start',
-        body: request.toJson(),
+        body: requestBody,
       );
+
+      _logger.d('Send message response status: ${response.statusCode}');
+      _logger.d('Send message response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -153,6 +159,8 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         }
       } else {
         _logger.e('Failed to send message: ${response.statusCode}');
+        _logger.e('Response headers: ${response.headers}');
+        _logger.e('Response body: ${response.body}');
         throw ServerException(
           statusCode: response.statusCode,
           message: 'Failed to send message: ${response.body}',

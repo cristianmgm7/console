@@ -38,6 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Reply panel state
   String? _selectedMessageForReply;
+  String? _selectedChannelForReply;
 
   @override
   void initState() {
@@ -241,53 +242,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: CircularDownloadProgressWidget(),
               ),
 
-              // Reply panel overlay
-              if (_selectedMessageForReply != null)
-                Positioned.fill(
-                  child: GestureDetector(
-                    onTap: _onCloseReplyPanel,
-                    child: Container(
-                      color: Colors.black54,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () {}, // Prevent closing when clicking panel
-                          child: BlocBuilder<ConversationBloc, ConversationState>(
-                            builder: (context, conversationState) {
-                              final selectedConversationIds = conversationState is ConversationLoaded
-                                  ? conversationState.selectedConversationIds
-                                  : <String>{};
+                              // Reply panel overlay
+                              if (_selectedMessageForReply != null && _selectedChannelForReply != null)
+                                Positioned.fill(
+                                  child: GestureDetector(
+                                    onTap: _onCloseReplyPanel,
+                                    child: ColoredBox(
+                                      color: Colors.black54,
+                                      child: Center(
+                                        child: GestureDetector(
+                                          onTap: () {}, // Prevent closing when clicking panel
+                                          child: BlocBuilder<WorkspaceBloc, WorkspaceState>(
+                                            builder: (context, workspaceState) {
+                                              final workspaceId = workspaceState is WorkspaceLoaded &&
+                                                      workspaceState.selectedWorkspace != null
+                                                  ? workspaceState.selectedWorkspace!.id
+                                                  : '';
 
-                              final channelId = selectedConversationIds.isEmpty
-                                  ? ''
-                                  : selectedConversationIds.first;
+                                              if (workspaceId.isEmpty) {
+                                                return const SizedBox.shrink();
+                                              }
 
-                              return BlocBuilder<WorkspaceBloc, WorkspaceState>(
-                                builder: (context, workspaceState) {
-                                  final workspaceId = workspaceState is WorkspaceLoaded &&
-                                          workspaceState.selectedWorkspace != null
-                                      ? workspaceState.selectedWorkspace!.id
-                                      : '';
-
-                                  if (channelId.isEmpty || workspaceId.isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-
-                                  return ReplyMessagePanel(
-                                    workspaceId: workspaceId,
-                                    channelId: channelId,
-                                    replyToMessageId: _selectedMessageForReply!,
-                                    onClose: _onCloseReplyPanel,
-                                    onSuccess: _onReplySuccess,
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                                              return ReplyMessagePanel(
+                                                workspaceId: workspaceId,
+                                                channelId: _selectedChannelForReply!,
+                                                replyToMessageId: _selectedMessageForReply!,
+                                                onClose: _onCloseReplyPanel,
+                                                onSuccess: _onReplySuccess,
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
             ],
           ),
         );
@@ -406,15 +395,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _onReply(String messageId) {
+  void _onReply(String messageId, String channelId) {
     setState(() {
       _selectedMessageForReply = messageId;
+      _selectedChannelForReply = channelId;
     });
   }
 
   void _onCloseReplyPanel() {
     setState(() {
       _selectedMessageForReply = null;
+      _selectedChannelForReply = null;
     });
   }
 

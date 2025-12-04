@@ -17,3 +17,4 @@ class SendMessageRequest extends Equatable {
   @override
   List<Object?> get props => [text, channelId, workspaceId, replyToMessageId];
 }
+

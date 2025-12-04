@@ -532,3 +532,4 @@ Delete the original `message_bloc.dart`, `message_event.dart`, `message_state.da
 - Current MessageBloc implementation: `lib/features/messages/presentation/bloc/message_bloc.dart`
 - Message repository interface: `lib/features/messages/domain/repositories/message_repository.dart`
 - Message remote datasource: `lib/features/messages/data/datasources/message_remote_datasource_impl.dart`
+

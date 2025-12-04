@@ -41,7 +41,7 @@ class DashboardContent extends StatefulWidget {
   final bool Function(BuildContext context) isAnyBlocLoading;
   final VoidCallback onManualLoadMore;
   final ValueChanged<String>? onViewDetail;
-  final ValueChanged<String>? onReply;
+  final void Function(String messageId, String channelId)? onReply;
   final ValueChanged<String>? onDownloadMessage;
   final VoidCallback? onDownloadAudio;
   final VoidCallback? onDownloadTranscript;
@@ -225,7 +225,7 @@ class _DashboardContentState extends State<DashboardContent> {
                   AppIconButton(
                     icon: AppIcons.reply,
                     tooltip: 'Reply',
-                    onPressed: () => widget.onReply?.call(message.id),
+                    onPressed: () => widget.onReply?.call(message.id, message.conversationId),
                     size: AppIconButtonSize.small,
                   ),
                   const SizedBox(width: 4),
