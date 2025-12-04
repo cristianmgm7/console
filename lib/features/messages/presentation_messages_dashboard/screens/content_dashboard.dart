@@ -108,12 +108,16 @@ class _DashboardContentState extends State<DashboardContent> {
               ),
             ),
 
-          // Mini player - positioned at bottom
-          const Positioned(
-            bottom: 24,
+          // Mini player - positioned at bottom, moves up when composition panel is open
+          Positioned(
+            bottom: (widget.showMessageComposition ?? false) &&
+                     widget.compositionWorkspaceId != null &&
+                     widget.compositionChannelId != null
+                ? 700  // Move up when composition panel is open
+                : 24,  // Normal position
             left: 0,
             right: 0,
-            child: Center(
+            child: const Center(
               child: AudioMiniPlayerWidget(),
             ),
           ),
@@ -123,7 +127,7 @@ class _DashboardContentState extends State<DashboardContent> {
               widget.compositionWorkspaceId != null &&
               widget.compositionChannelId != null)
             Positioned(
-              bottom: 120, // Above the audio mini player (24 + ~80 for player height + padding)
+              bottom: 24, // Above the audio mini player (24 + ~80 for player height + padding)
               left: 24,
               right: 24,
               child: Center(
