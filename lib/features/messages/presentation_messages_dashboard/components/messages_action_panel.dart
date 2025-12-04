@@ -26,27 +26,31 @@ class MessagesActionPanel extends StatelessWidget {
     }
 
     return GlassContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       opacity: 0.2,
-      width: 400,
-      height: 80,
-      child: Row(
+      width: 150,
+      height: 180,
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            AppIcons.checkCircle,
-            size: 20,
-            color: AppColors.primary,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                AppIcons.checkCircle,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$selectedCount',
+                style: AppTextStyle.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Text(
-            '$selectedCount',
-            style: AppTextStyle.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 24),
+          const SizedBox(height: 16),
 
           // Download Dropdown
           SizedBox(
@@ -121,7 +125,7 @@ class MessagesActionPanel extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 12),
+          const SizedBox(height: 12),
 
           // AI Chat Button
           AppButton(
