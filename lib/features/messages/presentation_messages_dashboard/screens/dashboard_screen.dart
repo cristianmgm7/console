@@ -269,6 +269,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // App Bar
         DashboardAppBar(
           onRefresh: _onRefresh,
+          onSendMessage: _onSendMessage,
         ),
 
         // Content
@@ -296,6 +297,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 compositionReplyToMessageId: _compositionReplyToMessageId,
                 onCloseMessageComposition: _onCloseMessageComposition,
                 onMessageCompositionSuccess: _onMessageCompositionSuccess,
+                onCancelReply: _onCancelReply,
               );
             },
           ),
@@ -311,6 +313,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // App Bar - full width at top
           DashboardAppBar(
             onRefresh: _onRefresh,
+            onSendMessage: _onSendMessage,
           ),
           // Main content area below app bar: left = messages, right = detail
           Expanded(
@@ -339,9 +342,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     compositionWorkspaceId: _compositionWorkspaceId,
                     compositionChannelId: _compositionChannelId,
                     compositionReplyToMessageId: _compositionReplyToMessageId,
-                    onCloseMessageComposition: _onCloseMessageComposition,
-                    onMessageCompositionSuccess: _onMessageCompositionSuccess,
-                  );
+                  onCloseMessageComposition: _onCloseMessageComposition,
+                  onMessageCompositionSuccess: _onMessageCompositionSuccess,
+                  onCancelReply: _onCancelReply,
+                );
                 },
               ),
             ),
@@ -395,6 +399,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _onSendMessage() {
+    final workspaceState = context.read<WorkspaceBloc>().state;
+    final conversationState = context.read<ConversationBloc>().state;
+
+    final workspaceId = workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null
+        ? workspaceState.selectedWorkspace!.id
+        : '';
+
+    if (workspaceId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No workspace selected')),
+      );
+      return;
+    }
+
+    if (conversationState is! ConversationLoaded || conversationState.selectedConversationIds.length != 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select exactly one conversation')),
+      );
+      return;
+    }
+
+    // Find the selected conversation to get the correct channel ID
+    final selectedConversationId = conversationState.selectedConversationIds.first;
+    final selectedConversation = conversationState.conversations
+        .where((c) => c.id == selectedConversationId)
+        .firstOrNull;
+
+    if (selectedConversation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selected conversation not found')),
+      );
+      return;
+    }
+
+    // Use the conversation's channelGuid as the channelId
+    final channelId = selectedConversation.channelGuid ?? selectedConversation.id;
+
+    setState(() {
+      _showMessageComposition = true;
+      _compositionWorkspaceId = workspaceId;
+      _compositionChannelId = channelId;
+      _compositionReplyToMessageId = null; // null for new message, not reply
+    });
+  }
+
   void _onCloseMessageComposition() {
     setState(() {
       _showMessageComposition = false;
@@ -408,6 +458,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Refresh messages after successful message send
     context.read<MessageBloc>().add(const msg_events.RefreshMessages());
     _onCloseMessageComposition();
+  }
+
+  void _onCancelReply() {
+    setState(() {
+      _compositionReplyToMessageId = null;
+    });
   }
 
 }
