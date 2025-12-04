@@ -6,9 +6,9 @@ import 'package:carbon_voice_console/core/widgets/buttons/app_icon_button.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_outlined_button.dart';
 import 'package:carbon_voice_console/core/widgets/containers/glass_container.dart';
 import 'package:carbon_voice_console/core/widgets/interactive/app_text_field.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/send_message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/send_message_event.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/send_message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_event.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

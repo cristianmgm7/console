@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:carbon_voice_console/core/theme/app_animations.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 
 enum AppIconButtonSize { small, medium, large }
 

@@ -7,25 +7,25 @@ part 'text_model_dto.g.dart';
 @JsonSerializable()
 class TextModelDto {
   const TextModelDto({
-    required this.type,
-    required this.audioId,
-    required this.languageId,
-    required this.value,
-    required this.timecodes,
+    this.type,
+    this.audioId,
+    this.languageId,
+    this.value,
+    this.timecodes,
   });
 
   factory TextModelDto.fromJson(Map<String, dynamic> json) => _$TextModelDtoFromJson(json);
 
-  final String type;
+  final String? type;
 
   @JsonKey(name: 'audio_id')
-  final String audioId;
+  final String? audioId;
 
   @JsonKey(name: 'language_id')
-  final String languageId;
+  final String? languageId;
 
-  final String value;
-  final List<TimecodeDto> timecodes;
+  final String? value;
+  final List<TimecodeDto>? timecodes;
 
   Map<String, dynamic> toJson() => _$TextModelDtoToJson(this);
 }

@@ -13,6 +13,7 @@ class AudioModelDto {
     this.language,
     this.isOriginalAudio,
     this.extension,
+    this.streaming,
   });
 
   factory AudioModelDto.fromJson(Map<String, dynamic> json) => _$AudioModelDtoFromJson(json);
@@ -45,6 +46,13 @@ class AudioModelDto {
 
   @JsonKey(name: 'extension', defaultValue: 'mp3')
   final String? extension;
+
+  @JsonKey(name: 'streaming', defaultValue: true)
+  final bool? streaming;
+
+  /// Computed property indicating if this audio can be streamed
+  /// Uses the streaming field if available, otherwise checks streamingUrl
+  bool get canStream => streaming ?? (streamingUrl != null);
 
   Map<String, dynamic> toJson() => _$AudioModelDtoToJson(this);
 }

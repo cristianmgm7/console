@@ -8,8 +8,8 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/components/pagination_controls.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;

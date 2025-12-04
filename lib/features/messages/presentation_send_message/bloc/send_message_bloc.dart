@@ -1,7 +1,7 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/send_message_request.dart';
 import 'package:carbon_voice_console/features/messages/domain/usecases/send_message_usecase.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/send_message_event.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/send_message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_event.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';

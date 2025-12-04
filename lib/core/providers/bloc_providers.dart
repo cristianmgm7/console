@@ -6,9 +6,9 @@ import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation/bloc/send_message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
