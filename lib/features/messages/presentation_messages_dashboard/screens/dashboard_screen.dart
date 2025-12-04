@@ -13,7 +13,6 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_det
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
-import 'package:carbon_voice_console/features/messages/presentation_send_message/components/reply_message_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -36,9 +35,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Message detail panel state
   String? _selectedMessageForDetail;
 
-  // Reply panel state
-  String? _selectedMessageForReply;
-  String? _selectedChannelForReply;
+  // Message composition panel state
+  bool _showMessageComposition = false;
+  String? _compositionWorkspaceId;
+  String? _compositionChannelId;
+  String? _compositionReplyToMessageId;
 
   @override
   void initState() {
@@ -242,41 +243,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: CircularDownloadProgressWidget(),
               ),
 
-                              // Reply panel overlay
-                              if (_selectedMessageForReply != null && _selectedChannelForReply != null)
-                                Positioned.fill(
-                                  child: GestureDetector(
-                                    onTap: _onCloseReplyPanel,
-                                    child: ColoredBox(
-                                      color: Colors.black54,
-                                      child: Center(
-                                        child: GestureDetector(
-                                          onTap: () {}, // Prevent closing when clicking panel
-                                          child: BlocBuilder<WorkspaceBloc, WorkspaceState>(
-                                            builder: (context, workspaceState) {
-                                              final workspaceId = workspaceState is WorkspaceLoaded &&
-                                                      workspaceState.selectedWorkspace != null
-                                                  ? workspaceState.selectedWorkspace!.id
-                                                  : '';
-
-                                              if (workspaceId.isEmpty) {
-                                                return const SizedBox.shrink();
-                                              }
-
-                                              return ReplyMessagePanel(
-                                                workspaceId: workspaceId,
-                                                channelId: _selectedChannelForReply!,
-                                                replyToMessageId: _selectedMessageForReply!,
-                                                onClose: _onCloseReplyPanel,
-                                                onSuccess: _onReplySuccess,
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
             ],
           ),
         );
@@ -323,6 +289,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onDownloadTranscript: _onDownloadTranscript,
                 onSummarize: _onSummarize,
                 onAIChat: _onAIChat,
+                showMessageComposition: _showMessageComposition,
+                compositionWorkspaceId: _compositionWorkspaceId,
+                compositionChannelId: _compositionChannelId,
+                compositionReplyToMessageId: _compositionReplyToMessageId,
+                onCloseMessageComposition: _onCloseMessageComposition,
+                onMessageCompositionSuccess: _onMessageCompositionSuccess,
               );
             },
           ),
@@ -362,6 +334,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onDownloadTranscript: _onDownloadTranscript,
                     onSummarize: _onSummarize,
                     onAIChat: _onAIChat,
+                    showMessageComposition: _showMessageComposition,
+                    compositionWorkspaceId: _compositionWorkspaceId,
+                    compositionChannelId: _compositionChannelId,
+                    compositionReplyToMessageId: _compositionReplyToMessageId,
+                    onCloseMessageComposition: _onCloseMessageComposition,
+                    onMessageCompositionSuccess: _onMessageCompositionSuccess,
                   );
                 },
               ),
@@ -396,22 +374,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _onReply(String messageId, String channelId) {
+    final workspaceState = context.read<WorkspaceBloc>().state;
+    final workspaceId = workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null
+        ? workspaceState.selectedWorkspace!.id
+        : '';
+
+    if (workspaceId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No workspace selected')),
+      );
+      return;
+    }
+
     setState(() {
-      _selectedMessageForReply = messageId;
-      _selectedChannelForReply = channelId;
+      _showMessageComposition = true;
+      _compositionWorkspaceId = workspaceId;
+      _compositionChannelId = channelId;
+      _compositionReplyToMessageId = messageId;
     });
   }
 
-  void _onCloseReplyPanel() {
+  void _onCloseMessageComposition() {
     setState(() {
-      _selectedMessageForReply = null;
-      _selectedChannelForReply = null;
+      _showMessageComposition = false;
+      _compositionWorkspaceId = null;
+      _compositionChannelId = null;
+      _compositionReplyToMessageId = null;
     });
   }
 
-  void _onReplySuccess() {
-    // Refresh messages after successful reply
+  void _onMessageCompositionSuccess() {
+    // Refresh messages after successful message send
     context.read<MessageBloc>().add(const msg_events.RefreshMessages());
+    _onCloseMessageComposition();
   }
 
 }
