@@ -53,6 +53,7 @@ class AppIcons {
   // Content
   static final IconData inbox = PhosphorIcons.tray();
   static final IconData message = PhosphorIcons.chatCircle();
+  static final IconData reply = PhosphorIcons.arrowBendUpLeft();
   static final IconData user = PhosphorIcons.user();
   static final IconData users = PhosphorIcons.users();
   static final IconData search = PhosphorIcons.magnifyingGlass();

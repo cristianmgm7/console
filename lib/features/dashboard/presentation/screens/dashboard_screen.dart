@@ -13,6 +13,7 @@ import 'package:carbon_voice_console/features/messages/presentation/bloc/message
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation/components/message_detail_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation/components/reply_message_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -34,6 +35,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // Message detail panel state
   String? _selectedMessageForDetail;
+
+  // Reply panel state
+  String? _selectedMessageForReply;
 
   @override
   void initState() {
@@ -236,6 +240,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 right: 24,
                 child: CircularDownloadProgressWidget(),
               ),
+
+              // Reply panel overlay
+              if (_selectedMessageForReply != null)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: _onCloseReplyPanel,
+                    child: Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () {}, // Prevent closing when clicking panel
+                          child: BlocBuilder<ConversationBloc, ConversationState>(
+                            builder: (context, conversationState) {
+                              final selectedConversationIds = conversationState is ConversationLoaded
+                                  ? conversationState.selectedConversationIds
+                                  : <String>{};
+
+                              final channelId = selectedConversationIds.isEmpty
+                                  ? ''
+                                  : selectedConversationIds.first;
+
+                              return BlocBuilder<WorkspaceBloc, WorkspaceState>(
+                                builder: (context, workspaceState) {
+                                  final workspaceId = workspaceState is WorkspaceLoaded &&
+                                          workspaceState.selectedWorkspace != null
+                                      ? workspaceState.selectedWorkspace!.id
+                                      : '';
+
+                                  if (channelId.isEmpty || workspaceId.isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+
+                                  return ReplyMessagePanel(
+                                    workspaceId: workspaceId,
+                                    channelId: channelId,
+                                    replyToMessageId: _selectedMessageForReply!,
+                                    onClose: _onCloseReplyPanel,
+                                    onSuccess: _onReplySuccess,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -276,6 +328,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 selectAll: _selectAll,
                 onManualLoadMore: _onManualLoadMore,
                 onViewDetail: _onViewDetail,
+                onReply: _onReply,
                 onDownloadMessage: _onDownloadMessage,
                 onDownloadAudio: _onDownloadAudio,
                 onDownloadTranscript: _onDownloadTranscript,
@@ -314,6 +367,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     selectAll: _selectAll,
                     onManualLoadMore: _onManualLoadMore,
                     onViewDetail: _onViewDetail,
+                    onReply: _onReply,
                     onDownloadMessage: _onDownloadMessage,
                     onDownloadAudio: _onDownloadAudio,
                     onDownloadTranscript: _onDownloadTranscript,
@@ -350,6 +404,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _selectedMessageForDetail = null;
     });
+  }
+
+  void _onReply(String messageId) {
+    setState(() {
+      _selectedMessageForReply = messageId;
+    });
+  }
+
+  void _onCloseReplyPanel() {
+    setState(() {
+      _selectedMessageForReply = null;
+    });
+  }
+
+  void _onReplySuccess() {
+    // Refresh messages after successful reply
+    context.read<MessageBloc>().add(const msg_events.RefreshMessages());
   }
 
 }

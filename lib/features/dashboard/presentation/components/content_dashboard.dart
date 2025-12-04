@@ -25,6 +25,7 @@ class DashboardContent extends StatefulWidget {
     required this.selectAll,
     required this.onManualLoadMore,
     this.onViewDetail,
+    this.onReply,
     this.onDownloadMessage,
     this.onDownloadAudio,
     this.onDownloadTranscript,
@@ -40,6 +41,7 @@ class DashboardContent extends StatefulWidget {
   final bool Function(BuildContext context) isAnyBlocLoading;
   final VoidCallback onManualLoadMore;
   final ValueChanged<String>? onViewDetail;
+  final ValueChanged<String>? onReply;
   final ValueChanged<String>? onDownloadMessage;
   final VoidCallback? onDownloadAudio;
   final VoidCallback? onDownloadTranscript;
@@ -217,6 +219,13 @@ class _DashboardContentState extends State<DashboardContent> {
                     icon: AppIcons.eye,
                     tooltip: 'View Details',
                     onPressed: () => widget.onViewDetail?.call(message.id),
+                    size: AppIconButtonSize.small,
+                  ),
+                  const SizedBox(width: 4),
+                  AppIconButton(
+                    icon: AppIcons.reply,
+                    tooltip: 'Reply',
+                    onPressed: () => widget.onReply?.call(message.id),
                     size: AppIconButtonSize.small,
                   ),
                   const SizedBox(width: 4),
