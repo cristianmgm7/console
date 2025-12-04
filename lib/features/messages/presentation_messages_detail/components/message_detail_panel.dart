@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
@@ -20,20 +19,18 @@ class MessageDetailPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<MessageDetailBloc>()..add(LoadMessageDetail(messageId)),
-      child: BlocBuilder<MessageDetailBloc, MessageDetailState>(
-        builder: (context, state) {
-          return SizedBox(
-            width: 400, // Fixed width panel
-            height: double.infinity, // Fill available height
-            child: AppContainer(
-              border: const Border(
-                left: BorderSide(
-                  color: AppColors.border,
-                ),
+    return BlocBuilder<MessageDetailBloc, MessageDetailState>(
+      builder: (context, state) {
+        return SizedBox(
+          width: 400, // Fixed width panel
+          height: double.infinity, // Fill available height
+          child: AppContainer(
+            border: const Border(
+              left: BorderSide(
+                color: AppColors.border,
               ),
-              child: Column(
+            ),
+            child: Column(
               children: [
                 // Header with close button
                 AppContainer(
@@ -63,9 +60,8 @@ class MessageDetailPanel extends StatelessWidget {
               ],
             ),
           ),
-          );
-        },
-      ),
+        );
+      },
     );
   }
 
