@@ -52,76 +52,70 @@ class MessagesActionPanel extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Download Dropdown
-          SizedBox(
-            width: 180,
-            height: 40,
-            child: AppDropdown<String>(
-              value: null, // No default selection
-              hint: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(AppIcons.download, size: 18, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Download',
-                    style: AppTextStyle.bodyMedium.copyWith(color: AppColors.primary),
-                  ),
-                ],
+          // Download Menu Button
+          PopupMenuButton<String>(
+            key: const Key('download_dropdown'),
+            onSelected: (String value) {
+              switch (value) {
+                case 'audio':
+                  onDownloadAudio();
+                case 'transcript':
+                  onDownloadTranscript();
+                case 'both':
+                  onSummarize();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'audio',
+                child: Row(
+                  children: [
+                    Icon(AppIcons.audioTrack, size: 18, color: AppColors.textPrimary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Audio',
+                      style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                    ),
+                  ],
+                ),
               ),
-              dropdownKey: const Key('download_dropdown'),
-              items: [
-                DropdownMenuItem<String>(
-                  value: 'audio',
-                  child: Row(
-                    children: [
-                      Icon(AppIcons.audioTrack, size: 18, color: AppColors.textPrimary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Audio',
-                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
+              PopupMenuItem<String>(
+                value: 'transcript',
+                child: Row(
+                  children: [
+                    Icon(AppIcons.message, size: 18, color: AppColors.textPrimary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Transcript',
+                      style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                    ),
+                  ],
                 ),
-                DropdownMenuItem<String>(
-                  value: 'transcript',
-                  child: Row(
-                    children: [
-                      Icon(AppIcons.message, size: 18, color: AppColors.textPrimary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Transcript',
-                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
+              ),
+              PopupMenuItem<String>(
+                value: 'both',
+                child: Row(
+                  children: [
+                    Icon(AppIcons.download, size: 18, color: AppColors.textPrimary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Both',
+                      style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                    ),
+                  ],
                 ),
-                DropdownMenuItem<String>(
-                  value: 'both',
-                  child: Row(
-                    children: [
-                      Icon(AppIcons.download, size: 18, color: AppColors.textPrimary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Both',
-                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              onChanged: (String? value) {
-                switch (value) {
-                  case 'audio':
-                    onDownloadAudio();
-                  case 'transcript':
-                    onDownloadTranscript();
-                  case 'both':
-                    onSummarize();
-                }
-              },
+              ),
+            ],
+            child: Container(
+              width: 90,
+              height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(AppIcons.download, size: 18, color: AppColors.primary),
             ),
           ),
 

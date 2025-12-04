@@ -18,3 +18,4 @@ class SendMessageRequest extends Equatable {
   List<Object?> get props => [text, channelId, workspaceId, replyToMessageId];
 }
 
+
