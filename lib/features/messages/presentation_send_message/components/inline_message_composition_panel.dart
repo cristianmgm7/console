@@ -1,7 +1,5 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
-import 'package:carbon_voice_console/core/theme/app_text_style.dart';
-import 'package:carbon_voice_console/core/widgets/buttons/app_button.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_icon_button.dart';
 import 'package:carbon_voice_console/core/widgets/containers/glass_container.dart';
 import 'package:carbon_voice_console/core/widgets/interactive/app_text_field.dart';
@@ -42,14 +40,22 @@ class _InlineMessageCompositionPanelState extends State<InlineMessageComposition
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
+    // Listen to text changes to update button state
+    _messageController.addListener(_onTextChanged);
   }
 
   @override
   void dispose() {
+    _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
+
+  void _onTextChanged() {
+    setState(() {});
+  }
+
 
   void _handleSend() {
     final text = _messageController.text.trim();
@@ -99,79 +105,37 @@ class _InlineMessageCompositionPanelState extends State<InlineMessageComposition
         }
       },
       child: GlassContainer(
-        width: 400,
+        width: 550,
         padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        opacity: 0.3,
+        child: Row(
           children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.replyToMessageId != null ? 'Reply' : 'Send Message',
-                  style: AppTextStyle.headlineSmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                AppIconButton(
-                  icon: AppIcons.close,
-                  onPressed: _handleClose,
-                  size: AppIconButtonSize.small,
-                ),
-              ],
+            // Message Input - takes most of the space
+            Expanded(
+              child: AppTextField(
+                controller: _messageController,
+                focusNode: _focusNode,
+                maxLines: null, // Allow automatic expansion
+                minLines: 1, // Start with single line
+                hint: 'Type your message...',
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(width: 12),
 
-            // Message Input
-            AppTextField(
-              controller: _messageController,
-              focusNode: _focusNode,
-              maxLines: 4,
-              hint: 'Type your message...',
-            ),
-            const SizedBox(height: 16),
-
-            // Action Buttons
+            // Single Action Button
             BlocBuilder<SendMessageBloc, SendMessageState>(
               builder: (context, state) {
                 final isLoading = state is SendMessageInProgress;
+                final hasText = _messageController.text.trim().isNotEmpty;
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (widget.onClose != null) ...[
-                      AppIconButton(
-                        icon: AppIcons.close,
-                        onPressed: isLoading ? null : _handleClose,
-                        size: AppIconButtonSize.small,
-                        tooltip: 'Cancel',
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    AppButton(
-                      onPressed: isLoading ? null : _handleSend,
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(AppIcons.check, size: 16),
-                                const SizedBox(width: 8),
-                                const Text('Send'),
-                              ],
-                            ),
-                    ),
-                  ],
+                return AppIconButton(
+                  icon: hasText ? AppIcons.chevronUp : AppIcons.close,
+                  onPressed: isLoading
+                      ? null
+                      : hasText
+                          ? _handleSend
+                          : _handleClose,
+                  tooltip: hasText ? 'Send message' : 'Cancel',
                 );
               },
             ),

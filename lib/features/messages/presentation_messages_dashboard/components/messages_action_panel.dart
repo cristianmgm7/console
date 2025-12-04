@@ -28,7 +28,7 @@ class MessagesActionPanel extends StatelessWidget {
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       opacity: 0.2,
-      width: 550,
+      width: 400,
       height: 80,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -40,7 +40,7 @@ class MessagesActionPanel extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '$selectedCount items selected',
+            '$selectedCount',
             style: AppTextStyle.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
