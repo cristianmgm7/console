@@ -6,11 +6,11 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_event.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_state.dart';

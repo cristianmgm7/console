@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/models/message_ui_model.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:equatable/equatable.dart';
 

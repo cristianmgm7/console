@@ -1,7 +1,7 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/models/message_ui_model.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 
 /// Extension methods to convert domain entities to UI models
