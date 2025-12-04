@@ -18,11 +18,9 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   @override
   Future<List<WorkspaceModel>> getWorkspaces() async {
     try {
-      _logger.d('Fetching workspaces from: ${OAuthConfig.apiBaseUrl}/workspaces');
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces',
       );
-      _logger.d('Workspaces response status: ${response.statusCode}');
 
       // Parse response body to check for error details
       Map<String, dynamic>? errorData;

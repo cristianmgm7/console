@@ -27,7 +27,6 @@ class MessageRepositoryImpl implements MessageRepository {
     DateTime? beforeTimestamp,
   }) async {
     try {
-      // If no timestamp provided, use current time as starting point
       final effectiveTimestamp = beforeTimestamp ?? DateTime.now();
       final beforeTimestampStr = effectiveTimestamp.toIso8601String();
 
@@ -106,10 +105,8 @@ class MessageRepositoryImpl implements MessageRepository {
       final requestDto = request.toDto();
       final messageDto = await _remoteDataSource.sendMessage(requestDto);
 
-      // Convert DTO to domain entity using existing mapper
       final message = messageDto.toDomain();
 
-      // Invalidate cache for the conversation to reflect new message
       clearCacheForConversation(request.channelId);
 
       return success(message);

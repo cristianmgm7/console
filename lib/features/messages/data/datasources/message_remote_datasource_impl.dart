@@ -20,11 +20,10 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   Future<List<MessageDto>> getRecentMessages({
     required String conversationId,
     int count = 50,
-    String direction = 'older',  // Use 'older' to get most recent messages (newest → oldest)
+    String direction = 'older',
     String? beforeTimestamp,
   }) async {
     try {
-      // Build request body according to actual API specification
       final requestBody = {
         'date': beforeTimestamp,
         'channel_id': conversationId,
@@ -34,13 +33,11 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
       };
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
-        body: requestBody, // AuthenticatedHttpService handles JSON encoding
+        body: requestBody,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        // API returns: [{message}, {message}, ...]
-        // But might be wrapped in an object like {messages: [...]} or {items: [...]}
         List<dynamic> messagesList;
 
         messagesList = data as List<dynamic>;
@@ -49,21 +46,6 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
           final messageDtos = messagesList
               .map((json) => MessageDto.fromJson(json as Map<String, dynamic>))
               .toList();
-
-          _logger.d('Successfully parsed ${messageDtos.length} messages');
-
-          // DEBUG: Log message order from API
-          if (messageDtos.isNotEmpty) {
-            _logger.d('🔵 Message order from API (direction: $direction):');
-            for (var i = 0; i < messageDtos.length && i < 3; i++) {
-              final dto = messageDtos[i];
-              _logger.d('🔵   Position $i: ${dto.createdAt} (ID: ${dto.messageId})');
-            }
-            if (messageDtos.length > 3) {
-              _logger.d('🔵   ... (${messageDtos.length - 3} more messages)');
-            }
-          }
-
           return messageDtos;
         } on Exception catch (e, stack) {
           _logger.e('Failed to parse recent messages: $e', error: e, stackTrace: stack);
@@ -87,33 +69,26 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   @override
   Future<MessageDetailDto> getMessage(String messageId, {bool includePreSignedUrls = false}) async {
     try {
-      // Build URL with optional pre-signed URLs parameter
       final queryParam = includePreSignedUrls ? '?presigned_url=true' : '';
 
-      // Try v5 endpoint first, fallback to v4
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/v5/messages/$messageId$queryParam',
       );
-
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
         try {
-          // Extract the actual message data from the nested structure
           final Map<String, dynamic> messageData;
           if (data.containsKey('message') && data['message'] is Map<String, dynamic>) {
             messageData = data['message'] as Map<String, dynamic>;
           } else {
             messageData = data;
           }
-
-          // Parse the message data into MessageDetailDto
           final messageDetailDto = MessageDetailDto.fromJson(messageData);
           return messageDetailDto;
         } catch (e, stack) {
           _logger.e('Failed to parse message JSON: $e', error: e, stackTrace: stack);
-          _logger.d('Message data that failed parsing: $data');
           throw ServerException(statusCode: 422, message: 'Invalid message JSON structure: $e');
         }
       } else {
@@ -135,23 +110,17 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
   Future<MessageDto> sendMessage(SendMessageRequestDto request) async {
     try {
       final requestBody = request.toJson();
-      _logger.d('Sending message request payload: $requestBody');
 
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/start',
         body: requestBody,
       );
 
-      _logger.d('Send message response status: ${response.statusCode}');
-      _logger.d('Send message response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
         try {
-          // API returns the full message DTO structure
           final messageDto = MessageDto.fromJson(data);
-          _logger.d('Successfully sent message: ${messageDto.messageId}');
           return messageDto;
         } on Exception catch (e, stack) {
           _logger.e('Failed to parse send message response: $e', error: e, stackTrace: stack);
