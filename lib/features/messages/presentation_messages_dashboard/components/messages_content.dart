@@ -68,9 +68,10 @@ class MessagesContent extends StatelessWidget {
         );
       }
 
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 60),
-        child: AppTable(
+      return SizedBox.expand(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 60),
+          child: AppTable(
           selectAll: selectAll,
           onSelectAllChanged: (value) =>
               onToggleSelectAll(loadedState.messages.length, value: value),
@@ -172,6 +173,7 @@ class MessagesContent extends StatelessWidget {
               ],
             );
           }).toList(),
+        ),
         ),
       );
 
