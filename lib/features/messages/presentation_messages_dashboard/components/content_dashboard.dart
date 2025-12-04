@@ -6,10 +6,11 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/components/inline_message_composition_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
@@ -31,6 +32,12 @@ class DashboardContent extends StatefulWidget {
     this.onDownloadTranscript,
     this.onSummarize,
     this.onAIChat,
+    this.showMessageComposition,
+    this.compositionWorkspaceId,
+    this.compositionChannelId,
+    this.compositionReplyToMessageId,
+    this.onCloseMessageComposition,
+    this.onMessageCompositionSuccess,
     super.key,
   });
 
@@ -48,6 +55,14 @@ class DashboardContent extends StatefulWidget {
   final VoidCallback? onSummarize;
   final VoidCallback? onAIChat;
 
+  // Message composition panel parameters
+  final bool? showMessageComposition;
+  final String? compositionWorkspaceId;
+  final String? compositionChannelId;
+  final String? compositionReplyToMessageId;
+  final VoidCallback? onCloseMessageComposition;
+  final VoidCallback? onMessageCompositionSuccess;
+
   @override
   State<DashboardContent> createState() => _DashboardContentState();
 }
@@ -61,15 +76,13 @@ class _DashboardContentState extends State<DashboardContent> {
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return AppContainer(
       backgroundColor: AppColors.surface,
       child: Stack(
         children: [
-          // Main content
+          // Main content - fills entire space
           BlocBuilder<MessageBloc, MessageState>(
             builder: (context, messageState) {
               return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
@@ -80,29 +93,53 @@ class _DashboardContentState extends State<DashboardContent> {
             },
           ),
 
-          // Action panel - only show when messages are selected
-          if (widget.selectedMessages.isNotEmpty && widget.onDownloadAudio != null)
+          // Right-side panels - positioned on top of main content
+          if ((widget.showMessageComposition ?? false) &&
+              widget.compositionWorkspaceId != null &&
+              widget.compositionChannelId != null ||
+              widget.selectedMessages.isNotEmpty && widget.onDownloadAudio != null)
             Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: MessagesActionPanel(
-                  selectedCount: widget.selectedMessages.length,
-                  onDownloadAudio: widget.onDownloadAudio!,
-                  onDownloadTranscript: widget.onDownloadTranscript ?? () {},
-                  onSummarize: widget.onSummarize ?? () {},
-                  onAIChat: widget.onAIChat ?? () {},
-                ),
+              top: 24,
+              right: 24,
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Message composition panel
+                  if ((widget.showMessageComposition ?? false) &&
+                      widget.compositionWorkspaceId != null &&
+                      widget.compositionChannelId != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: InlineMessageCompositionPanel(
+                        workspaceId: widget.compositionWorkspaceId!,
+                        channelId: widget.compositionChannelId!,
+                        replyToMessageId: widget.compositionReplyToMessageId,
+                        onClose: widget.onCloseMessageComposition,
+                        onSuccess: widget.onMessageCompositionSuccess,
+                      ),
+                    ),
+
+                  // Action panel - only show when messages are selected
+                  if (widget.selectedMessages.isNotEmpty && widget.onDownloadAudio != null)
+                    MessagesActionPanel(
+                      selectedCount: widget.selectedMessages.length,
+                      onDownloadAudio: widget.onDownloadAudio!,
+                      onDownloadTranscript: widget.onDownloadTranscript ?? () {},
+                      onSummarize: widget.onSummarize ?? () {},
+                      onAIChat: widget.onAIChat ?? () {},
+                    ),
+                ],
               ),
             ),
 
-          // Mini player - show when audio is ready
-          Positioned(
-            bottom: widget.selectedMessages.isNotEmpty ? 100 : 24,
+          // Mini player - positioned at bottom
+          const Positioned(
+            bottom: 24,
             left: 0,
             right: 0,
-            child: const Center(
+            child: Center(
               child: AudioMiniPlayerWidget(),
             ),
           ),
