@@ -95,7 +95,7 @@ class _DashboardContentState extends State<DashboardContent> {
           // Action panel - positioned in top-right for track downloads
           if (widget.selectedMessages.isNotEmpty && widget.onDownloadAudio != null)
             Positioned(
-              top: 24,
+              bottom: 24,
               right: 24,
               child: MessagesActionPanel(
                 selectedCount: widget.selectedMessages.length,
