@@ -6,6 +6,8 @@ import 'package:carbon_voice_console/core/widgets/buttons/app_icon_button.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_outlined_button.dart';
 import 'package:carbon_voice_console/core/widgets/containers/glass_container.dart';
 import 'package:carbon_voice_console/core/widgets/interactive/app_text_field.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_state.dart';
@@ -79,95 +81,107 @@ class _ReplyMessagePanelState extends State<ReplyMessagePanel> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SendMessageBloc, SendMessageState>(
-      listener: (context, state) {
-        if (state is SendMessageSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Message sent successfully!'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          widget.onSuccess?.call();
-          _handleClose();
-        } else if (state is SendMessageError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${state.message}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+    return BlocBuilder<ConversationBloc, ConversationState>(
+      builder: (context, conversationState) {
+        // Only show the panel if there's exactly one conversation selected
+        final shouldShow = conversationState is ConversationLoaded &&
+            conversationState.selectedConversationIds.length == 1;
+
+        if (!shouldShow) {
+          return const SizedBox.shrink();
         }
-      },
-      child: GlassContainer(
-        width: 500,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Reply to Message',
-                  style: AppTextStyle.headlineMedium.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+
+        return BlocListener<SendMessageBloc, SendMessageState>(
+          listener: (context, state) {
+            if (state is SendMessageSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Message sent successfully!'),
+                  backgroundColor: AppColors.success,
                 ),
-                AppIconButton(
-                  icon: AppIcons.close,
-                  onPressed: _handleClose,
-                  size: AppIconButtonSize.small,
+              );
+              widget.onSuccess?.call();
+              _handleClose();
+            } else if (state is SendMessageError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: ${state.message}'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          },
+          child: GlassContainer(
+            width: 500,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Reply to Message',
+                      style: AppTextStyle.headlineMedium.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    AppIconButton(
+                      icon: AppIcons.close,
+                      onPressed: _handleClose,
+                      size: AppIconButtonSize.small,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Message Input
+                AppTextField(
+                  controller: _messageController,
+                  focusNode: _focusNode,
+                  maxLines: 5,
+                  hint: 'Type your message...',
+                ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                BlocBuilder<SendMessageBloc, SendMessageState>(
+                  builder: (context, state) {
+                    final isLoading = state is SendMessageInProgress;
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        AppOutlinedButton(
+                          onPressed: isLoading ? null : _handleClose,
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        AppButton(
+                          onPressed: isLoading ? null : _handleSend,
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Send'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-
-            // Message Input
-            AppTextField(
-              controller: _messageController,
-              focusNode: _focusNode,
-              maxLines: 5,
-              hint: 'Type your message...',
-            ),
-            const SizedBox(height: 24),
-
-            // Action Buttons
-            BlocBuilder<SendMessageBloc, SendMessageState>(
-              builder: (context, state) {
-                final isLoading = state is SendMessageInProgress;
-
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    AppOutlinedButton(
-                      onPressed: isLoading ? null : _handleClose,
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 12),
-                    AppButton(
-                      onPressed: isLoading ? null : _handleSend,
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Send'),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
