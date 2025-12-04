@@ -6,7 +6,7 @@ import 'package:carbon_voice_console/features/message_download/domain/entities/d
 import 'package:carbon_voice_console/features/message_download/domain/repositories/download_repository.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
-import 'package:carbon_voice_console/features/messages/presentation/mappers/message_ui_mapper.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/mappers/message_ui_mapper.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 

@@ -6,10 +6,10 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/messages_action_panel.dart';
-import 'package:carbon_voice_console/features/dashboard/presentation/components/pagination_controls.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;

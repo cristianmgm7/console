@@ -2,7 +2,7 @@ import 'package:carbon_voice_console/core/di/injection.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/components/message_detail_view.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

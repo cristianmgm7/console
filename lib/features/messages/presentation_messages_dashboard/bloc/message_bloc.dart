@@ -1,10 +1,10 @@
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/usecases/get_messages_from_conversations_usecase.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_event.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart';
 // Remove LoadMessageDetail import - now handled by MessageDetailBloc
 // import 'package:carbon_voice_console/features/messages/presentation/bloc/message_detail_event.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/mappers/message_ui_mapper.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

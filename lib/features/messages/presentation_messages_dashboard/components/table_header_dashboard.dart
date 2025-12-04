@@ -2,7 +2,7 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_table/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:flutter/material.dart';
 
 class DashboardTableHeader extends StatelessWidget {
