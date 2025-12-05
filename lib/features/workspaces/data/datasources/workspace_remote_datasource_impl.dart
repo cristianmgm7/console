@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/utils/json_normalizer.dart';
 import 'package:carbon_voice_console/features/workspaces/data/datasources/workspace_remote_datasource.dart';
-import 'package:carbon_voice_console/features/workspaces/data/models/workspace_model.dart';
+import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_dto.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -16,7 +15,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<List<WorkspaceModel>> getWorkspaces() async {
+  Future<List<WorkspaceDto>> getWorkspaces() async {
     try {
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces',
@@ -89,10 +88,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
       }
 
       final workspaces = workspacesJson
-          .map((json) {
-            final normalized = JsonNormalizer.normalizeWorkspace(json as Map<String, dynamic>);
-            return WorkspaceModel.fromJson(normalized);
-          })
+          .map((json) => WorkspaceDto.fromJson(json as Map<String, dynamic>))
           .toList();
 
       return workspaces;
@@ -108,7 +104,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   }
 
   @override
-  Future<WorkspaceModel> getWorkspace(String workspaceId) async {
+  Future<WorkspaceDto> getWorkspace(String workspaceId) async {
     try {
       final response = await _httpService.get(
         '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId',
@@ -116,8 +112,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final normalized = JsonNormalizer.normalizeWorkspace(data);
-        final workspace = WorkspaceModel.fromJson(normalized);
+        final workspace = WorkspaceDto.fromJson(data);
         return workspace;
       } else {
         _logger.e('Failed to fetch workspace: ${response.statusCode}');
