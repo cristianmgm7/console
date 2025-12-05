@@ -87,9 +87,32 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         return [];
       }
 
-      final workspaces = workspacesJson
-          .map((json) => WorkspaceDto.fromJson(json as Map<String, dynamic>))
+      _logger.i('Workspace list size from API: ${workspacesJson.length}');
+      final sampleKeys = workspacesJson
+          .whereType<Map<String, dynamic>>()
+          .take(3)
+          .map((json) => json.keys.toList())
           .toList();
+      _logger.i('Workspace sample keys from API: $sampleKeys');
+
+      final workspaces = <WorkspaceDto>[];
+      var skipped = 0;
+      for (final item in workspacesJson) {
+        if (item is! Map<String, dynamic>) {
+          skipped++;
+          _logger.w('Skipping workspace entry with unexpected type', error: item.runtimeType);
+          continue;
+        }
+        try {
+          workspaces.add(WorkspaceDto.fromApiJson(item));
+        } on Exception catch (e, stack) {
+          skipped++;
+          _logger.w('Skipping malformed workspace entry', error: e, stackTrace: stack);
+        }
+      }
+      if (skipped > 0) {
+        _logger.w('Skipped $skipped workspace entries; delivering ${workspaces.length}');
+      }
 
       return workspaces;
     } on ServerException {
@@ -112,7 +135,8 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final workspace = WorkspaceDto.fromJson(data);
+        _logger.i('Workspace detail keys from API: ${data.keys.toList()}');
+        final workspace = WorkspaceDto.fromApiJson(data);
         return workspace;
       } else {
         _logger.e('Failed to fetch workspace: ${response.statusCode}');
@@ -128,4 +152,5 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
       throw NetworkException(message: 'Failed to fetch workspace: $e');
     }
   }
+
 }

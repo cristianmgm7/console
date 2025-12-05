@@ -9,8 +9,6 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/conversation_selected_widget.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
-    as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/widgets/workspace_selector.dart';
 import 'package:flutter/material.dart';

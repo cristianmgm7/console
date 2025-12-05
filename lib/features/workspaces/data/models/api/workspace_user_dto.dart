@@ -15,6 +15,17 @@ class WorkspaceUserDto {
   factory WorkspaceUserDto.fromJson(Map<String, dynamic> json) =>
       _$WorkspaceUserDtoFromJson(json);
 
+  /// Accepts alternate keys commonly seen in collaborators payloads.
+  factory WorkspaceUserDto.fromApiJson(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+    normalized['user_id'] ??=
+        json['user_guid'] ?? json['guid'] ?? json['_id'] ?? json['id'];
+    normalized['role'] ??= json['role_cd'] ?? json['role'];
+    normalized['status'] ??= json['status'];
+    normalized['status_changed_at'] ??= json['status_changed_at'];
+    return _$WorkspaceUserDtoFromJson(normalized);
+  }
+
   @JsonKey(name: 'user_id')
   final String? userId;
 
