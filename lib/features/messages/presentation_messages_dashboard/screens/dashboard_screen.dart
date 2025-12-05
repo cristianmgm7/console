@@ -6,7 +6,6 @@ import 'package:carbon_voice_console/features/conversations/presentation/bloc/co
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
-import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
@@ -218,24 +217,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<DownloadBloc, DownloadState>(
       builder: (context, downloadState) {
-        return ColoredBox(
-          color: Theme.of(context).colorScheme.surface,
-          child: Stack(
-            children: [
-              if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
-
-              // Error listeners
-              _buildErrorListeners(),
-
-              // Right-side circular progress indicator
-              const Positioned(
-                top: 100,
-                right: 24,
-                child: CircularDownloadProgressWidget(),
-              ),
-
-            ],
-          ),
+        return Stack(
+          children: [
+            if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
+        
+            // Error listeners
+            _buildErrorListeners(),
+        
+          ],
         );
       },
     );
