@@ -3,6 +3,7 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
@@ -97,6 +98,13 @@ class _DashboardContentState extends State<DashboardContent> {
                 },
               );
             },
+          ),
+
+          // Circular download progress indicator - positioned at top-right
+          const Positioned(
+            top: 100,
+            right: 24,
+            child: CircularDownloadProgressWidget(),
           ),
 
           // Action panel - positioned in top-right for track downloads
