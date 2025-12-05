@@ -47,9 +47,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   @override
-  void dispose() {
-    _workspaceSubscription.cancel();
-    _conversationSubscription.cancel();
+  Future<void> dispose() async {
+    await _workspaceSubscription.cancel();
+    await _conversationSubscription.cancel();
     super.dispose();
   }
 
@@ -78,40 +78,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Widget _buildErrorListeners() {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<WorkspaceBloc, WorkspaceState>(
-          listener: (context, state) {
-            if (state is WorkspaceError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
-        ),
-        BlocListener<ConversationBloc, ConversationState>(
-          listener: (context, state) {
-            if (state is ConversationError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
-        ),
-        BlocListener<MessageBloc, MessageState>(
-          listener: (context, state) {
-            if (state is MessageError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
-        ),
-      ],
-      child: const SizedBox.shrink(),
-    );
-  }
 
 
   void _toggleSelectAll(int messageCount, {bool? value}) {
@@ -217,14 +183,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<DownloadBloc, DownloadState>(
       builder: (context, downloadState) {
-        return Stack(
-          children: [
-            if (_selectedMessageForDetail == null) _buildFullDashboard() else _buildDashboardWithDetail(),
-        
-            // Error listeners
-            _buildErrorListeners(),
-        
+        return MultiBlocListener(
+          listeners: [
+            BlocListener<WorkspaceBloc, WorkspaceState>(
+              listener: (context, state) {
+                if (state is WorkspaceError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                }
+              },
+            ),
+            BlocListener<ConversationBloc, ConversationState>(
+              listener: (context, state) {
+                if (state is ConversationError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                }
+              },
+            ),
+            BlocListener<MessageBloc, MessageState>(
+              listener: (context, state) {
+                if (state is MessageError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                }
+              },
+            ),
           ],
+          child: ColoredBox(
+            color: Theme.of(context).colorScheme.surface,
+            child: _selectedMessageForDetail == null ? _buildFullDashboard() : _buildDashboardWithDetail(),
+          ),
         );
       },
     );

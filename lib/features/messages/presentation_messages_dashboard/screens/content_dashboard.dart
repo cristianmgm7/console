@@ -15,14 +15,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardContent extends StatefulWidget {
   const DashboardContent({
-    required this.isAnyBlocLoading,
+    // Required data and state
     required this.selectedMessages,
     required this.onToggleMessageSelection,
     required this.onToggleSelectAll,
     required this.selectAll,
+    required this.isAnyBlocLoading,
     required this.onManualLoadMore,
     required this.hasMoreMessages,
     required this.isLoadingMore,
+
+    // Optional action callbacks
     this.onViewDetail,
     this.onReply,
     this.onDownloadMessage,
@@ -30,6 +33,8 @@ class DashboardContent extends StatefulWidget {
     this.onDownloadTranscript,
     this.onSummarize,
     this.onAIChat,
+
+    // Message composition panel parameters
     this.showMessageComposition,
     this.compositionWorkspaceId,
     this.compositionChannelId,
@@ -37,6 +42,7 @@ class DashboardContent extends StatefulWidget {
     this.onCloseMessageComposition,
     this.onMessageCompositionSuccess,
     this.onCancelReply,
+
     super.key,
   });
 
