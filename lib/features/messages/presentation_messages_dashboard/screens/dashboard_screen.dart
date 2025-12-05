@@ -15,7 +15,6 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart' as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -140,15 +139,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _onRefresh() {
-    // Refresh all blocs by reloading workspaces
-    context.read<WorkspaceBloc>().add(const ws_events.LoadWorkspaces());
-    setState(() {
-      _selectedMessages.clear();
-      _selectAll = false;
-    });
-  }
-
   void _onManualLoadMore() {
     context.read<MessageBloc>().add(const msg_events.LoadMoreMessages());
   }
@@ -268,7 +258,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         // App Bar
         DashboardAppBar(
-          onRefresh: _onRefresh,
           onSendMessage: _onSendMessage,
         ),
 
@@ -314,7 +303,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           // App Bar - full width at top
           DashboardAppBar(
-            onRefresh: _onRefresh,
             onSendMessage: _onSendMessage,
           ),
           // Main content area below app bar: left = messages, right = detail
