@@ -36,6 +36,8 @@ class WorkspaceUIHelper {
       WorkspaceCategory.standardMember,
       WorkspaceCategory.standardGuest,
       WorkspaceCategory.webcontact,
+      // Fallback bucket when userId is missing or roles are unknown
+      WorkspaceCategory.unknown,
     ];
 
     for (final category in categoryOrder) {
@@ -53,6 +55,15 @@ class WorkspaceUIHelper {
         ..sort((a, b) => a.name.compareTo(b.name));
 
       for (final workspace in sorted) {
+        items.add(WorkspaceDisplayItem.workspace(workspace));
+      }
+    }
+
+    // If nothing was added (e.g., all were unknown), fall back to showing all non-hidden
+    if (items.isEmpty) {
+      final visible = workspaces.where((w) => !w.shouldBeHidden).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+      for (final workspace in visible) {
         items.add(WorkspaceDisplayItem.workspace(workspace));
       }
     }

@@ -24,8 +24,32 @@ extension WorkspaceDtoMapper on WorkspaceDto {
       description: description,
       imageUrl: imageUrl,
       lastUpdatedAt: lastUpdatedAt,
-      users: users?.map((dto) => dto.toDomain()).toList() ?? [],
-      phones: phones?.map((dto) => dto.toDomain()).toList() ?? [],
+      users: users == null
+          ? []
+          : users!
+              .map((dto) {
+                try {
+                  return dto.toDomain();
+                } on FormatException {
+                  // Skip invalid user entries rather than failing the workspace
+                  return null;
+                }
+              })
+              .whereType<WorkspaceUser>()
+              .toList(),
+      phones: phones == null
+          ? []
+          : phones!
+              .map((dto) {
+                try {
+                  return dto.toDomain();
+                } on FormatException {
+                  // Skip invalid phone entries rather than failing the workspace
+                  return null;
+                }
+              })
+              .whereType<WorkspacePhone>()
+              .toList(),
       backgroundColor: backgroundColor,
       watermarkImageUrl: watermarkImageUrl,
       conversationDefault: conversationDefault,

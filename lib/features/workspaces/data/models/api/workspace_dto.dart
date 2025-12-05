@@ -100,6 +100,98 @@ class WorkspaceDto {
   factory WorkspaceDto.fromJson(Map<String, dynamic> json) =>
       _$WorkspaceDtoFromJson(json);
 
+  /// Accepts API payloads with alternative key names and normalizes them
+  /// before delegating to the generated `fromJson`.
+  factory WorkspaceDto.fromApiJson(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+
+    DateTime? _parseEpochOrString(dynamic value) {
+      if (value == null) return null;
+      if (value is String) {
+        // If it's already an ISO string, use it directly
+        return DateTime.tryParse(value);
+      }
+      if (value is int) {
+        // Detect seconds vs millis
+        final millis = value > 1000000000000 ? value : value * 1000;
+        return DateTime.fromMillisecondsSinceEpoch(millis);
+      }
+      return null;
+    }
+
+    normalized['_id'] ??=
+        json['workspace_guid'] ?? json['_id'] ?? json['id'] ?? json['workspace_id'];
+    normalized['name'] ??=
+        json['workspace_name'] ?? json['name'] ?? json['workspaceName'];
+    normalized['description'] ??=
+        json['workspace_description'] ?? json['description'];
+    normalized['type'] ??=
+        json['type'] ?? json['type_cd'] ?? json['workspace_type'];
+    normalized['plan_type'] ??= json['plan_type'] ?? json['plan'];
+    normalized['created_at'] ??= json['created_at'] ?? json['createdAt'];
+    normalized['last_updated_at'] ??=
+        json['last_updated_at'] ?? json['updated_at'];
+    normalized['vanity_name'] ??= json['vanity_name'] ?? json['vanityName'];
+    normalized['image_url'] ??= json['image_url'] ?? json['imageUrl'];
+    normalized['background_color'] ??=
+        json['background_color'] ?? json['backgroundColor'];
+    normalized['watermark_image_url'] ??=
+        json['watermark_image_url'] ?? json['watermarkImageUrl'];
+    normalized['conversation_default'] ??=
+        json['conversation_default'] ?? json['conversationDefault'];
+    normalized['invitation_mode'] ??=
+        json['invitation_mode'] ?? json['invitationMode'];
+    normalized['sso_email_domain'] ??= json['sso_email_domain'];
+    normalized['is_retention_enabled'] ??= json['is_retention_enabled'];
+    normalized['retention_days'] ??= json['retention_days'];
+    normalized['who_can_change_conversation_retention'] ??=
+        json['who_can_change_conversation_retention'];
+    normalized['who_can_mark_messages_as_preserved'] ??=
+        json['who_can_mark_messages_as_preserved'];
+    normalized['retention_days_async_meeting'] ??=
+        json['retention_days_async_meeting'];
+
+    // Collections
+    if (json['collaborators'] is List) {
+      normalized['users'] = (json['collaborators'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((u) => WorkspaceUserDto.fromApiJson(u).toJson())
+          .toList();
+    } else {
+      normalized['users'] ??= json['users'];
+    }
+
+    if (json['phones'] is List) {
+      normalized['phones'] = (json['phones'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((p) => WorkspacePhoneDto.fromApiJson(p).toJson())
+          .toList();
+    }
+    normalized['phones'] ??= json['phones'];
+    normalized['settings'] ??= json['settings'];
+
+    // Ensure domains is a list of strings if present
+    final domains = json['domains'];
+    if (domains is List) {
+      normalized['domains'] = domains.map((e) => e.toString()).toList();
+    }
+
+    // Normalize timestamps to ISO strings for the generated parser
+    final createdTs = _parseEpochOrString(json['created_ts']) ??
+        _parseEpochOrString(normalized['created_at']);
+    if (createdTs != null) {
+      normalized['created_at'] = createdTs.toIso8601String();
+    }
+
+    final updatedTs = _parseEpochOrString(json['last_updated_ts']) ??
+        _parseEpochOrString(normalized['last_updated_at']);
+    if (updatedTs != null) {
+      normalized['last_updated_at'] = updatedTs.toIso8601String();
+    }
+
+    return _$WorkspaceDtoFromJson(normalized);
+  }
+
   @JsonKey(name: '_id')
   final String? id;
 

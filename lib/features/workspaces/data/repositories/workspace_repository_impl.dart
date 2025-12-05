@@ -28,7 +28,28 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
       }
 
       final workspaceDtos = await _remoteDataSource.getWorkspaces();
-      final workspaces = workspaceDtos.map((dto) => dto.toDomain()).toList();
+
+      // Convert DTOs defensively so one bad entry does not drop the rest
+      final workspaces = <Workspace>[];
+      var skipped = 0;
+      for (final dto in workspaceDtos) {
+        try {
+          workspaces.add(dto.toDomain());
+        } on FormatException catch (e, stack) {
+          skipped++;
+          _logger.w('Skipping workspace DTO due to format issue', error: e, stackTrace: stack);
+        } on Exception catch (e, stack) {
+          skipped++;
+          _logger.w('Skipping workspace DTO due to unexpected issue', error: e, stackTrace: stack);
+        }
+      }
+      if (skipped > 0) {
+        _logger.w('Skipped $skipped workspace DTO(s); delivered ${workspaces.length}');
+      }
+
+      _logger.i(
+        'Workspaces converted: ${workspaces.length}/${workspaceDtos.length} -> ids=${workspaces.map((w) => w.id).toList()}',
+      );
 
       // Cache the result
       _cachedWorkspaces = workspaces;
