@@ -30,8 +30,23 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           emit(const WorkspaceError('No workspaces found'));
           return;
         }
-        final selected = workspaces.first;
-        emit(WorkspaceLoaded(workspaces, selected));
+
+        // Filter out hidden workspaces if userId provided
+        final visibleWorkspaces = event.currentUserId != null
+            ? workspaces.where((w) => !w.shouldBeHidden).toList()
+            : workspaces;
+
+        if (visibleWorkspaces.isEmpty) {
+          emit(const WorkspaceError('No accessible workspaces found'));
+          return;
+        }
+
+        final selected = visibleWorkspaces.first;
+        emit(WorkspaceLoaded(
+          visibleWorkspaces,
+          selected,
+          currentUserId: event.currentUserId,
+        ));
         // State change will trigger dashboard screen to notify ConversationBloc
       },
       onFailure: (failure) {
@@ -52,7 +67,11 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       orElse: () => currentState.selectedWorkspace!,
     );
 
-    emit(WorkspaceLoaded(currentState.workspaces, selected));
+    emit(WorkspaceLoaded(
+      currentState.workspaces,
+      selected,
+      currentUserId: currentState.currentUserId,
+    ));
     // State change will trigger dashboard screen to notify ConversationBloc
   }
 }
