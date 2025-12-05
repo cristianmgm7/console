@@ -4,11 +4,15 @@ import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/utils/date_time_formatters.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
 import 'package:flutter/material.dart';
@@ -19,16 +23,14 @@ class MessagesContent extends StatelessWidget {
     required this.messageState,
     required this.audioState,
     required this.isAnyBlocLoading,
-    this.onReply,
-    this.onDownloadMessage,
     super.key,
   });
 
   final MessageState messageState;
   final AudioPlayerState audioState;
   final bool Function(BuildContext context) isAnyBlocLoading;
-  final void Function(String messageId, String channelId)? onReply;
-  final ValueChanged<String>? onDownloadMessage;
+
+  // All callbacks removed - use Cubits directly
 
   @override
   Widget build(BuildContext context) {
@@ -161,14 +163,26 @@ class MessagesContent extends StatelessWidget {
                     AppIconButton(
                       icon: AppIcons.reply,
                       tooltip: 'Reply',
-                      onPressed: () => onReply?.call(message.id, message.conversationId),
+                      onPressed: () {
+                        final workspaceState = context.read<WorkspaceBloc>().state;
+                        if (workspaceState is WorkspaceLoaded &&
+                            workspaceState.selectedWorkspace != null) {
+                          context.read<MessageCompositionCubit>().openReply(
+                            workspaceId: workspaceState.selectedWorkspace!.id,
+                            channelId: message.conversationId,
+                            replyToMessageId: message.id,
+                          );
+                        }
+                      },
                       size: AppIconButtonSize.small,
                     ),
                     const SizedBox(width: 4),
                     AppIconButton(
                       icon: AppIcons.download,
                       tooltip: 'Download',
-                      onPressed: () => onDownloadMessage?.call(message.id),
+                      onPressed: () {
+                        context.read<DownloadBloc>().add(StartDownloadAudio({message.id}));
+                      },
                       size: AppIconButtonSize.small,
                     ),
                     ],

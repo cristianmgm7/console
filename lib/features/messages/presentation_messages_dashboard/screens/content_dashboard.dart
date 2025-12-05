@@ -13,13 +13,11 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_content.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_cubit.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/components/inline_message_composition_panel.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -58,26 +56,6 @@ class _DashboardContentState extends State<DashboardContent> {
                     messageState: messageState,
                     audioState: audioState,
                     isAnyBlocLoading: widget.isAnyBlocLoading,
-                    onReply: (messageId, channelId) {
-                      final workspaceState = context.read<WorkspaceBloc>().state;
-                      final workspaceId = workspaceState is WorkspaceLoaded &&
-                                         workspaceState.selectedWorkspace != null
-                          ? workspaceState.selectedWorkspace!.id
-                          : '';
-
-                      if (workspaceId.isEmpty) {
-                        return; // Cannot open reply without workspace
-                      }
-
-                      context.read<MessageCompositionCubit>().openReply(
-                        workspaceId: workspaceId,
-                        channelId: channelId,
-                        replyToMessageId: messageId,
-                      );
-                    },
-                    onDownloadMessage: (messageId) {
-                      context.read<DownloadBloc>().add(StartDownloadAudio({messageId}));
-                    },
                   );
                 },
               );
