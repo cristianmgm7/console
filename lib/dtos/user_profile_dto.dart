@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/dtos/permission_dto.dart';
-import 'package:carbon_voice_console/dtos/workspace_dto.dart';
+import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_dto.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_profile_dto.g.dart';

@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
+import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 import 'package:carbon_voice_console/features/conversations/domain/repositories/conversation_repository.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
@@ -17,10 +18,29 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     on<SelectMultipleConversations>(_onSelectMultipleConversations);
     on<ClearConversationSelection>(_onClearConversationSelection);
     on<WorkspaceSelectedEvent>(_onWorkspaceSelected);
+    on<OpenConversationSearch>(_onOpenConversationSearch);
+    on<CloseConversationSearch>(_onCloseConversationSearch);
+    on<UpdateSearchQuery>(_onUpdateSearchQuery);
+    on<ToggleSearchMode>(_onToggleSearchMode);
+    on<SelectConversationFromSearch>(_onSelectConversationFromSearch);
   }
 
   final ConversationRepository _conversationRepository;
   final Logger _logger;
+
+  /// Helper method to sort conversations by most recent activity
+  List<Conversation> _sortConversationsByRecency(List<Conversation> conversations) {
+    final sorted = List<Conversation>.from(conversations);
+
+    sorted.sort((a, b) {
+      final aTimestamp = a.lastPostedTs ?? a.lastUpdatedTs ?? a.createdTs ?? 0;
+      final bTimestamp = b.lastPostedTs ?? b.lastUpdatedTs ?? b.createdTs ?? 0;
+
+      return bTimestamp.compareTo(aTimestamp);
+    });
+
+    return sorted;
+  }
 
   Future<void> _onWorkspaceSelected(
     WorkspaceSelectedEvent event,
@@ -48,12 +68,19 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           return;
         }
 
-        final selected = conversations.first;
+        final sortedConversations = _sortConversationsByRecency(conversations);
+
+        final colorMap = <String, int>{};
+        for (var i = 0; i < sortedConversations.length; i++) {
+          colorMap[sortedConversations[i].id] = i % 10;
+        }
+
+        final selected = sortedConversations.first;
 
         emit(ConversationLoaded(
-          conversations: conversations,
+          conversations: sortedConversations,
           selectedConversationIds: {selected.id},
-          conversationColorMap: const {},
+          conversationColorMap: colorMap,
         ),);
         // State change will trigger dashboard screen to notify MessageBloc
       },
@@ -104,6 +131,94 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     if (currentState is! ConversationLoaded) return;
 
     emit(currentState.copyWith(selectedConversationIds: const <String>{}));
+    // State change will trigger dashboard screen to notify MessageBloc
+  }
+
+  /// Handles opening the conversation search panel
+  void _onOpenConversationSearch(
+    OpenConversationSearch event,
+    Emitter<ConversationState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot open search: current state is not ConversationLoaded');
+      return;
+    }
+
+    emit(currentState.copyWith(
+      isSearchOpen: true,
+      searchQuery: '',
+      searchMode: ConversationSearchMode.name,
+    ));
+  }
+
+  /// Handles closing the conversation search panel
+  void _onCloseConversationSearch(
+    CloseConversationSearch event,
+    Emitter<ConversationState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot close search: current state is not ConversationLoaded');
+      return;
+    }
+
+    emit(currentState.copyWith(
+      isSearchOpen: false,
+      searchQuery: '',
+    ));
+  }
+
+  /// Handles updating the search query
+  void _onUpdateSearchQuery(
+    UpdateSearchQuery event,
+    Emitter<ConversationState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot update search query: current state is not ConversationLoaded');
+      return;
+    }
+
+    emit(currentState.copyWith(searchQuery: event.query));
+  }
+
+  /// Handles toggling between ID and Name search modes
+  void _onToggleSearchMode(
+    ToggleSearchMode event,
+    Emitter<ConversationState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot toggle search mode: current state is not ConversationLoaded');
+      return;
+    }
+
+    emit(currentState.copyWith(
+      searchMode: event.searchMode,
+      searchQuery: '',
+    ));
+  }
+
+  /// Handles selecting a conversation from search results
+  void _onSelectConversationFromSearch(
+    SelectConversationFromSearch event,
+    Emitter<ConversationState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot select from search: current state is not ConversationLoaded');
+      return;
+    }
+
+    final newSelectedIds = Set<String>.from(currentState.selectedConversationIds);
+    newSelectedIds.add(event.conversationId);
+
+    emit(currentState.copyWith(
+      selectedConversationIds: newSelectedIds,
+      isSearchOpen: false,
+      searchQuery: '',
+    ));
     // State change will trigger dashboard screen to notify MessageBloc
   }
 }
