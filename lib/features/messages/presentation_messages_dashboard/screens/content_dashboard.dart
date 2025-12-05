@@ -7,13 +7,19 @@ import 'package:carbon_voice_console/features/message_download/presentation/bloc
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart'
+    as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_content.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/components/inline_message_composition_panel.dart';
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,18 +29,6 @@ class DashboardContent extends StatefulWidget {
     required this.onManualLoadMore,
     required this.hasMoreMessages,
     required this.isLoadingMore,
-    this.onViewDetail,
-    this.onDownloadAudio,
-    this.onDownloadTranscript,
-    this.onSummarize,
-    this.onAIChat,
-    this.showMessageComposition,
-    this.compositionWorkspaceId,
-    this.compositionChannelId,
-    this.compositionReplyToMessageId,
-    this.onCloseMessageComposition,
-    this.onMessageCompositionSuccess,
-    this.onCancelReply,
     super.key,
   });
 
@@ -42,18 +36,6 @@ class DashboardContent extends StatefulWidget {
   final VoidCallback onManualLoadMore;
   final bool hasMoreMessages;
   final bool isLoadingMore;
-  final ValueChanged<String>? onViewDetail;
-  final VoidCallback? onDownloadAudio;
-  final VoidCallback? onDownloadTranscript;
-  final VoidCallback? onSummarize;
-  final VoidCallback? onAIChat;
-  final bool? showMessageComposition;
-  final String? compositionWorkspaceId;
-  final String? compositionChannelId;
-  final String? compositionReplyToMessageId;
-  final VoidCallback? onCloseMessageComposition;
-  final VoidCallback? onMessageCompositionSuccess;
-  final VoidCallback? onCancelReply;
 
   @override
   State<DashboardContent> createState() => _DashboardContentState();
@@ -76,9 +58,22 @@ class _DashboardContentState extends State<DashboardContent> {
                     messageState: messageState,
                     audioState: audioState,
                     isAnyBlocLoading: widget.isAnyBlocLoading,
-                    onViewDetail: widget.onViewDetail,
                     onReply: (messageId, channelId) {
-                      // Reply handler will be added in Phase 2
+                      final workspaceState = context.read<WorkspaceBloc>().state;
+                      final workspaceId = workspaceState is WorkspaceLoaded &&
+                                         workspaceState.selectedWorkspace != null
+                          ? workspaceState.selectedWorkspace!.id
+                          : '';
+
+                      if (workspaceId.isEmpty) {
+                        return; // Cannot open reply without workspace
+                      }
+
+                      context.read<MessageCompositionCubit>().openReply(
+                        workspaceId: workspaceId,
+                        channelId: channelId,
+                        replyToMessageId: messageId,
+                      );
                     },
                     onDownloadMessage: (messageId) {
                       context.read<DownloadBloc>().add(StartDownloadAudio({messageId}));
@@ -115,8 +110,12 @@ class _DashboardContentState extends State<DashboardContent> {
                     context.read<DownloadBloc>().add(StartDownloadTranscripts(messageIds));
                     context.read<MessageSelectionCubit>().clearSelection();
                   },
-                  onSummarize: widget.onSummarize ?? () {},
-                  onAIChat: widget.onAIChat ?? () {},
+                  onSummarize: () {
+                    // TODO: Implement summarize functionality
+                  },
+                  onAIChat: () {
+                    // TODO: Implement AI chat functionality
+                  },
                 ),
               );
             },
@@ -141,38 +140,53 @@ class _DashboardContentState extends State<DashboardContent> {
           ),
 
           // Mini player - positioned at bottom, moves up when composition panel is open
-          Positioned(
-            bottom: (widget.showMessageComposition ?? false) &&
-                     widget.compositionWorkspaceId != null &&
-                     widget.compositionChannelId != null
-                ? 700  // Move up when composition panel is open
-                : 24,  // Normal position
-            left: 0,
-            right: 0,
-            child: const Center(
-              child: AudioMiniPlayerWidget(),
-            ),
+          BlocBuilder<MessageCompositionCubit, MessageCompositionState>(
+            builder: (context, compositionState) {
+              return Positioned(
+                bottom: compositionState.isVisible && compositionState.canCompose
+                    ? 700  // Move up when composition panel is open
+                    : 24,  // Normal position
+                left: 0,
+                right: 0,
+                child: const Center(
+                  child: AudioMiniPlayerWidget(),
+                ),
+              );
+            },
           ),
 
           // Message composition panel - positioned above audio mini player
-          if ((widget.showMessageComposition ?? false) &&
-              widget.compositionWorkspaceId != null &&
-              widget.compositionChannelId != null)
-            Positioned(
-              bottom: 24, // Above the audio mini player (24 + ~80 for player height + padding)
-              left: 24,
-              right: 24,
-              child: Center(
-                child: InlineMessageCompositionPanel(
-                  workspaceId: widget.compositionWorkspaceId!,
-                  channelId: widget.compositionChannelId!,
-                  replyToMessageId: widget.compositionReplyToMessageId,
-                  onClose: widget.onCloseMessageComposition,
-                  onSuccess: widget.onMessageCompositionSuccess,
-                  onCancelReply: widget.onCancelReply,
+          BlocBuilder<MessageCompositionCubit, MessageCompositionState>(
+            builder: (context, compositionState) {
+              if (!compositionState.isVisible || !compositionState.canCompose) {
+                return const SizedBox.shrink();
+              }
+
+              return Positioned(
+                bottom: 24, // Above the audio mini player (24 + ~80 for player height + padding)
+                left: 24,
+                right: 24,
+                child: Center(
+                  child: InlineMessageCompositionPanel(
+                    workspaceId: compositionState.workspaceId!,
+                    channelId: compositionState.channelId!,
+                    replyToMessageId: compositionState.replyToMessageId,
+                    onClose: () {
+                      context.read<MessageCompositionCubit>().closePanel();
+                    },
+                    onSuccess: () {
+                      // Refresh messages after successful send
+                      context.read<MessageBloc>().add(const msg_events.RefreshMessages());
+                      context.read<MessageCompositionCubit>().onSuccess();
+                    },
+                    onCancelReply: () {
+                      context.read<MessageCompositionCubit>().cancelReply();
+                    },
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
+          ),
         ],
       ),
     );

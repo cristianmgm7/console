@@ -5,6 +5,7 @@ import 'package:carbon_voice_console/core/utils/date_time_formatters.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
@@ -18,7 +19,6 @@ class MessagesContent extends StatelessWidget {
     required this.messageState,
     required this.audioState,
     required this.isAnyBlocLoading,
-    this.onViewDetail,
     this.onReply,
     this.onDownloadMessage,
     super.key,
@@ -27,7 +27,6 @@ class MessagesContent extends StatelessWidget {
   final MessageState messageState;
   final AudioPlayerState audioState;
   final bool Function(BuildContext context) isAnyBlocLoading;
-  final ValueChanged<String>? onViewDetail;
   final void Function(String messageId, String channelId)? onReply;
   final ValueChanged<String>? onDownloadMessage;
 
@@ -153,7 +152,9 @@ class MessagesContent extends StatelessWidget {
                     AppIconButton(
                       icon: AppIcons.eye,
                       tooltip: 'View Details',
-                      onPressed: () => onViewDetail?.call(message.id),
+                      onPressed: () {
+                        context.read<MessageDetailCubit>().openDetail(message.id);
+                      },
                       size: AppIconButtonSize.small,
                     ),
                     const SizedBox(width: 4),
