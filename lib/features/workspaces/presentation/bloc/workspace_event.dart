@@ -8,7 +8,12 @@ sealed class WorkspaceEvent extends Equatable {
 }
 
 class LoadWorkspaces extends WorkspaceEvent {
-  const LoadWorkspaces();
+  const LoadWorkspaces({this.currentUserId});
+
+  final String? currentUserId;
+
+  @override
+  List<Object?> get props => [currentUserId];
 }
 
 class SelectWorkspace extends WorkspaceEvent {

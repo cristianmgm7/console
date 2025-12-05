@@ -17,12 +17,17 @@ class WorkspaceLoading extends WorkspaceState {
 }
 
 class WorkspaceLoaded extends WorkspaceState {
-  const WorkspaceLoaded(this.workspaces, this.selectedWorkspace);
+  const WorkspaceLoaded(
+    this.workspaces,
+    this.selectedWorkspace, {
+    this.currentUserId,
+  });
   final List<Workspace> workspaces;
   final Workspace? selectedWorkspace;
+  final String? currentUserId;
 
   @override
-  List<Object?> get props => [workspaces, selectedWorkspace];
+  List<Object?> get props => [workspaces, selectedWorkspace, currentUserId];
 }
 
 class WorkspaceError extends WorkspaceState {
