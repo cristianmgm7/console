@@ -5,12 +5,14 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/conversation_search_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/conversation_selected_widget.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
+import 'package:carbon_voice_console/features/workspaces/presentation/widgets/workspace_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -90,7 +92,7 @@ class DashboardAppBar extends StatelessWidget {
 
           const SizedBox(width: 16),
 
-          // Workspace Dropdown
+          // Workspace Selector with enhanced UI
           BlocSelector<WorkspaceBloc, WorkspaceState, WorkspaceLoaded?>(
             selector: (state) => state is WorkspaceLoaded ? state : null,
             builder: (context, workspaceState) {
@@ -98,12 +100,28 @@ class DashboardAppBar extends StatelessWidget {
                 return const SizedBox.shrink();
               }
 
-              return Column(
+              // Get current user ID from auth or user profile
+              // TODO: Replace with actual current user ID from auth
+              final currentUserId = workspaceState.currentUserId ?? '';
+
+              return WorkspaceSelector(
+                currentUserId: currentUserId,
+              );
+            },
+          ),
+
+          const SizedBox(width: 16),
+
+          // Conversation Selector Dropdown with Search
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Workspace',
+                    'Conversations',
                     style: AppTextStyle.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
@@ -113,122 +131,103 @@ class DashboardAppBar extends StatelessWidget {
                   SizedBox(
                     width: 170,
                     height: 40,
-                    child: AppDropdown<String>(
-                      value: workspaceState.selectedWorkspace?.id,
-                      dropdownKey: const Key('workspace_dropdown'),
-                      items: workspaceState.workspaces.map((workspace) {
-                        return DropdownMenuItem<String>(
-                          value: workspace.id,
-                          child: Text(
-                            workspace.name,
+                    child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+                      selector: (state) => state is ConversationLoaded ? state : null,
+                      builder: (context, conversationState) {
+                        if (conversationState == null || conversationState.conversations.isEmpty) {
+                          return AppContainer(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            backgroundColor: AppColors.surface,
+                            border: Border.all(
+                              color: AppColors.border,
+                            ),
+                            child: Text(
+                              'No conversations',
+                              style: AppTextStyle.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return AppDropdown<String>(
+                          value: null,
+                          hint: Text(
+                            conversationState.selectedConversationIds.isEmpty
+                                ? 'Select conversations...'
+                                : '${conversationState.selectedConversationIds.length} selected',
                             style: AppTextStyle.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
+                              color: AppColors.textSecondary,
                             ),
                           ),
+                          dropdownKey: const Key('conversation_dropdown'),
+                          items: conversationState.conversations.map((conversation) {
+                            final isSelected =
+                                conversationState.selectedConversationIds.contains(conversation.id);
+                            return DropdownMenuItem<String>(
+                              value: conversation.id,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isSelected ? AppIcons.check : AppIcons.add,
+                                    size: 16,
+                                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    conversation.name,
+                                    style: AppTextStyle.bodyMedium.copyWith(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              final currentSelected = Set<String>.from(conversationState.selectedConversationIds);
+                              if (currentSelected.contains(newValue)) {
+                                currentSelected.remove(newValue);
+                              } else {
+                                currentSelected.add(newValue);
+                              }
+                              context.read<ConversationBloc>().add(SelectMultipleConversations(currentSelected));
+                            }
+                          },
                         );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          context.read<WorkspaceBloc>().add(ws_events.SelectWorkspace(newValue));
-                        }
                       },
                     ),
                   ),
                 ],
-              );
-            },
-          ),
-
-          const SizedBox(width: 16),
-
-          // Conversation Selector Dropdown
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Conversations',
-                style: AppTextStyle.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
               ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: 170,
-                height: 40,
-                child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
-                  selector: (state) => state is ConversationLoaded ? state : null,
-                  builder: (context, conversationState) {
-                    if (conversationState == null || conversationState.conversations.isEmpty) {
-                      return AppContainer(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        backgroundColor: AppColors.surface,
-                        border: Border.all(
-                          color: AppColors.border,
-                        ),
-                        child: Text(
-                          'No conversations',
-                          style: AppTextStyle.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      );
-                    }
+              const SizedBox(width: 8),
+              BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
+                selector: (state) => state is ConversationLoaded ? state : null,
+                builder: (context, conversationState) {
+                  if (conversationState == null || conversationState.conversations.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
 
-                    return AppDropdown<String>(
-                      value: null, // No single value since we allow multiple selections
-                      hint: Text(
-                        conversationState.selectedConversationIds.isEmpty
-                            ? 'Select conversations...'
-                            : '${conversationState.selectedConversationIds.length} selected',
-                        style: AppTextStyle.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      dropdownKey: const Key('conversation_dropdown'),
-                      items: conversationState.conversations.map((conversation) {
-                        final isSelected = conversationState.selectedConversationIds.contains(conversation.id);
-                        return DropdownMenuItem<String>(
-                          value: conversation.id,
-                          child: Row(
-                            children: [
-                              Icon(
-                                isSelected ? AppIcons.check : AppIcons.add,
-                                size: 16,
-                                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                conversation.name,
-                                style: AppTextStyle.bodyMedium.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          final currentSelected = Set<String>.from(conversationState.selectedConversationIds);
-                          if (currentSelected.contains(newValue)) {
-                            // Remove if already selected (toggle off)
-                            currentSelected.remove(newValue);
-                          } else {
-                            // Add if not selected (toggle on)
-                            currentSelected.add(newValue);
-                          }
-                          context.read<ConversationBloc>().add(SelectMultipleConversations(currentSelected));
-                        }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 22),
+                    child: AppIconButton(
+                      icon: AppIcons.search,
+                      onPressed: () {
+                        context.read<ConversationBloc>().add(const OpenConversationSearch());
                       },
-                    );
-                  },
-                ),
+                      backgroundColor: AppColors.surface,
+                      foregroundColor: AppColors.primary,
+                      tooltip: 'Search conversations',
+                    ),
+                  );
+                },
               ),
+              const SizedBox(width: 8),
+              const ConversationSearchPanel(),
             ],
           ),
 
