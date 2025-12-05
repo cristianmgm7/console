@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
