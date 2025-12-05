@@ -13,6 +13,8 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/content_dashboard.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart'
+    show LoadMessageDetail, MessageDetailBloc;
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -29,6 +31,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late final StreamSubscription<WorkspaceState> _workspaceSubscription;
   late final StreamSubscription<ConversationState> _conversationSubscription;
+  late final StreamSubscription<MessageDetailState> _messageDetailSubscription;
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> dispose() async {
     await _workspaceSubscription.cancel();
     await _conversationSubscription.cancel();
+    await _messageDetailSubscription.cancel();
     super.dispose();
   }
 
@@ -48,6 +52,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final workspaceBloc = context.read<WorkspaceBloc>();
     final conversationBloc = context.read<ConversationBloc>();
     final messageBloc = context.read<MessageBloc>();
+    final messageDetailCubit = context.read<MessageDetailCubit>();
+    final messageDetailBloc = context.read<MessageDetailBloc>();
 
     // WorkspaceBloc -> ConversationBloc
     _workspaceSubscription = workspaceBloc.stream.listen((state) {
@@ -64,6 +70,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         messageBloc.add(
           msg_events.ConversationSelectedEvent(state.selectedConversationIds),
         );
+      }
+    });
+
+    // MessageDetailCubit -> MessageDetailBloc
+    _messageDetailSubscription = messageDetailCubit.stream.listen((state) {
+      if (state.selectedMessageId != null) {
+        messageDetailBloc.add(LoadMessageDetail(state.selectedMessageId!));
       }
     });
   }

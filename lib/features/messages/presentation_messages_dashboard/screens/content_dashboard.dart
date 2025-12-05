@@ -144,7 +144,7 @@ class _DashboardContentState extends State<DashboardContent> {
             builder: (context, compositionState) {
               return Positioned(
                 bottom: compositionState.isVisible && compositionState.canCompose
-                    ? 700  // Move up when composition panel is open
+                    ? 180  // Move up when composition panel is open (~150px panel + ~30px spacing)
                     : 24,  // Normal position
                 left: 0,
                 right: 0,
