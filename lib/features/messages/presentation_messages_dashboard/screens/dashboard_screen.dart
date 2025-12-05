@@ -9,9 +9,8 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/app_bar_dashboard.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_cubit.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_cubit.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/content_dashboard.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart'
     show LoadMessageDetail, MessageDetailBloc;
@@ -148,9 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       children: [
         // App Bar
-        DashboardAppBar(
-          onSendMessage: _onSendMessage,
-        ),
+        const DashboardAppBar(),
 
         // Content
         Expanded(
@@ -175,9 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         children: [
           // App Bar - full width at top
-          DashboardAppBar(
-            onSendMessage: _onSendMessage,
-          ),
+          const DashboardAppBar(),
           // Main content area below app bar: left = messages, right = detail
           Expanded(
             child: Row(
@@ -218,49 +213,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _onSendMessage() {
-    final workspaceState = context.read<WorkspaceBloc>().state;
-    final conversationState = context.read<ConversationBloc>().state;
-
-    final workspaceId = workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null
-        ? workspaceState.selectedWorkspace!.id
-        : '';
-
-    if (workspaceId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No workspace selected')),
-      );
-      return;
-    }
-
-    if (conversationState is! ConversationLoaded || conversationState.selectedConversationIds.length != 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select exactly one conversation')),
-      );
-      return;
-    }
-
-    // Find the selected conversation to get the correct channel ID
-    final selectedConversationId = conversationState.selectedConversationIds.first;
-    final selectedConversation = conversationState.conversations
-        .where((c) => c.id == selectedConversationId)
-        .firstOrNull;
-
-    if (selectedConversation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selected conversation not found')),
-      );
-      return;
-    }
-
-    // Use the conversation's channelGuid as the channelId
-    final channelId = selectedConversation.channelGuid ?? selectedConversation.id;
-
-    context.read<MessageCompositionCubit>().openNewMessage(
-      workspaceId: workspaceId,
-      channelId: channelId,
-    );
-  }
 
 
 }

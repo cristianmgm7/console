@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -19,7 +19,6 @@ class MessageCompositionCubit extends Cubit<MessageCompositionState> {
       isVisible: true,
       workspaceId: workspaceId,
       channelId: channelId,
-      replyToMessageId: null,
     ));
   }
 
