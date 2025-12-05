@@ -4,14 +4,15 @@ import 'package:carbon_voice_console/features/conversations/presentation/bloc/co
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
-import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/app_bar_dashboard.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_composition_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_detail_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/content_dashboard.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
@@ -28,15 +29,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late final StreamSubscription<WorkspaceState> _workspaceSubscription;
   late final StreamSubscription<ConversationState> _conversationSubscription;
-
-  // Message detail panel state
-  String? _selectedMessageForDetail;
-
-  // Message composition panel state
-  bool _showMessageComposition = false;
-  String? _compositionWorkspaceId;
-  String? _compositionChannelId;
-  String? _compositionReplyToMessageId;
 
   @override
   void initState() {
@@ -114,9 +106,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
           ],
-          child: ColoredBox(
-            color: Theme.of(context).colorScheme.surface,
-            child: _selectedMessageForDetail == null ? _buildFullDashboard() : _buildDashboardWithDetail(),
+          child: BlocBuilder<MessageDetailCubit, MessageDetailState>(
+            builder: (context, detailState) {
+              return ColoredBox(
+                color: Theme.of(context).colorScheme.surface,
+                child: !detailState.isVisible ? _buildFullDashboard() : _buildDashboardWithDetail(),
+              );
+            },
           ),
         );
       },
@@ -153,14 +149,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onManualLoadMore: _onManualLoadMore,
                 hasMoreMessages: messageState?.hasMoreMessages ?? false,
                 isLoadingMore: messageState?.isLoadingMore ?? false,
-                onViewDetail: _onViewDetail,
-                showMessageComposition: _showMessageComposition,
-                compositionWorkspaceId: _compositionWorkspaceId,
-                compositionChannelId: _compositionChannelId,
-                compositionReplyToMessageId: _compositionReplyToMessageId,
-                onCloseMessageComposition: _onCloseMessageComposition,
-                onMessageCompositionSuccess: _onMessageCompositionSuccess,
-                onCancelReply: _onCancelReply,
               );
             },
           ),
@@ -191,66 +179,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onManualLoadMore: _onManualLoadMore,
                     hasMoreMessages: messageState?.hasMoreMessages ?? false,
                     isLoadingMore: messageState?.isLoadingMore ?? false,
-                    onViewDetail: _onViewDetail,
-                    showMessageComposition: _showMessageComposition,
-                    compositionWorkspaceId: _compositionWorkspaceId,
-                    compositionChannelId: _compositionChannelId,
-                    compositionReplyToMessageId: _compositionReplyToMessageId,
-                    onCloseMessageComposition: _onCloseMessageComposition,
-                    onMessageCompositionSuccess: _onMessageCompositionSuccess,
-                    onCancelReply: _onCancelReply,
                   );
                 },
               ),
             ),
         
             // Right side: Detail panel
-            if (_selectedMessageForDetail != null)
-              MessageDetailPanel(
-                messageId: _selectedMessageForDetail!,
-                onClose: _onCloseDetail,
-              ),
+            BlocBuilder<MessageDetailCubit, MessageDetailState>(
+              builder: (context, detailState) {
+                if (!detailState.isVisible) return const SizedBox.shrink();
+
+                return MessageDetailPanel(
+                  messageId: detailState.selectedMessageId!,
+                  onClose: () {
+                    context.read<MessageDetailCubit>().closeDetail();
+                  },
+                );
+              },
+            ),
           ],
         ),
           ),
         ],
       ),
     );
-  }
-
-  void _onViewDetail(String messageId) {
-    setState(() {
-      _selectedMessageForDetail = messageId;
-    });
-    // Load message details using the centralized bloc
-    context.read<MessageDetailBloc>().add(LoadMessageDetail(messageId));
-  }
-
-  void _onCloseDetail() {
-    setState(() {
-      _selectedMessageForDetail = null;
-    });
-  }
-
-  void _onReply(String messageId, String channelId) {
-    final workspaceState = context.read<WorkspaceBloc>().state;
-    final workspaceId = workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null
-        ? workspaceState.selectedWorkspace!.id
-        : '';
-
-    if (workspaceId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No workspace selected')),
-      );
-      return;
-    }
-
-    setState(() {
-      _showMessageComposition = true;
-      _compositionWorkspaceId = workspaceId;
-      _compositionChannelId = channelId;
-      _compositionReplyToMessageId = messageId;
-    });
   }
 
   void _onSendMessage() {
@@ -291,33 +243,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Use the conversation's channelGuid as the channelId
     final channelId = selectedConversation.channelGuid ?? selectedConversation.id;
 
-    setState(() {
-      _showMessageComposition = true;
-      _compositionWorkspaceId = workspaceId;
-      _compositionChannelId = channelId;
-      _compositionReplyToMessageId = null; // null for new message, not reply
-    });
+    context.read<MessageCompositionCubit>().openNewMessage(
+      workspaceId: workspaceId,
+      channelId: channelId,
+    );
   }
 
-  void _onCloseMessageComposition() {
-    setState(() {
-      _showMessageComposition = false;
-      _compositionWorkspaceId = null;
-      _compositionChannelId = null;
-      _compositionReplyToMessageId = null;
-    });
-  }
-
-  void _onMessageCompositionSuccess() {
-    // Refresh messages after successful message send
-    context.read<MessageBloc>().add(const msg_events.RefreshMessages());
-    _onCloseMessageComposition();
-  }
-
-  void _onCancelReply() {
-    setState(() {
-      _compositionReplyToMessageId = null;
-    });
-  }
 
 }
