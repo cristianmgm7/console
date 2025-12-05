@@ -5,6 +5,8 @@ import 'package:carbon_voice_console/core/utils/date_time_formatters.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
@@ -16,11 +18,6 @@ class MessagesContent extends StatelessWidget {
     required this.messageState,
     required this.audioState,
     required this.isAnyBlocLoading,
-    required this.selectedMessages,
-    required this.onToggleMessageSelection,
-    required this.onToggleSelectAll,
-    required this.selectAll,
-    required this.onManualLoadMore,
     this.onViewDetail,
     this.onReply,
     this.onDownloadMessage,
@@ -30,11 +27,6 @@ class MessagesContent extends StatelessWidget {
   final MessageState messageState;
   final AudioPlayerState audioState;
   final bool Function(BuildContext context) isAnyBlocLoading;
-  final Set<String> selectedMessages;
-  final void Function(String, {bool? value}) onToggleMessageSelection;
-  final void Function(int length, {bool? value}) onToggleSelectAll;
-  final bool selectAll;
-  final VoidCallback onManualLoadMore;
   final ValueChanged<String>? onViewDetail;
   final void Function(String messageId, String channelId)? onReply;
   final ValueChanged<String>? onDownloadMessage;
@@ -71,11 +63,17 @@ class MessagesContent extends StatelessWidget {
       return SizedBox.expand(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 60),
-          child: AppTable(
-          selectAll: selectAll,
-          onSelectAllChanged: (value) =>
-              onToggleSelectAll(loadedState.messages.length, value: value),
-          columns: const [
+          child: BlocBuilder<MessageSelectionCubit, MessageSelectionState>(
+            builder: (context, selectionState) {
+              return AppTable(
+                selectAll: selectionState.selectAll,
+                onSelectAllChanged: (value) {
+                  context.read<MessageSelectionCubit>().toggleSelectAll(
+                    loadedState.messages.map((m) => m.id).toList(),
+                    value: value,
+                  );
+                },
+                columns: const [
             AppTableColumn(
               title: 'Date',
               width: FixedColumnWidth(90),
@@ -101,12 +99,16 @@ class MessagesContent extends StatelessWidget {
               width: FixedColumnWidth(180), // Increased width for horizontal action buttons
             ),
           ],
-          rows: loadedState.messages.map((message) {
-            return AppTableRow(
-              selected: selectedMessages.contains(message.id),
-              onSelectChanged: (selected) =>
-                  onToggleMessageSelection(message.id, value: selected),
-              cells: [
+                rows: loadedState.messages.map((message) {
+                  return AppTableRow(
+                    selected: selectionState.selectedMessageIds.contains(message.id),
+                    onSelectChanged: (selected) {
+                      context.read<MessageSelectionCubit>().toggleMessage(
+                        message.id,
+                        value: selected,
+                      );
+                    },
+                    cells: [
                 // Date
                 Text(
                   DateTimeFormatters.formatDate(message.createdAt),
@@ -168,12 +170,14 @@ class MessagesContent extends StatelessWidget {
                       onPressed: () => onDownloadMessage?.call(message.id),
                       size: AppIconButtonSize.small,
                     ),
-                  ],
-                ),
-              ],
-            );
-          }).toList(),
-        ),
+                    ],
+                  ),
+                ],
+              );
+            }).toList(),
+          );
+        },
+      ),
         ),
       );
 

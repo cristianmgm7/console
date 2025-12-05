@@ -26,8 +26,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final Set<String> _selectedMessages = {};
-  bool _selectAll = false;
   late final StreamSubscription<WorkspaceState> _workspaceSubscription;
   late final StreamSubscription<ConversationState> _conversationSubscription;
 
@@ -78,105 +76,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-
-
-  void _toggleSelectAll(int messageCount, {bool? value}) {
-    setState(() {
-      _selectAll = value ?? false;
-      if (_selectAll) {
-        final state = context.read<MessageBloc>().state;
-        if (state is MessageLoaded) {
-          _selectedMessages.addAll(state.messages.map((m) => m.id));
-        }
-      } else {
-        _selectedMessages.clear();
-      }
-    });
-  }
-
-  void _toggleMessageSelection(String messageId, {bool? value}) {
-    setState(() {
-      if (value ?? false) {
-        _selectedMessages.add(messageId);
-      } else {
-        _selectedMessages.remove(messageId);
-      }
-    });
-  }
-
   void _onManualLoadMore() {
     context.read<MessageBloc>().add(const msg_events.LoadMoreMessages());
-  }
-
-  void _onDownloadAudio() {
-    // Check for empty selection
-    if (_selectedMessages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No messages selected'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Create a copy of selected messages for the download
-    final messagesToDownload = Set<String>.from(_selectedMessages);
-
-    // Clear selection after capturing the messages to download
-    setState(() {
-      _selectedMessages.clear();
-      _selectAll = false;
-    });
-
-    // Start download (no modal shown - progress indicator appears automatically)
-    context.read<DownloadBloc>().add(StartDownloadAudio(messagesToDownload));
-  }
-
-  void _onDownloadTranscript() {
-    // Check for empty selection
-    if (_selectedMessages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No messages selected'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    // Create a copy of selected messages for the download
-    final messagesToDownload = Set<String>.from(_selectedMessages);
-
-    // Clear selection after capturing the messages to download
-    setState(() {
-      _selectedMessages.clear();
-      _selectAll = false;
-    });
-
-    // Start download (no modal shown - progress indicator appears automatically)
-    context.read<DownloadBloc>().add(StartDownloadTranscripts(messagesToDownload));
-  }
-
-  void _onDownloadMessage(String messageId) {
-    // Start download for single message
-    context.read<DownloadBloc>().add(StartDownloadAudio({messageId}));
-  }
-
-  void _onSummarize() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Summarizing ${_selectedMessages.length} messages...'),
-      ),
-    );
-  }
-
-  void _onAIChat() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening AI chat for ${_selectedMessages.length} messages...'),
-      ),
-    );
   }
 
   @override
@@ -249,20 +150,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             builder: (context, messageState) {
               return DashboardContent(
                 isAnyBlocLoading: _isAnyBlocLoading,
-                selectedMessages: _selectedMessages,
-                onToggleMessageSelection: _toggleMessageSelection,
-                onToggleSelectAll: _toggleSelectAll,
-                selectAll: _selectAll,
                 onManualLoadMore: _onManualLoadMore,
                 hasMoreMessages: messageState?.hasMoreMessages ?? false,
                 isLoadingMore: messageState?.isLoadingMore ?? false,
                 onViewDetail: _onViewDetail,
-                onReply: _onReply,
-                onDownloadMessage: _onDownloadMessage,
-                onDownloadAudio: _onDownloadAudio,
-                onDownloadTranscript: _onDownloadTranscript,
-                onSummarize: _onSummarize,
-                onAIChat: _onAIChat,
                 showMessageComposition: _showMessageComposition,
                 compositionWorkspaceId: _compositionWorkspaceId,
                 compositionChannelId: _compositionChannelId,
@@ -297,28 +188,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 builder: (context, messageState) {
                   return DashboardContent(
                     isAnyBlocLoading: _isAnyBlocLoading,
-                    selectedMessages: _selectedMessages,
-                    onToggleMessageSelection: _toggleMessageSelection,
-                    onToggleSelectAll: _toggleSelectAll,
-                    selectAll: _selectAll,
                     onManualLoadMore: _onManualLoadMore,
                     hasMoreMessages: messageState?.hasMoreMessages ?? false,
                     isLoadingMore: messageState?.isLoadingMore ?? false,
                     onViewDetail: _onViewDetail,
-                    onReply: _onReply,
-                    onDownloadMessage: _onDownloadMessage,
-                    onDownloadAudio: _onDownloadAudio,
-                    onDownloadTranscript: _onDownloadTranscript,
-                    onSummarize: _onSummarize,
-                    onAIChat: _onAIChat,
                     showMessageComposition: _showMessageComposition,
                     compositionWorkspaceId: _compositionWorkspaceId,
                     compositionChannelId: _compositionChannelId,
                     compositionReplyToMessageId: _compositionReplyToMessageId,
-                  onCloseMessageComposition: _onCloseMessageComposition,
-                  onMessageCompositionSuccess: _onMessageCompositionSuccess,
-                  onCancelReply: _onCancelReply,
-                );
+                    onCloseMessageComposition: _onCloseMessageComposition,
+                    onMessageCompositionSuccess: _onMessageCompositionSuccess,
+                    onCancelReply: _onCancelReply,
+                  );
                 },
               ),
             ),

@@ -3,38 +3,31 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/widgets/audio_mini_player_widget.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
+import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/widgets/circular_download_progress_widget.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_action_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/messages_content.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/components/inline_message_composition_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardContent extends StatefulWidget {
   const DashboardContent({
-    // Required data and state
-    required this.selectedMessages,
-    required this.onToggleMessageSelection,
-    required this.onToggleSelectAll,
-    required this.selectAll,
     required this.isAnyBlocLoading,
     required this.onManualLoadMore,
     required this.hasMoreMessages,
     required this.isLoadingMore,
-
-    // Optional action callbacks
     this.onViewDetail,
-    this.onReply,
-    this.onDownloadMessage,
     this.onDownloadAudio,
     this.onDownloadTranscript,
     this.onSummarize,
     this.onAIChat,
-
-    // Message composition panel parameters
     this.showMessageComposition,
     this.compositionWorkspaceId,
     this.compositionChannelId,
@@ -42,27 +35,18 @@ class DashboardContent extends StatefulWidget {
     this.onCloseMessageComposition,
     this.onMessageCompositionSuccess,
     this.onCancelReply,
-
     super.key,
   });
 
-  final Set<String> selectedMessages;
-  final void Function(String, {bool? value}) onToggleMessageSelection;
-  final void Function(int length, {bool? value}) onToggleSelectAll;
-  final bool selectAll;
   final bool Function(BuildContext context) isAnyBlocLoading;
   final VoidCallback onManualLoadMore;
   final bool hasMoreMessages;
   final bool isLoadingMore;
   final ValueChanged<String>? onViewDetail;
-  final void Function(String messageId, String channelId)? onReply;
-  final ValueChanged<String>? onDownloadMessage;
   final VoidCallback? onDownloadAudio;
   final VoidCallback? onDownloadTranscript;
   final VoidCallback? onSummarize;
   final VoidCallback? onAIChat;
-
-  // Message composition panel parameters
   final bool? showMessageComposition;
   final String? compositionWorkspaceId;
   final String? compositionChannelId;
@@ -92,14 +76,13 @@ class _DashboardContentState extends State<DashboardContent> {
                     messageState: messageState,
                     audioState: audioState,
                     isAnyBlocLoading: widget.isAnyBlocLoading,
-                    selectedMessages: widget.selectedMessages,
-                    onToggleMessageSelection: widget.onToggleMessageSelection,
-                    onToggleSelectAll: widget.onToggleSelectAll,
-                    selectAll: widget.selectAll,
-                    onManualLoadMore: widget.onManualLoadMore,
                     onViewDetail: widget.onViewDetail,
-                    onReply: widget.onReply,
-                    onDownloadMessage: widget.onDownloadMessage,
+                    onReply: (messageId, channelId) {
+                      // Reply handler will be added in Phase 2
+                    },
+                    onDownloadMessage: (messageId) {
+                      context.read<DownloadBloc>().add(StartDownloadAudio({messageId}));
+                    },
                   );
                 },
               );
@@ -113,20 +96,31 @@ class _DashboardContentState extends State<DashboardContent> {
             child: CircularDownloadProgressWidget(),
           ),
 
-          // Action panel - positioned in top-right for track downloads
-          if (widget.selectedMessages.isNotEmpty && widget.onDownloadAudio != null)
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: MessagesActionPanel(
-                selectedCount: widget.selectedMessages.length,
-                onDownloadAudio: widget.onDownloadAudio!,
-                onDownloadTranscript: widget.onDownloadTranscript ?? () {},
-                onSummarize: widget.onSummarize ?? () {},
-                onAIChat: widget.onAIChat ?? () {},
-                onCancel: () => widget.onToggleSelectAll(0, value: false),
-              ),
-            ),
+          // Action panel - reads MessageSelectionCubit
+          BlocBuilder<MessageSelectionCubit, MessageSelectionState>(
+            builder: (context, selectionState) {
+              if (!selectionState.hasSelection) return const SizedBox.shrink();
+
+              return Positioned(
+                bottom: 24,
+                right: 24,
+                child: MessagesActionPanel(
+                  onDownloadAudio: () {
+                    final messageIds = context.read<MessageSelectionCubit>().getSelectedMessageIds();
+                    context.read<DownloadBloc>().add(StartDownloadAudio(messageIds));
+                    context.read<MessageSelectionCubit>().clearSelection();
+                  },
+                  onDownloadTranscript: () {
+                    final messageIds = context.read<MessageSelectionCubit>().getSelectedMessageIds();
+                    context.read<DownloadBloc>().add(StartDownloadTranscripts(messageIds));
+                    context.read<MessageSelectionCubit>().clearSelection();
+                  },
+                  onSummarize: widget.onSummarize ?? () {},
+                  onAIChat: widget.onAIChat ?? () {},
+                ),
+              );
+            },
+          ),
 
           // Pagination controls - positioned on the left side
           Positioned(

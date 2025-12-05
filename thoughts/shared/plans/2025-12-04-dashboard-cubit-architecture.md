@@ -362,9 +362,9 @@ Widget build(BuildContext context) {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Code generation completes: `flutter pub run build_runner build --delete-conflicting-outputs`
-- [ ] No analysis errors: `flutter analyze`
-- [ ] MessageSelectionCubit registered in DI
+- [x] Code generation completes: `flutter pub run build_runner build --delete-conflicting-outputs`
+- [x] No analysis errors: `flutter analyze`
+- [x] MessageSelectionCubit registered in DI
 
 #### Manual Verification:
 - [ ] Single message selection works
