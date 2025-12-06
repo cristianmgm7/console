@@ -20,7 +20,7 @@ class UserProfileCubit extends Cubit<UserProfileState> {
 
     emit(const UserProfileLoading());
 
-    // First get user info from OAuth
+    // Get user info from OAuth to extract user ID
     final userInfoResult = await _oauthRepository.getUserInfo();
 
     final userInfo = userInfoResult.fold(
@@ -33,15 +33,17 @@ class UserProfileCubit extends Cubit<UserProfileState> {
 
     if (userInfo == null) return;
 
-    // Extract user ID from userinfo - try multiple possible field names
-    final userId = userInfo['client_id'] ?? userInfo['id'] ?? userInfo['sub'] ?? userInfo['userId'];
+    // Extract user ID from the OAuth response
+    final dynamic userIdValue = userInfo['user_guid'] ?? userInfo['uuid'] ?? userInfo['id'] ?? userInfo['user_id'] ?? userInfo['userId'] ?? userInfo['sub'];
+    final userId = userIdValue?.toString();
+
     if (userId == null) {
-      emit(const UserProfileError('User ID not found in user info'));
+      emit(const UserProfileError('No user ID found in OAuth response'));
       return;
     }
 
-    // Now load the full user profile using the user ID
-    final result = await _userRepository.getUser(userId.toString());
+    // Always fetch full user profile from user repository using the ID
+    final result = await _userRepository.getUser(userId);
 
     result.fold(
       onSuccess: (user) {
