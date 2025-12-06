@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
-import 'package:carbon_voice_console/core/dtos/conversation_dto.dart';
+import 'package:carbon_voice_console/features/conversations/data/dtos/conversation_dto.dart';
 
 /// Abstract interface for conversation remote data operations
 abstract class ConversationRemoteDataSource {
