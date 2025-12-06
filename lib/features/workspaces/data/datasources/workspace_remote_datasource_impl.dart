@@ -87,14 +87,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         return [];
       }
 
-      _logger.i('Workspace list size from API: ${workspacesJson.length}');
-      final sampleKeys = workspacesJson
-          .whereType<Map<String, dynamic>>()
-          .take(3)
-          .map((json) => json.keys.toList())
-          .toList();
-      _logger.i('Workspace sample keys from API: $sampleKeys');
-
       final workspaces = <WorkspaceDto>[];
       var skipped = 0;
       for (final item in workspacesJson) {
