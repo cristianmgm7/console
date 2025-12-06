@@ -31,7 +31,6 @@ class DashboardAppBar extends StatelessWidget {
           WorkspaceSection(),
           SizedBox(width: 16),
           ConversationSelectorSection(),
-          SizedBox(width: 8),
           ConversationSearchButton(),
           SizedBox(width: 16),
           SelectedConversationsSection(),

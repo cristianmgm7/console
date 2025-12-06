@@ -13,25 +13,37 @@ class MessageDetailView extends StatelessWidget {
     return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
         if (state is MessageDetailLoading) {
-          return const Center(child: AppProgressIndicator());
+          return _buildLoadingState();
         }
         if (state is MessageDetailLoaded) {
-          return _buildDetailContent(context, state);
+          return _buildLoadedState(state);
         }
         if (state is MessageDetailError) {
-          return Center(
-            child: Text(
-              'Error: ${state.message}',
-              style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
-            ),
-          );
+          return _buildErrorState(state);
         }
-        return const SizedBox.shrink();
+        return _buildDefaultState();
       },
     );
   }
 
-  Widget _buildDetailContent(BuildContext context, MessageDetailLoaded state) {
+  Widget _buildLoadingState() {
+    return const Center(child: AppProgressIndicator());
+  }
+
+  Widget _buildErrorState(MessageDetailError state) {
+    return Center(
+      child: Text(
+        'Error: ${state.message}',
+        style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
+      ),
+    );
+  }
+
+  Widget _buildDefaultState() {
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildLoadedState(MessageDetailLoaded state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
