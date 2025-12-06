@@ -290,4 +290,3 @@ class Conversation extends Equatable {
     );
   }
 }
-
