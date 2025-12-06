@@ -105,7 +105,7 @@ class WorkspaceDto {
   factory WorkspaceDto.fromApiJson(Map<String, dynamic> json) {
     final normalized = Map<String, dynamic>.from(json);
 
-    DateTime? _parseEpochOrString(dynamic value) {
+    DateTime? parseEpochOrString(dynamic value) {
       if (value == null) return null;
       if (value is String) {
         // If it's already an ISO string, use it directly
@@ -177,14 +177,14 @@ class WorkspaceDto {
     }
 
     // Normalize timestamps to ISO strings for the generated parser
-    final createdTs = _parseEpochOrString(json['created_ts']) ??
-        _parseEpochOrString(normalized['created_at']);
+    final createdTs = parseEpochOrString(json['created_ts']) ??
+        parseEpochOrString(normalized['created_at']);
     if (createdTs != null) {
       normalized['created_at'] = createdTs.toIso8601String();
     }
 
-    final updatedTs = _parseEpochOrString(json['last_updated_ts']) ??
-        _parseEpochOrString(normalized['last_updated_at']);
+    final updatedTs = parseEpochOrString(json['last_updated_ts']) ??
+        parseEpochOrString(normalized['last_updated_at']);
     if (updatedTs != null) {
       normalized['last_updated_at'] = updatedTs.toIso8601String();
     }

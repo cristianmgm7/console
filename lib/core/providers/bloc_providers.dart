@@ -12,6 +12,7 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_det
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
+import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_cubit.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
@@ -24,6 +25,9 @@ class BlocProviders {
   static Widget generalBlocs({required Widget child}) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<UserProfileCubit>(
+          create: (_) => getIt<UserProfileCubit>(),
+        ),
         BlocProvider<AuthBloc>(
           create: (_) => getIt<AuthBloc>()..add(const auth_events.AppStarted()),
         ),
