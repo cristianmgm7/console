@@ -7,14 +7,14 @@ import 'package:carbon_voice_console/features/audio_player/presentation/bloc/aud
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
-import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart'
     as ws_events;
+import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
