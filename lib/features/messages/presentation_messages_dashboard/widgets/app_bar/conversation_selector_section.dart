@@ -32,74 +32,82 @@ class ConversationSelectorSection extends StatelessWidget {
             selector: (state) => state is ConversationLoaded ? state : null,
             builder: (context, conversationState) {
               if (conversationState == null || conversationState.conversations.isEmpty) {
-                return AppContainer(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  backgroundColor: AppColors.surface,
-                  border: Border.all(
-                    color: AppColors.border,
-                  ),
-                  child: Text(
-                    'No conversations',
-                    style: AppTextStyle.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                );
+                return _buildNoConversationsState();
               }
 
-              return AppDropdown<String>(
-                value: null,
-                hint: Text(
-                  conversationState.selectedConversationIds.isEmpty
-                      ? 'Select conversations...'
-                      : '${conversationState.selectedConversationIds.length} selected',
-                  style: AppTextStyle.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                dropdownKey: const Key('conversation_dropdown'),
-                items: conversationState.conversations.map((conversation) {
-                  final isSelected =
-                      conversationState.selectedConversationIds.contains(conversation.id);
-                  return DropdownMenuItem<String>(
-                    value: conversation.id,
-                    child: Row(
-                      children: [
-                        Icon(
-                          isSelected ? AppIcons.check : AppIcons.add,
-                          size: 16,
-                          color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          conversation.name,
-                          style: AppTextStyle.bodyMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    final currentSelected = Set<String>.from(conversationState.selectedConversationIds);
-                    if (currentSelected.contains(newValue)) {
-                      currentSelected.remove(newValue);
-                    } else {
-                      currentSelected.add(newValue);
-                    }
-                    context.read<ConversationBloc>().add(SelectMultipleConversations(currentSelected));
-                  }
-                },
-              );
+              return _buildConversationsDropdown(context, conversationState);
             },
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNoConversationsState() {
+    return AppContainer(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
+      backgroundColor: AppColors.surface,
+      border: Border.all(
+        color: AppColors.border,
+      ),
+      child: Text(
+        'No conversations',
+        style: AppTextStyle.bodyMedium.copyWith(
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConversationsDropdown(BuildContext context, ConversationLoaded conversationState) {
+    return AppDropdown<String>(
+      value: null,
+      hint: Text(
+        conversationState.selectedConversationIds.isEmpty
+            ? 'Select conversations...'
+            : '${conversationState.selectedConversationIds.length} selected',
+        style: AppTextStyle.bodyMedium.copyWith(
+          color: AppColors.textSecondary,
+        ),
+      ),
+      dropdownKey: const Key('conversation_dropdown'),
+      items: conversationState.conversations.map((conversation) {
+        final isSelected =
+            conversationState.selectedConversationIds.contains(conversation.id);
+        return DropdownMenuItem<String>(
+          value: conversation.id,
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? AppIcons.check : AppIcons.add,
+                size: 16,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                conversation.name,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          final currentSelected = Set<String>.from(conversationState.selectedConversationIds);
+          if (currentSelected.contains(newValue)) {
+            currentSelected.remove(newValue);
+          } else {
+            currentSelected.add(newValue);
+          }
+          context.read<ConversationBloc>().add(SelectMultipleConversations(currentSelected));
+        }
+      },
     );
   }
 }
