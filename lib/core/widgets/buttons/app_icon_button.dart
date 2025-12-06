@@ -53,19 +53,19 @@ class _AppIconButtonState extends State<AppIconButton>
     super.dispose();
   }
 
-  void _handleTapDown(TapDownDetails details) {
+  Future<void> _handleTapDown(TapDownDetails details) async {
     // Ignore: unawaited_futures - animation is fire and forget
-    _controller.forward();
+    await _controller.forward();
   }
 
-  void _handleTapUp(TapUpDetails details) {
+  Future<void> _handleTapUp(TapUpDetails details) async {
     // Ignore: unawaited_futures - animation is fire and forget
-    _controller.reverse();
+    await _controller.reverse();
   }
 
-  void _handleTapCancel() {
+  Future<void> _handleTapCancel() async {
     // Ignore: unawaited_futures - animation is fire and forget
-    _controller.reverse();
+    await _controller.reverse();
   }
 
   double get _iconSize {
@@ -108,7 +108,7 @@ class _AppIconButtonState extends State<AppIconButton>
             decoration: BoxDecoration(
               color: _isHovered && !isDisabled
                   ? (backgroundColor == AppColors.transparent
-                      ? foregroundColor.withOpacity(0.08)
+                      ? foregroundColor.withValues(alpha: 0.08)
                       : _darkenColor(backgroundColor, 0.1))
                   : backgroundColor,
               shape: BoxShape.circle,

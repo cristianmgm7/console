@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/dtos/permission_dto.dart';
+import 'package:carbon_voice_console/core/dtos/permission_dto.dart';
 import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_dto.dart';
 import 'package:json_annotation/json_annotation.dart';
 

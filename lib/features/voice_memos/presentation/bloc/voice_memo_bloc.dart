@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
+import 'package:carbon_voice_console/core/errors/failure_mapper.dart';
 import 'package:carbon_voice_console/features/voice_memos/domain/repositories/voice_memo_repository.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_event.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_state.dart';

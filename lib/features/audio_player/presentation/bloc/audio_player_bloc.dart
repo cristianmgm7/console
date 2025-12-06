@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:carbon_voice_console/features/audio_player/domain/usecases/get_audio_presigned_url_usecase.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
-import 'package:carbon_voice_console/features/audio_player/services/audio_player_service.dart';
+import 'package:carbon_voice_console/features/audio_player/domain/services/audio_player_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -28,8 +28,9 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
   }
 
   final AudioPlayerService _playerService;
-  final Logger _logger;
   final GetAudioPreSignedUrlUsecase _getAudioPreSignedUrlUsecase;
+
+  final Logger _logger;
 
   // Current state tracking
   String? _currentMessageId;

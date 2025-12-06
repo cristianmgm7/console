@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/dtos/user_profile_dto.dart';
+import 'package:carbon_voice_console/core/dtos/user_profile_dto.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
-import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -64,32 +63,4 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     }
   }
 
-}
-
-void debugPrintJsonStructure(dynamic data, {int indent = 0}) {
-  final padding = '  ' * indent;
-
-  if (data is Map) {
-    debugPrint('$padding{');
-    for (final key in data.keys) {
-      final value = data[key];
-
-      if (value is Map || value is List) {
-        debugPrint('$padding  "$key":');
-        debugPrintJsonStructure(value, indent: indent + 2);
-      } else {
-        final typeName = value.runtimeType.toString();
-        debugPrint('$padding  "$key": <$typeName>');
-      }
-    }
-    debugPrint('$padding}');
-  } else if (data is List) {
-    debugPrint('$padding[');
-    if (data.isNotEmpty) {
-      debugPrintJsonStructure(data.first, indent: indent + 1);
-    } else {
-      debugPrint('$padding  <empty>');
-    }
-    debugPrint('$padding]');
-  }
 }

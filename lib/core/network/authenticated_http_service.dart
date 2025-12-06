@@ -3,14 +3,16 @@ import 'dart:convert';
 import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 
 /// Service para realizar llamadas HTTP autenticadas usando oauth2.Client
 @LazySingleton()
 class AuthenticatedHttpService {
-  AuthenticatedHttpService(this._oauthRepository);
+  AuthenticatedHttpService(this._oauthRepository, this._logger);
 
   final OAuthRepository _oauthRepository;
+  final Logger _logger;
 
   /// Obtiene el cliente oauth2 (con refresh automático)
   Future<oauth2.Client?> _getClient() async {
@@ -39,7 +41,7 @@ class AuthenticatedHttpService {
         headers: headers,
       );
     } catch (e) {
-      print('❌ HTTP GET failed for $path: $e');
+      _logger.e('HTTP GET failed for $path: $e');
       rethrow;
     }
   }

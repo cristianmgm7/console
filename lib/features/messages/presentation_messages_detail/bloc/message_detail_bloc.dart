@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
+import 'package:carbon_voice_console/core/errors/failure_mapper.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';

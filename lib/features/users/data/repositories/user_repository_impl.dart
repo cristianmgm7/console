@@ -1,7 +1,7 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/dtos/user_profile_mapper.dart';
+import 'package:carbon_voice_console/core/dtos/user_profile_mapper.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';

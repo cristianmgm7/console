@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/core/routing/presentation/side_navigation_bar.dart';
+import 'package:carbon_voice_console/core/routing/side_navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 class AppShell extends StatelessWidget {

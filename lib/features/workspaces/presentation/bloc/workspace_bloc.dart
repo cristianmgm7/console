@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
+import 'package:carbon_voice_console/core/errors/failure_mapper.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/repositories/workspace_repository.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_event.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';

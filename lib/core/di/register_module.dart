@@ -6,8 +6,6 @@ import 'package:logger/logger.dart';
 
 @module
 abstract class RegisterModule {
-  // Mantener Dio SOLO para llamadas públicas (no autenticadas)
-  // Para llamadas autenticadas, usar AuthenticatedHttpService
   @LazySingleton()
   @Named('publicDio')
   Dio publicDio() {
