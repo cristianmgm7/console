@@ -9,14 +9,19 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/app_bar_dashboard.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/content_dashboard.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+
+
+// This dashboard screen is a stateful widget that is used to display the dashboard screen.
+// Responsability to manage the layout and the communication between the blocs and the cubits.
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
