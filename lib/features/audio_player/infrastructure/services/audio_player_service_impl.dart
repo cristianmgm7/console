@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:carbon_voice_console/features/audio_player/services/audio_player_service.dart';
+import 'package:carbon_voice_console/features/audio_player/domain/services/audio_player_service.dart';
 import 'package:injectable/injectable.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';

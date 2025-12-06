@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-/// Service to guard and validate all routes, including authentication and path validation
+/// Service to guard and validate all routes, including authentication and path validation WEB ONLY
 @LazySingleton()
 class RouteGuard {
   RouteGuard(this._oauthRepository);
@@ -50,29 +50,24 @@ class RouteGuard {
   /// Get the initial location based on current URI and platform
   String getInitialLocation() {
     final basePath = Uri.base.path;
-    debugPrint('📍 Uri.base.path: $basePath');
 
     // For web, use current URL (important for OAuth callbacks)
     // For desktop/mobile, use login to avoid file system paths
     if (kIsWeb) {
       // Detect file system paths and redirect to login
       if (_isFileSystemPath(basePath)) {
-        debugPrint('📍 Detected file system path, using login');
         return AppRoutes.login;
       }
 
       // If it's a valid route or OAuth callback, use it
       if (validRoutes.contains(basePath) || basePath.startsWith('/auth/callback')) {
-        debugPrint('📍 Using current web path: $basePath');
         return basePath;
       }
 
       // If not valid, use login
-      debugPrint('📍 Invalid web path, using login');
       return AppRoutes.login;
     } else {
       // On desktop/mobile, always use login
-      debugPrint('📍 Desktop/mobile app, using login');
       return AppRoutes.login;
     }
   }
@@ -110,7 +105,6 @@ class RouteGuard {
       }
 
       // If not authenticated or error, redirect to login
-      debugPrint('🔐 Authentication required, redirecting to login');
       return AppRoutes.login;
     }
 

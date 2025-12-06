@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:logger/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Helper para manejar OAuth en desktop mediante un servidor HTTP local
+/// Helper to handle OAuth on desktop through a local HTTP server
 class OAuthDesktopServer {
 
   OAuthDesktopServer({
@@ -18,18 +18,18 @@ class OAuthDesktopServer {
 
   final Logger _logger = Logger();
 
-  /// Inicia el servidor local y abre el navegador con la URL de OAuth
-  /// Retorna la URL completa con el código de autorización cuando el callback es recibido
+  /// Starts the local server and opens the browser with the OAuth URL
+  /// Returns the full callback URL with the authorization code when the callback is received
   Future<String> authenticate(String authorizationUrl) async {
     final completer = Completer<String>();
 
     try {
-      // Intentar iniciar servidor HTTP local, con fallback a puerto alternativo
+      // Try to start local HTTP server, with fallback to alternative ports
       try {
         _server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
       } on SocketException catch (e) {
         _logger.e('❌ Error binding to port $port: ${e.message}');
-        // Intentar puertos alternativos: 3001, 8080, 9090
+        // Try alternative ports: 3001, 8080, 9090
         final alternativePorts = [3001, 8080, 9090];
         for (final altPort in alternativePorts) {
           try {
@@ -49,30 +49,30 @@ class OAuthDesktopServer {
       final actualPort = _server!.port;
       _logger.i('🌐 OAuth server listening on http://localhost:$actualPort');
 
-      // Manejar requests
+      // Handle requests
       _server!.listen((HttpRequest request) async {
         final uri = request.uri;
         _logger.d('📥 Received request: ${uri.path}${uri.query.isNotEmpty ? '?${uri.query}' : ''}');
 
         if (uri.path == callbackPath) {
-          // Obtener la URL completa con query params
+          // Get the full callback URL with query params
           final fullCallbackUrl = 'http://localhost:$port${uri.path}?${uri.query}';
           _logger.i('✅ OAuth callback received: $fullCallbackUrl');
 
-          // Responder al navegador con una página de éxito
+          // Respond to the browser with a success page
           request.response
             ..statusCode = HttpStatus.ok
             ..headers.set('Content-Type', 'text/html; charset=utf-8')
             ..write(_getSuccessHtml());
           await request.response.close();
 
-          // Resolver el completer con la URL completa
+          // Complete the completer with the full callback URL
           completer.complete(fullCallbackUrl);
 
-          // Cerrar el servidor después de un pequeño delay
+          // Close the server after a short delay
           Future.delayed(const Duration(seconds: 1), close);
         } else {
-          // Ruta no reconocida
+          // Unrecognized route
           request.response
             ..statusCode = HttpStatus.notFound
             ..write('Not Found');
@@ -80,7 +80,7 @@ class OAuthDesktopServer {
         }
       });
 
-      // Abrir el navegador con la URL de OAuth
+      // Open the browser with the OAuth URL
       _logger.i('🌐 Opening browser: $authorizationUrl');
       final uri = Uri.parse(authorizationUrl);
       if (await canLaunchUrl(uri)) {
@@ -89,7 +89,7 @@ class OAuthDesktopServer {
         throw Exception('Could not launch $authorizationUrl');
       }
 
-      // Esperar a que se complete la autenticación (con timeout)
+      // Wait until authentication completes (with timeout)
       return await completer.future.timeout(
         const Duration(minutes: 5),
         onTimeout: () {
@@ -105,14 +105,14 @@ class OAuthDesktopServer {
     }
   }
 
-  /// Cierra el servidor local
+  /// Close the local server
   Future<void> close() async {
     await _server?.close(force: true);
     _server = null;
     _logger.i('🛑 OAuth server closed');
   }
 
-  /// HTML para mostrar cuando la autenticación es exitosa
+  /// HTML to display when authentication is successful
   String _getSuccessHtml() {
     return '''
 <!DOCTYPE html>
@@ -166,7 +166,7 @@ class OAuthDesktopServer {
     <div class="close-info">This window will close automatically...</div>
   </div>
   <script>
-    // Auto-cerrar después de 3 segundos
+    // Auto-close after 3 seconds
     setTimeout(() => {
       window.close();
     }, 3000);

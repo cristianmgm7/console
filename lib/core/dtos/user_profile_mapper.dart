@@ -1,5 +1,5 @@
-import 'package:carbon_voice_console/dtos/user_profile.dart';
-import 'package:carbon_voice_console/dtos/user_profile_dto.dart';
+import 'package:carbon_voice_console/core/dtos/user_profile.dart';
+import 'package:carbon_voice_console/core/dtos/user_profile_dto.dart';
 
 /// Mapper extension to convert UserProfileDto to UserProfile domain model
 extension UserProfileMapper on UserProfileDto {

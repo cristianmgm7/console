@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/core/utils/failure_mapper.dart';
+import 'package:carbon_voice_console/core/errors/failure_mapper.dart';
 import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';

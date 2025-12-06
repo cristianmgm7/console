@@ -20,7 +20,6 @@ class AppRouter {
 
   void _initializeRouter() {
     final initialLoc = routeGuard.getInitialLocation();
-    debugPrint('🚀 Initializing GoRouter with location: $initialLoc');
 
     router = GoRouter(
       initialLocation: initialLoc,

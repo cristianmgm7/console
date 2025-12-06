@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart' show NetworkException, ServerException;
-import 'package:carbon_voice_console/dtos/user_profile_dto.dart';
+import 'package:carbon_voice_console/core/dtos/user_profile_dto.dart';
 
 /// Abstract interface for user remote data operations
 abstract class UserRemoteDataSource {
