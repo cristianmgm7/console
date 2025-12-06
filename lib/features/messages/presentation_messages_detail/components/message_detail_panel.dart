@@ -8,7 +8,7 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_det
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class MessageDetailPanel extends StatelessWidget {
+class MessageDetailPanel extends StatefulWidget {
   const MessageDetailPanel({
     required this.messageId,
     required this.onClose,
@@ -19,9 +19,36 @@ class MessageDetailPanel extends StatelessWidget {
   final VoidCallback onClose;
 
   @override
+  State<MessageDetailPanel> createState() => _MessageDetailPanelState();
+}
+
+class _MessageDetailPanelState extends State<MessageDetailPanel> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger the bloc to load the message when the panel is mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MessageDetailBloc>().add(LoadMessageDetail(widget.messageId));
+    });
+  }
+
+  @override
+  void didUpdateWidget(MessageDetailPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If the messageId changes, load the new message
+    if (oldWidget.messageId != widget.messageId) {
+      context.read<MessageDetailBloc>().add(LoadMessageDetail(widget.messageId));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
+        // Debug: Print current statetate: ${state.runtimeType}');
+        if (state is MessageDetailLoaded) {
+        }
+
         return SizedBox(
           width: 400,
           height: double.infinity,
@@ -47,7 +74,7 @@ class MessageDetailPanel extends StatelessWidget {
                       const Spacer(),
                       AppIconButton(
                         icon: AppIcons.close,
-                        onPressed: onClose,
+                        onPressed: widget.onClose,
                         tooltip: 'Close',
                       ),
                     ],
@@ -70,7 +97,7 @@ class MessageDetailPanel extends StatelessWidget {
     }
     if (state is MessageDetailLoaded) {
       // Verify that the loaded message matches the current messageId
-      if (state.message.id == messageId) {
+      if (state.message.id == widget.messageId) {
         return _buildLoadedState(state);
       }
       // If the message doesn't match, show loading while waiting for the correct message
