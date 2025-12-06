@@ -1,3 +1,5 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_cubit.dart';
 import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_state.dart';
@@ -27,22 +29,37 @@ class WorkspaceSection extends StatelessWidget {
       },
     );
   }
+  
 
   Widget _buildInitialState() {
     return const SizedBox.shrink();
   }
 
   Widget _buildLoadingState() {
-    return const SizedBox(
-      width: 200,
-      height: 40,
-      child: Center(
-        child: SizedBox(
-          width: 16,
-          height: 16,
-          child: AppProgressIndicator(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Workspace',
+          style: AppTextStyle.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-      ),
+        const SizedBox(height: 4),
+          const SizedBox(
+          width: 200,
+          height: 40,
+          child: Center(
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: AppProgressIndicator(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

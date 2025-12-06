@@ -33,8 +33,8 @@ class UserProfileCubit extends Cubit<UserProfileState> {
 
     if (userInfo == null) return;
 
-    // Extract user ID from userinfo
-    final userId = userInfo['user_id'] ?? userInfo['id'] ?? userInfo['sub'];
+    // Extract user ID from userinfo - try multiple possible field names
+    final userId = userInfo['client_id'] ?? userInfo['id'] ?? userInfo['sub'] ?? userInfo['userId'];
     if (userId == null) {
       emit(const UserProfileError('User ID not found in user info'));
       return;

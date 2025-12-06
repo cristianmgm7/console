@@ -182,7 +182,7 @@ class WorkspaceSelector extends StatelessWidget {
           const SizedBox(width: 8),
           AppContainer(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(4),
             child: Text(
               roleBadge,
@@ -203,7 +203,7 @@ class WorkspaceSelector extends StatelessWidget {
       width: 24,
       height: 24,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Center(
