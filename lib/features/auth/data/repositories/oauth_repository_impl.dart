@@ -57,10 +57,10 @@ class OAuthRepositoryImpl implements OAuthRepository {
         _desktopOAuthStates[state] = codeVerifier;
       }
 
-      // Determinar redirect URI según plataforma
+      // Determine redirect URI according to platform
       const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
 
-      // Construir la URL de autorización manualmente con PKCE
+      // Manually build the authorization URL with PKCE
       final authUrl = Uri.parse(OAuthConfig.authorizationEndpoint).replace(
         queryParameters: {
           'response_type': 'code',
@@ -121,7 +121,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       final state = responseUri.queryParameters['state'];
       final error = responseUri.queryParameters['error'];
 
-      // Si hay error en la respuesta
+      // If there is an error in the response
       if (error != null) {
         return failure(AuthFailure(
           code: error,
@@ -129,7 +129,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ),);
       }
 
-      // Si no hay código de autorización
+      // If there is no authorization code
       if (code == null) {
         return failure(const AuthFailure(
           code: 'NO_CODE',
@@ -137,7 +137,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ),);
       }
 
-      // Recuperar el codeVerifier usando el state
+      // Retrieve the codeVerifier using the state
       if (state == null) {
         return failure(const AuthFailure(
           code: 'NO_STATE',
@@ -171,7 +171,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         _desktopOAuthStates.remove(state);
       }
 
-      // Usar el redirect URI correcto según la plataforma
+      // Use the correct redirect URI according to the platform
       const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
 
       final tokenBody = {
@@ -249,7 +249,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         }
       }
 
-      // Parsear la respuesta del token
+      // Parse the token response
       final tokenJson = jsonDecode(tokenResponse.body) as Map<String, dynamic>;
 
       final expiresIn = tokenJson['expires_in'] as int? ?? 3600;
@@ -390,7 +390,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
         ).timeout(const Duration(seconds: 10));
         _logger.d('HTTP request completed, got response');
         _logger.d('Exchange response status: ${response.statusCode}');
-      } catch (e) {
+      } on Exception catch (e) {
         _logger.e('Network error during exchange request: $e');
         if (e is http.ClientException) {
           _logger.e('ClientException details: ${e.message}');
@@ -416,7 +416,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
       _logger.i('Successfully obtained PX token');
       return success(pxToken);
-    } catch (e, stack) {
+    } on Exception catch (e, stack) {
       _logger.e('Error fetching PX token', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: 'Error fetching PX token: $e'));
     }
@@ -428,7 +428,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
       if (_client != null) {
         return success(_client);
       }
-
       return await loadSavedClient();
     } on Exception catch (e) {
       _logger.e('Error getting client', error: e);

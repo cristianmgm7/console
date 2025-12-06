@@ -124,12 +124,6 @@ class DownloadRepositoryImpl implements DownloadRepository {
         baseFileName,
       );
 
-      // Debug: Log audio data info before saving
-      _logger.i('💾 Saving audio file: $uniqueFileName');
-      _logger.i('📊 Audio bytes length: ${audioBytes.length}');
-      _logger.i('🏷️ Content-Type: $contentType');
-      _logger.i('📁 Extension determined: $extension');
-
       // Verify bytes are not empty or corrupted
       if (audioBytes.isEmpty) {
         _logger.e('❌ Audio bytes are empty!');

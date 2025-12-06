@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/core/dtos/conversation_dto.dart';
+import 'package:carbon_voice_console/features/conversations/data/dtos/conversation_dto.dart';
 import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 
 /// Extension methods to convert ConversationDto to domain entities
