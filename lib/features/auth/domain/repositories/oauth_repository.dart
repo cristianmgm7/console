@@ -26,4 +26,7 @@ abstract class OAuthRepository {
 
   /// Gets the PX token from /whoami endpoint for streaming
   Future<Result<String>> getPxToken();
+
+  /// Gets current user information from /userinfo or /me endpoint
+  Future<Result<Map<String, dynamic>>> getUserInfo();
 }

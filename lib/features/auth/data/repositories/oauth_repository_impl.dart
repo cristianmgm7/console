@@ -434,4 +434,38 @@ class OAuthRepositoryImpl implements OAuthRepository {
       return failure(UnknownFailure(details: e.toString()));
     }
   }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getUserInfo() async {
+    try {
+      final clientResult = await getClient();
+      final client = clientResult.fold(
+        onSuccess: (client) => client,
+        onFailure: (_) => null,
+      );
+
+      if (client == null) {
+        return failure(const UnknownFailure(details: 'Not authenticated'));
+      }
+
+      const userInfoUrl = '${OAuthConfig.apiBaseUrl}/userinfo';
+      _logger.d('Fetching user info from: $userInfoUrl');
+
+      final response = await client.get(Uri.parse(userInfoUrl));
+
+      if (response.statusCode == 200) {
+        final userInfo = jsonDecode(response.body) as Map<String, dynamic>;
+        _logger.d('User info retrieved successfully');
+        return success(userInfo);
+      } else {
+        _logger.e('Failed to fetch user info: ${response.statusCode}');
+        return failure(UnknownFailure(
+          details: 'Failed to fetch user info: ${response.statusCode}',
+        ));
+      }
+    } on Exception catch (e) {
+      _logger.e('Error fetching user info', error: e);
+      return failure(UnknownFailure(details: 'Failed to fetch user info: $e'));
+    }
+  }
 }

@@ -1,4 +1,6 @@
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_cubit.dart';
+import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/widgets/workspace_selector.dart';
@@ -12,12 +14,16 @@ class WorkspaceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<WorkspaceBloc, WorkspaceState>(
       builder: (context, workspaceState) {
-        return switch (workspaceState) {
-          WorkspaceInitial() => _buildInitialState(),
-          WorkspaceLoading() => _buildLoadingState(),
-          WorkspaceLoaded() => _buildLoadedState(workspaceState),
-          WorkspaceError() => _buildErrorState(workspaceState),
-        };
+        return BlocBuilder<UserProfileCubit, UserProfileState>(
+          builder: (context, userProfileState) {
+            return switch (workspaceState) {
+              WorkspaceInitial() => _buildInitialState(),
+              WorkspaceLoading() => _buildLoadingState(),
+              WorkspaceLoaded() => _buildLoadedState(workspaceState, userProfileState),
+              WorkspaceError() => _buildErrorState(workspaceState),
+            };
+          },
+        );
       },
     );
   }
@@ -40,10 +46,11 @@ class WorkspaceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadedState(WorkspaceLoaded loadedState) {
-    // Get current user ID from auth or user profile
-    // TODO: Replace with actual current user ID from auth
-    final currentUserId = loadedState.currentUserId ?? '';
+  Widget _buildLoadedState(WorkspaceLoaded loadedState, UserProfileState userProfileState) {
+    // Get current user ID from user profile cubit
+    final currentUserId = userProfileState is UserProfileLoaded
+        ? userProfileState.user.id
+        : loadedState.currentUserId ?? '';
 
     return WorkspaceSelector(
       currentUserId: currentUserId,

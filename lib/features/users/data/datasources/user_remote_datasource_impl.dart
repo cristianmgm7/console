@@ -1,8 +1,9 @@
 import 'dart:convert';
+
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
+import 'package:carbon_voice_console/core/dtos/user_profile_dto.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
-import 'package:carbon_voice_console/core/dtos/user_profile_dto.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
