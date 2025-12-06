@@ -212,7 +212,7 @@ class _EmptySearchResults extends StatelessWidget {
 }
 
 /// List of search results
-class _SearchResultsList extends StatelessWidget {
+class _SearchResultsList extends StatefulWidget {
   const _SearchResultsList({
     required this.conversations,
   });
@@ -220,12 +220,27 @@ class _SearchResultsList extends StatelessWidget {
   final List<Conversation> conversations;
 
   @override
+  State<_SearchResultsList> createState() => _SearchResultsListState();
+}
+
+class _SearchResultsListState extends State<_SearchResultsList> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scrollbar(
+      controller: _scrollController,
       child: ListView.builder(
-        itemCount: conversations.length,
+        controller: _scrollController,
+        itemCount: widget.conversations.length,
         itemBuilder: (context, index) {
-          final conversation = conversations[index];
+          final conversation = widget.conversations[index];
           return _SearchResultItem(conversation: conversation);
         },
       ),
