@@ -14,50 +14,47 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class WorkspaceSelector extends StatelessWidget {
   const WorkspaceSelector({
     required this.currentUserId,
+    required this.workspaceState,
     this.width = 200,
     super.key,
   });
 
   final String currentUserId;
+  final WorkspaceLoaded workspaceState;
   final double width;
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<WorkspaceBloc, WorkspaceState, WorkspaceLoaded?>(
-      selector: (state) => state is WorkspaceLoaded ? state : null,
-      builder: (context, workspaceState) {
-        if (workspaceState == null || workspaceState.workspaces.isEmpty) {
-          return const SizedBox.shrink();
-        }
+    if (workspaceState.workspaces.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-        final displayItems = WorkspaceUIHelper.getDisplayItems(
-          workspaceState.workspaces,
-          currentUserId,
-        );
+    final displayItems = WorkspaceUIHelper.getDisplayItems(
+      workspaceState.workspaces,
+      currentUserId,
+    );
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Workspace',
-              style: AppTextStyle.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            SizedBox(
-              width: width,
-              child: _buildDropdown(
-                context,
-                workspaceState,
-                displayItems,
-              ),
-            ),
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Workspace',
+          style: AppTextStyle.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: width,
+          child: _buildDropdown(
+            context,
+            workspaceState,
+            displayItems,
+          ),
+        ),
+      ],
     );
   }
 
@@ -109,7 +106,7 @@ class WorkspaceSelector extends StatelessWidget {
             const SizedBox(width: 4),
 
             // Dropdown icon
-            Icon(
+            const Icon(
               Icons.arrow_drop_down,
               color: AppColors.textSecondary,
               size: 20,

@@ -128,11 +128,13 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: 240,
-                    child: filteredConversations.isEmpty
-                        ? _EmptySearchResults(searchMode: conversationState.searchMode)
-                        : _SearchResultsList(conversations: filteredConversations),
+                  Expanded(
+                    child: SizedBox(
+                      height: 240,
+                      child: filteredConversations.isEmpty
+                          ? _EmptySearchResults(searchMode: conversationState.searchMode)
+                          : _SearchResultsList(conversations: filteredConversations),
+                    ),
                   ),
                 ],
               ],
@@ -296,5 +298,3 @@ class _SearchResultItem extends StatelessWidget {
     );
   }
 }
-
-
