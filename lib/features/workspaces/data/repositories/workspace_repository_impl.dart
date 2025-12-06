@@ -47,10 +47,6 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
         _logger.w('Skipped $skipped workspace DTO(s); delivered ${workspaces.length}');
       }
 
-      _logger.i(
-        'Workspaces converted: ${workspaces.length}/${workspaceDtos.length} -> ids=${workspaces.map((w) => w.id).toList()}',
-      );
-
       // Cache the result
       _cachedWorkspaces = workspaces;
 
