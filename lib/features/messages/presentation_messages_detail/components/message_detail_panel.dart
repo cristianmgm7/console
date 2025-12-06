@@ -1,3 +1,4 @@
+
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
@@ -22,8 +23,8 @@ class MessageDetailPanel extends StatelessWidget {
     return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
         return SizedBox(
-          width: 400, // Fixed width panel
-          height: double.infinity, // Fill available height
+          width: 400,
+          height: double.infinity,
           child: AppContainer(
             border: const Border(
               left: BorderSide(
@@ -32,7 +33,6 @@ class MessageDetailPanel extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // Header with close button
                 AppContainer(
                   padding: const EdgeInsets.all(16),
                   border: const Border(
@@ -53,9 +53,8 @@ class MessageDetailPanel extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Content
                 Expanded(
-                  child: _buildContent(state),
+                  child: _buildContentFromState(state),
                 ),
               ],
             ),
@@ -65,21 +64,36 @@ class MessageDetailPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(MessageDetailState state) {
+  Widget _buildContentFromState(MessageDetailState state) {
     if (state is MessageDetailLoading) {
-      return const Center(child: AppProgressIndicator());
+      return _buildLoadingState();
     }
     if (state is MessageDetailLoaded) {
-      return MessageDetailContent(state: state);
+      // Verify that the loaded message matches the current messageId
+      if (state.message.id == messageId) {
+        return _buildLoadedState(state);
+      }
+      // If the message doesn't match, show loading while waiting for the correct message
+      return _buildLoadingState();
     }
     if (state is MessageDetailError) {
-      return Center(
-        child: Text(
-          'Error: ${state.message}',
-          style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
-        ),
-      );
+      return _buildErrorState(state);
     }
-    return const SizedBox.shrink();
+    return _buildDefaultState();
   }
+  Widget _buildErrorState(MessageDetailError state) {
+    return Center(
+      child: Text(
+        'Error: ${state.message}',
+        style: AppTextStyle.bodyLarge.copyWith(color: AppColors.error),
+      ),
+    );
+  }
+
+  Widget _buildDefaultState() => const SizedBox.shrink();
+
+  Widget _buildLoadingState() => const Center(child: AppProgressIndicator());
+
+  Widget _buildLoadedState(MessageDetailLoaded state) => MessageDetailContent(state: state);
+
 }

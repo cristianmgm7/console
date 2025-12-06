@@ -68,6 +68,7 @@ class MessageDetailContent extends StatelessWidget {
               style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: 16),
+
             if (message.transcriptText != null) ...[
               Text(
                 'Transcript',
@@ -79,7 +80,14 @@ class MessageDetailContent extends StatelessWidget {
                 style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 16),
+            ] else ...[
+              const Text(
+                'No transcript available',
+                style: TextStyle(color: Color(0xFF6B7280), fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 16),
             ],
+
             if (message.text != null) ...[
               Text(
                 'Text',
@@ -89,6 +97,11 @@ class MessageDetailContent extends StatelessWidget {
               Text(
                 message.text!,
                 style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
+            ] else if (message.transcriptText == null) ...[
+              const Text(
+                'No text content available',
+                style: TextStyle(color: Color(0xFF6B7280), fontStyle: FontStyle.italic),
               ),
             ],
             if (message.hasPlayableAudio) ...[
