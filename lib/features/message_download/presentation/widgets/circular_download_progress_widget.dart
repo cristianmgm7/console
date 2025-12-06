@@ -61,7 +61,7 @@ class CircularDownloadProgressWidget extends StatelessWidget {
                 ),
                 // Percentage text
                 Text(
-                  '${state.progressPercent.round()}%',
+                  '${state.current} / ${state.total}',
                   style: AppTextStyle.bodyLarge.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,

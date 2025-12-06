@@ -11,9 +11,6 @@ extension SendMessageRequestMapper on SendMessageRequest {
       channelId: channelId,
       workspaceGuid: workspaceId,
       uniqueClientId: const Uuid().v4(), // Generate unique client ID
-      isStreaming: false,
-      announceUser: true,
-      kind: 'text',
       replyToMessageId: replyToMessageId,
     );
   }
