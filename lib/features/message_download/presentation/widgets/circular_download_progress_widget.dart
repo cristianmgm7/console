@@ -76,27 +76,7 @@ class CircularDownloadProgressWidget extends StatelessWidget {
           // Cancel button below the circle
           GestureDetector(
             onTap: () {
-              // Show confirmation dialog before cancelling
-              showDialog(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Cancel Download'),
-                  content: const Text('Are you sure you want to cancel the download?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('No'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.read<DownloadBloc>().add(const CancelDownload());
-                        Navigator.pop(dialogContext);
-                      },
-                      child: const Text('Yes'),
-                    ),
-                  ],
-                ),
-              );
+              context.read<DownloadBloc>().add(const CancelDownload());
             },
             child: Container(
               width: 32,
