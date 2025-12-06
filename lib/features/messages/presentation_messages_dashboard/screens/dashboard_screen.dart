@@ -10,8 +10,8 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/content_dashboard.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart' as cubit_state;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
@@ -180,14 +180,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               builder: (context, detailState) {
                 if (!detailState.isVisible) return const SizedBox.shrink();
 
-                return BlocProvider.value(
-                  value: context.read<MessageDetailBloc>(),
-                  child: MessageDetailPanel(
-                    messageId: detailState.selectedMessageId!,
-                    onClose: () {
-                      context.read<MessageDetailCubit>().closeDetail();
-                    },
-                  ),
+                return MessageDetailPanel(
+                  messageId: detailState.selectedMessageId!,
+                  onClose: () {
+                    context.read<MessageDetailCubit>().closeDetail();
+                  },
                 );
               },
             ),
