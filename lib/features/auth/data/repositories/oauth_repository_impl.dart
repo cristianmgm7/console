@@ -449,7 +449,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       final decodedBytes = base64Url.decode(normalizedPayload);
       final decodedString = utf8.decode(decodedBytes);
       return jsonDecode(decodedString) as Map<String, dynamic>;
-    } catch (e) {
+    }catch (e) {
       _logger.e('Error decoding JWT token', error: e);
       return null;
     }
