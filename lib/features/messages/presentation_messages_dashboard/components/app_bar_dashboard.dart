@@ -1,7 +1,6 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/conversation_search_button.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/conversation_search_panel_wrapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/conversation_selector_section.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/dashboard_title.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/selected_conversations_section.dart';
@@ -31,16 +30,9 @@ class DashboardAppBar extends StatelessWidget {
           SizedBox(width: 16),
           WorkspaceSection(),
           SizedBox(width: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ConversationSelectorSection(),
-              SizedBox(width: 8),
-              ConversationSearchButton(),
-              SizedBox(width: 8),
-              ConversationSearchPanelWrapper(),
-            ],
-          ),
+          ConversationSelectorSection(),
+          SizedBox(width: 8),
+          ConversationSearchButton(),
           SizedBox(width: 16),
           SelectedConversationsSection(),
           SendMessageButton(),

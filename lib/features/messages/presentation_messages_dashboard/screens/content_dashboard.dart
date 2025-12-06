@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/conversation_search_panel_wrapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_content/audio_mini_player_positioned.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_content/download_progress_indicator.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_content/message_composition_panel_wrapper.dart';
@@ -30,6 +31,7 @@ class DashboardContent extends StatelessWidget {
         children: [
           MessagesContentContainer(isAnyBlocLoading: isAnyBlocLoading),
           const DownloadProgressIndicator(),
+          const ConversationSearchPanelWrapper(),
           const MessagesActionPanelWrapper(),
           PaginationControlsWrapper(
             onLoadMore: onManualLoadMore,
