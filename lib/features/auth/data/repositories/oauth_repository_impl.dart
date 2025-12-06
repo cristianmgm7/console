@@ -468,12 +468,37 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(const UnknownFailure(details: 'Not authenticated'));
       }
 
+      // Try /whoami endpoint first - this should return current user profile directly
+      const whoamiUrl = '${OAuthConfig.apiBaseUrl}/whoami';
+      _logger.d('Fetching current user profile from: $whoamiUrl');
+
+      try {
+        final response = await client.get(Uri.parse(whoamiUrl));
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+          _logger.d('Raw response from /whoami: $responseData');
+
+          // Extract user data from the "user" key
+          final userData = responseData['user'] as Map<String, dynamic>;
+          _logger.d('Extracted user data with ${userData.length} fields');
+
+          return success(userData);
+        } else {
+          _logger.d('Failed to fetch from /whoami endpoint: ${response.statusCode}');
+        }
+      } on Exception catch (e) {
+        _logger.d('Failed to fetch from /whoami endpoint, trying JWT decoding', error: e);
+        return failure(UnknownFailure(details: 'Failed to fetch user info: $e'));
+      }
+
       // Fallback: Decode JWT token to get user info
       final accessToken = client.credentials.accessToken;
       final payload = _decodeJwtPayload(accessToken);
 
       if (payload != null) {
         _logger.d('User info extracted from JWT token');
+        _logger.d('JWT payload: $payload'); // Debug logging
         return success(payload);
       } else {
         return failure(const UnknownFailure(details: 'Failed to decode JWT token'));

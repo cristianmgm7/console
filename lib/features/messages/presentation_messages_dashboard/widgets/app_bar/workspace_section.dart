@@ -52,17 +52,16 @@ class WorkspaceSection extends StatelessWidget {
           width: 200,
           height: 40,
           child: Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: AppProgressIndicator(),
-            ),
+            child: AppProgressIndicator(),
           ),
         ),
       ],
     );
   }
 
+  Widget _buildErrorState(WorkspaceError errorState) {
+    return const SizedBox.shrink(); // Or show error indicator if needed
+  }
   Widget _buildLoadedState(WorkspaceLoaded loadedState, UserProfileState userProfileState) {
     // Get current user ID from user profile cubit
     final currentUserId = userProfileState is UserProfileLoaded
@@ -75,7 +74,4 @@ class WorkspaceSection extends StatelessWidget {
     );
   }
 
-  Widget _buildErrorState(WorkspaceError errorState) {
-    return const SizedBox.shrink(); // Or show error indicator if needed
-  }
 }

@@ -18,9 +18,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   @override
   Future<UserProfileDto> getUser(String userId) async {
     try {
-      final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/user/profile/$userId',
-      );
+      final url = '${OAuthConfig.apiBaseUrl}/user/profile/$userId';
+
+      final response = await _httpService.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -29,10 +29,10 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
         final userProfileDto = UserProfileDto.fromJson(data);
         return userProfileDto;
       } else {
-        _logger.e('Failed to fetch user: ${response.statusCode}');
+        _logger.e('Failed to fetch user: ${response.statusCode}, body: ${response.body}');
         throw ServerException(
           statusCode: response.statusCode,
-          message: 'Failed to fetch user',
+          message: 'Failed to fetch user: ${response.body}',
         );
       }
     } on ServerException {
