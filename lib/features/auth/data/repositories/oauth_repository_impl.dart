@@ -435,6 +435,26 @@ class OAuthRepositoryImpl implements OAuthRepository {
     }
   }
 
+  /// Decodes a JWT token and returns the payload
+  Map<String, dynamic>? _decodeJwtPayload(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return null;
+      }
+
+      final payload = parts[1];
+      // Add padding if needed
+      final normalizedPayload = base64Url.normalize(payload);
+      final decodedBytes = base64Url.decode(normalizedPayload);
+      final decodedString = utf8.decode(decodedBytes);
+      return jsonDecode(decodedString) as Map<String, dynamic>;
+    } catch (e) {
+      _logger.e('Error decoding JWT token', error: e);
+      return null;
+    }
+  }
+
   @override
   Future<Result<Map<String, dynamic>>> getUserInfo() async {
     try {
@@ -448,20 +468,15 @@ class OAuthRepositoryImpl implements OAuthRepository {
         return failure(const UnknownFailure(details: 'Not authenticated'));
       }
 
-      const userInfoUrl = '${OAuthConfig.apiBaseUrl}/userinfo';
-      _logger.d('Fetching user info from: $userInfoUrl');
+      // Fallback: Decode JWT token to get user info
+      final accessToken = client.credentials.accessToken;
+      final payload = _decodeJwtPayload(accessToken);
 
-      final response = await client.get(Uri.parse(userInfoUrl));
-
-      if (response.statusCode == 200) {
-        final userInfo = jsonDecode(response.body) as Map<String, dynamic>;
-        _logger.d('User info retrieved successfully');
-        return success(userInfo);
+      if (payload != null) {
+        _logger.d('User info extracted from JWT token');
+        return success(payload);
       } else {
-        _logger.e('Failed to fetch user info: ${response.statusCode}');
-        return failure(UnknownFailure(
-          details: 'Failed to fetch user info: ${response.statusCode}',
-        ));
+        return failure(const UnknownFailure(details: 'Failed to decode JWT token'));
       }
     } on Exception catch (e) {
       _logger.e('Error fetching user info', error: e);

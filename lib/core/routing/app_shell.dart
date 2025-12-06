@@ -19,8 +19,40 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   @override
+  void initState() {
+    super.initState();
+    // Check current auth state when AppShell is first built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthState();
+    });
+  }
+
+  Future<void> _checkAuthState() async {
+    final authBloc = context.read<AuthBloc>();
+    final userProfileCubit = context.read<UserProfileCubit>();
+
+    // Get current auth state
+    final currentState = authBloc.state;
+
+    switch (currentState) {
+      case Authenticated():
+        // Load user profile if we're authenticated
+        await userProfileCubit.loadCurrentUser();
+
+      case Unauthenticated() || AuthError() || LoggedOut():
+        // Clear user profile if not authenticated
+        userProfileCubit.clearProfile();
+
+      default:
+        // No action needed for other states
+        break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) => previous != current,
       listener: (context, authState) async {
         final userProfileCubit = context.read<UserProfileCubit>();
 
