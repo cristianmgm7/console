@@ -72,10 +72,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _onManualLoadMore() {
-    context.read<MessageBloc>().add(const msg_events.LoadMoreMessages());
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DownloadBloc, DownloadState>(
@@ -148,9 +144,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             builder: (context, messageState) {
               return DashboardContent(
                 isAnyBlocLoading: _isAnyBlocLoading,
-                onManualLoadMore: _onManualLoadMore,
-                hasMoreMessages: messageState?.hasMoreMessages ?? false,
-                isLoadingMore: messageState?.isLoadingMore ?? false,
               );
             },
           ),
@@ -176,9 +169,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 builder: (context, messageState) {
                   return DashboardContent(
                     isAnyBlocLoading: _isAnyBlocLoading,
-                    onManualLoadMore: _onManualLoadMore,
-                    hasMoreMessages: messageState?.hasMoreMessages ?? false,
-                    isLoadingMore: messageState?.isLoadingMore ?? false,
                   );
                 },
               ),

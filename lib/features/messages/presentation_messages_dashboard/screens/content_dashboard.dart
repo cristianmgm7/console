@@ -12,16 +12,10 @@ import 'package:flutter/material.dart';
 class DashboardContent extends StatelessWidget {
   const DashboardContent({
     required this.isAnyBlocLoading,
-    required this.onManualLoadMore,
-    required this.hasMoreMessages,
-    required this.isLoadingMore,
     super.key,
   });
 
   final bool Function(BuildContext context) isAnyBlocLoading;
-  final VoidCallback onManualLoadMore;
-  final bool hasMoreMessages;
-  final bool isLoadingMore;
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +27,7 @@ class DashboardContent extends StatelessWidget {
           const DownloadProgressIndicator(),
           const ConversationSearchPanelWrapper(),
           const MessagesActionPanelWrapper(),
-          PaginationControlsWrapper(
-            onLoadMore: onManualLoadMore,
-            hasMore: hasMoreMessages,
-            isLoading: isLoadingMore,
-          ),
+          const PaginationControlsWrapper(),
           const AudioMiniPlayerPositioned(),
           const MessageCompositionPanelWrapper(),
         ],
