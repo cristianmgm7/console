@@ -24,14 +24,15 @@ extension MessageDtoMapper on MessageDto {
       audioModels: audioModels?.map((dto) {
         try {
           return dto.toDomain();
-        } catch (e) {
+        } on Exception {
+
           return null; // Skip invalid audio models
         }
       }).where((model) => model != null).cast<AudioModel>().toList() ?? [],
       textModels: textModels?.map((dto) {
         try {
           return dto.toDomain();
-        } catch (e) {
+        } on Exception {
           return null; // Skip invalid text models
         }
       }).where((model) => model != null).cast<TextModel>().toList() ?? [],
