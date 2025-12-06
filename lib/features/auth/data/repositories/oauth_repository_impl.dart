@@ -477,11 +477,9 @@ class OAuthRepositoryImpl implements OAuthRepository {
 
         if (response.statusCode == 200) {
           final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-          _logger.d('Raw response from /whoami: $responseData');
 
           // Extract user data from the "user" key
           final userData = responseData['user'] as Map<String, dynamic>;
-          _logger.d('Extracted user data with ${userData.length} fields');
 
           return success(userData);
         } else {
