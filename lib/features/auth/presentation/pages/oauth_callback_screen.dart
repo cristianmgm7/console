@@ -94,8 +94,8 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
                   center: Alignment.topCenter,
                   radius: 1.5,
                   colors: [
-                    AppColors.gradientPurple.withOpacity(0.3),
-                    AppColors.gradientPink.withOpacity(0.2),
+                    AppColors.gradientPurple.withValues(alpha: 0.3),
+                    AppColors.gradientPink.withValues(alpha: 0.2),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -125,8 +125,8 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
                   center: Alignment.topCenter,
                   radius: 1.5,
                   colors: [
-                    AppColors.gradientPurple.withOpacity(0.3),
-                    AppColors.gradientPink.withOpacity(0.2),
+                    AppColors.gradientPurple.withValues(alpha: 0.3),
+                    AppColors.gradientPink.withValues(alpha: 0.2),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -159,8 +159,8 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
                   center: Alignment.topCenter,
                   radius: 1.5,
                   colors: [
-                    AppColors.gradientPurple.withOpacity(0.3),
-                    AppColors.gradientPink.withOpacity(0.2),
+                    AppColors.gradientPurple.withValues(alpha: 0.3),
+                    AppColors.gradientPink.withValues(alpha: 0.2),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -204,8 +204,8 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
                 center: Alignment.topCenter,
                 radius: 1.5,
                 colors: [
-                  AppColors.gradientPurple.withOpacity(0.3),
-                  AppColors.gradientPink.withOpacity(0.2),
+                  AppColors.gradientPurple.withValues(alpha: 0.3),
+                  AppColors.gradientPink.withValues(alpha: 0.2),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.5, 1.0],
