@@ -59,6 +59,7 @@ class MessagesActionPanel extends StatelessWidget {
 
             // Download Menu Button
             PopupMenuButton<String>(
+              color: AppColors.surface,
               key: const Key('download_dropdown'),
               onSelected: (String value) {
                 switch (value) {

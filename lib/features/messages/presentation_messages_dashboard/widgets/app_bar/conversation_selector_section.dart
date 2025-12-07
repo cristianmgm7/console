@@ -35,9 +35,10 @@ class ConversationSelectorSection extends StatelessWidget {
             selector: (state) => state is ConversationLoaded ? state : null,
             builder: (context, conversationState) {
               if (conversationState == null || conversationState.conversations.isEmpty) {
+                // empty state or
                 return _buildNoConversationsState();
               }
-
+              // build conversations dropdown
               return _buildConversationsDropdown(context, conversationState);
             },
           ),
@@ -46,6 +47,7 @@ class ConversationSelectorSection extends StatelessWidget {
     );
   }
 
+  // empty state or loading state
   Widget _buildNoConversationsState() {
     return AppContainer(
       padding: const EdgeInsets.symmetric(
@@ -65,6 +67,7 @@ class ConversationSelectorSection extends StatelessWidget {
     );
   }
 
+  // build conversations dropdown
   Widget _buildConversationsDropdown(BuildContext context, ConversationLoaded conversationState) {
     return AppDropdown<String>(
       value: null,
