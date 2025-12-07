@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
-import 'package:carbon_voice_console/core/dtos/user_profile_dto.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/network/authenticated_http_service.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
@@ -16,7 +15,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<UserProfileDto> getUser(String userId) async {
+  Future<Map<String, dynamic>> getUser(String userId) async {
     try {
       final url = '${OAuthConfig.apiBaseUrl}/user/profile/$userId';
 
@@ -24,10 +23,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-
-        // Parse using DTO
-        final userProfileDto = UserProfileDto.fromJson(data);
-        return userProfileDto;
+        return data;
       } else {
         _logger.e('Failed to fetch user: ${response.statusCode}, body: ${response.body}');
         throw ServerException(
@@ -44,9 +40,9 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   }
 
   @override
-  Future<List<UserProfileDto>> getUsers(List<String> userIds) async {
+  Future<List<Map<String, dynamic>>> getUsers(List<String> userIds) async {
     try {
-      final users = <UserProfileDto>[];
+      final users = <Map<String, dynamic>>[];
       for (final userId in userIds) {
         try {
           final user = await getUser(userId);

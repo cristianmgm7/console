@@ -18,45 +18,17 @@ class UserProfileCubit extends Cubit<UserProfileState> {
 
     emit(const UserProfileLoading());
 
-    // Get user info using the use case
-    final userInfoResult = await _getCurrentUserInfoUsecase.call();
+    // Get user using the use case
+    final userResult = await _getCurrentUserInfoUsecase.call();
 
-    final userInfo = userInfoResult.fold(
-      onSuccess: (info) => info,
+    userResult.fold(
+      onSuccess: (user) {
+        emit(UserProfileLoaded(user));
+      },
       onFailure: (failure) {
         emit(UserProfileError(FailureMapper.mapToMessage(failure.failure)));
-        return null;
       },
     );
-
-    if (userInfo == null) return;
-
-    // Extract user data from the response
-    final dynamic userIdValue = userInfo['user_guid'] ?? userInfo['uuid'] ?? userInfo['id'] ?? userInfo['user_id'] ?? userInfo['userId'] ?? userInfo['sub'];
-    final userId = userIdValue?.toString();
-
-    if (userId == null) {
-      emit(const UserProfileError('No user ID found in user info response'));
-      return;
-    }
-
-    // Extract user profile data
-    final name = userInfo['name']?.toString() ??
-                userInfo['full_name']?.toString() ??
-                userInfo['display_name']?.toString() ??
-                'Unknown User';
-
-    final email = userInfo['email']?.toString();
-
-    // Create user entity directly from session data
-    final user = User(
-      id: userId,
-      name: name,
-      email: email,
-      // avatarUrl and workspaceId can be added if available in session data
-    );
-
-    emit(UserProfileLoaded(user));
   }
 
 

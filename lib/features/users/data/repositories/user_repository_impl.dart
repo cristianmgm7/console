@@ -1,8 +1,8 @@
-import 'package:carbon_voice_console/core/dtos/user_profile_mapper.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/users/data/datasources/user_remote_datasource.dart';
+import 'package:carbon_voice_console/features/users/data/models/user_profile_dto.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:injectable/injectable.dart';
@@ -27,14 +27,9 @@ class UserRepositoryImpl implements UserRepository {
         return success(_cachedUsers[userId]!);
       }
 
-      final userProfileDto = await _remoteDataSource.getUser(userId);
-      final userProfile = userProfileDto.toDomain(userId);
-      final user = User(
-        id: userProfile.id,
-        name: userProfile.fullName,
-        email: userProfile.email,
-        // avatarUrl and workspaceId can be added later if available in API
-      );
+      final userData = await _remoteDataSource.getUser(userId);
+      final userProfileDto = UserProfileDto.fromJson(userData);
+      final user = userProfileDto.toEntity();
 
       // Cache the result
       _cachedUsers[userId] = user;
@@ -72,18 +67,13 @@ class UserRepositoryImpl implements UserRepository {
 
       // Fetch uncached users
       if (uncachedIds.isNotEmpty) {
-        final userProfileDtos = await _remoteDataSource.getUsers(uncachedIds);
+        final userDataList = await _remoteDataSource.getUsers(uncachedIds);
         final users = <User>[];
-        for (var i = 0; i < userProfileDtos.length; i++) {
-          final dto = userProfileDtos[i];
-          final userId = uncachedIds[i];
-          final userProfile = dto.toDomain(userId);
-          users.add(User(
-            id: userProfile.id,
-            name: userProfile.fullName,
-            email: userProfile.email,
-            // avatarUrl and workspaceId can be added later if available in API
-          ),);
+        for (var i = 0; i < userDataList.length; i++) {
+          final userData = userDataList[i];
+          final userProfileDto = UserProfileDto.fromJson(userData);
+          final user = userProfileDto.toEntity();
+          users.add(user);
         }
 
         // Cache the results
@@ -111,10 +101,12 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<Result<Map<String, dynamic>>> getCurrentUserInfo() async {
+  Future<Result<User>> getCurrentUserInfo() async {
     try {
       final userData = await _remoteDataSource.getCurrentUserInfo();
-      return success(userData);
+      final userProfileDto = UserProfileDto.fromJson(userData);
+      final user = userProfileDto.toEntity();
+      return success(user);
     } on ServerException catch (e) {
       _logger.e('Server error fetching current user info', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
