@@ -37,8 +37,6 @@ class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, M
 /// DTO for message from API response
 @JsonSerializable()
 class MessageDto {
-
-  factory MessageDto.fromJson(Map<String, dynamic> json) => _$MessageDtoFromJson(json);
   const MessageDto({
     required this.reactionSummary,
     required this.utmData,
@@ -77,6 +75,8 @@ class MessageDto {
     this.streamKey,
     this.folderId,
   });
+
+  factory MessageDto.fromJson(Map<String, dynamic> json) => _$MessageDtoFromJson(json);
 
   @JsonKey(name: 'deleted_at')
   final DateTime? deletedAt;
