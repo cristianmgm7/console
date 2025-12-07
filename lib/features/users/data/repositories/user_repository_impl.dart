@@ -110,6 +110,22 @@ class UserRepositoryImpl implements UserRepository {
     }
   }
 
+  @override
+  Future<Result<Map<String, dynamic>>> getCurrentUserInfo() async {
+    try {
+      final userData = await _remoteDataSource.getCurrentUserInfo();
+      return success(userData);
+    } on ServerException catch (e) {
+      _logger.e('Server error fetching current user info', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error fetching current user info', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } on Exception catch (e, stack) {
+      _logger.e('Unknown error fetching current user info', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: e.toString()));
+    }
+  }
 
   /// Clears the user cache
   void clearCache() {

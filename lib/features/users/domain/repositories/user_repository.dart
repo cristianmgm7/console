@@ -9,4 +9,7 @@ abstract class UserRepository {
   /// Fetches multiple users by their IDs (batch operation)
   Future<Result<List<User>>> getUsers(List<String> userIds);
 
+  /// Fetches current user information from /whoami endpoint
+  Future<Result<Map<String, dynamic>>> getCurrentUserInfo();
+
 }
