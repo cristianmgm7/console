@@ -13,4 +13,9 @@ abstract class UserRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<List<UserProfileDto>> getUsers(List<String> userIds);
 
+  /// Fetches current user information from /whoami endpoint
+  /// Throws [ServerException] on API errors
+  /// Throws [NetworkException] on network errors
+  Future<Map<String, dynamic>> getCurrentUserInfo();
+
 }

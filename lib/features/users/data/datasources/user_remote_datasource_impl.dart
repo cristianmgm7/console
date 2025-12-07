@@ -64,4 +64,40 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
     }
   }
 
+  @override
+  Future<Map<String, dynamic>> getCurrentUserInfo() async {
+    try {
+      // Try /whoami endpoint first - this should return current user profile directly
+      const whoamiUrl = '${OAuthConfig.apiBaseUrl}/whoami';
+      _logger.d('Fetching current user profile from: $whoamiUrl');
+
+      try {
+        final response = await _httpService.get(whoamiUrl);
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+
+          // Extract user data from the "user" key
+          final userData = responseData['user'] as Map<String, dynamic>;
+
+          return userData;
+        } else {
+          _logger.d('Failed to fetch from /whoami endpoint: ${response.statusCode}');
+          throw ServerException(
+            statusCode: response.statusCode,
+            message: 'Failed to fetch current user info: ${response.body}',
+          );
+        }
+      } on ServerException {
+        rethrow;
+      } on Exception catch (e) {
+        _logger.d('Failed to fetch from /whoami endpoint, trying JWT decoding', error: e);
+        throw NetworkException(message: 'Failed to fetch current user info: $e');
+      }
+    } on Exception catch (e, stack) {
+      _logger.e('Error fetching current user info', error: e, stackTrace: stack);
+      throw NetworkException(message: 'Failed to fetch current user info: $e');
+    }
+  }
+
 }

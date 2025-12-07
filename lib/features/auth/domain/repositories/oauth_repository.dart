@@ -23,8 +23,4 @@ abstract class OAuthRepository {
 
   /// Gets the OAuth client for making API calls
   Future<Result<oauth2.Client?>> getClient();
-
-
-  /// Gets current user information from /userinfo or /me endpoint
-  Future<Result<Map<String, dynamic>>> getUserInfo();
 }
