@@ -1,5 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'user_profile_dto.g.dart';
 
@@ -29,6 +29,9 @@ class UserProfileDto {
     this.translationMode,
     this.preserveSendersVoice,
   });
+
+  factory UserProfileDto.fromJson(Map<String, dynamic> json) =>
+      _$UserProfileDtoFromJson(json);
   @JsonKey(name: 'user_guid')
   final String? userGuid;
 
@@ -88,17 +91,11 @@ class UserProfileDto {
   @JsonKey(name: 'preserve_senders_voice')
   final bool? preserveSendersVoice;
 
-  factory UserProfileDto.fromJson(Map<String, dynamic> json) =>
-      _$UserProfileDtoFromJson(json);
-
   Map<String, dynamic> toJson() => _$UserProfileDtoToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
 class IdentityDto {
-  final String? provider;
-  final String? providerId;
-  final String? email;
 
   IdentityDto({
     this.provider,
@@ -108,15 +105,15 @@ class IdentityDto {
 
   factory IdentityDto.fromJson(Map<String, dynamic> json) =>
       _$IdentityDtoFromJson(json);
+  final String? provider;
+  final String? providerId;
+  final String? email;
 
   Map<String, dynamic> toJson() => _$IdentityDtoToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
 class EntryDto {
-  final String? id;
-  final String? type;
-  final String? value;
 
   EntryDto({
     this.id,
@@ -126,20 +123,15 @@ class EntryDto {
 
   factory EntryDto.fromJson(Map<String, dynamic> json) =>
       _$EntryDtoFromJson(json);
+  final String? id;
+  final String? type;
+  final String? value;
 
   Map<String, dynamic> toJson() => _$EntryDtoToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
 class NotificationSettingsDto {
-  @JsonKey(name: 'email_notifications')
-  final bool? emailNotifications;
-
-  @JsonKey(name: 'push_notifications')
-  final bool? pushNotifications;
-
-  @JsonKey(name: 'sms_notifications')
-  final bool? smsNotifications;
 
   NotificationSettingsDto({
     this.emailNotifications,
@@ -149,6 +141,14 @@ class NotificationSettingsDto {
 
   factory NotificationSettingsDto.fromJson(Map<String, dynamic> json) =>
       _$NotificationSettingsDtoFromJson(json);
+  @JsonKey(name: 'email_notifications')
+  final bool? emailNotifications;
+
+  @JsonKey(name: 'push_notifications')
+  final bool? pushNotifications;
+
+  @JsonKey(name: 'sms_notifications')
+  final bool? smsNotifications;
 
   Map<String, dynamic> toJson() => _$NotificationSettingsDtoToJson(this);
 }
@@ -160,7 +160,7 @@ extension UserProfileMapper on UserProfileDto {
       firstName: firstName ?? 'Unknown',
       lastName: lastName ?? 'User',
       email: email ?? '',
-      isVerified: isVerified == "Y",
+      isVerified: isVerified == 'Y',
       avatarUrl: imageUrl,
       lastSeen: lastSeenOn != null ? DateTime.tryParse(lastSeenOn!) : null,
       languages: languages ?? [],
