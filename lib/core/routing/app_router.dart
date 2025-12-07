@@ -4,7 +4,7 @@ import 'package:carbon_voice_console/core/routing/app_shell.dart';
 import 'package:carbon_voice_console/core/routing/route_guard.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
-import 'package:carbon_voice_console/features/settings/presentation/settings_screen.dart';
+import 'package:carbon_voice_console/features/settings/presentation/screen/settings_screen.dart';
 import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
