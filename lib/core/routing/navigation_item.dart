@@ -10,6 +10,7 @@ class NavigationItem extends StatelessWidget {
     required this.route,
     required this.isSelected,
     required this.onTap,
+    super.key, 
   });
 
   final IconData icon;

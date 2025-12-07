@@ -72,14 +72,9 @@ class UserProfileButton extends StatelessWidget {
       child: Tooltip(
         message: 'Settings - ${user.fullName}',
         child: CircleAvatar(
-          radius: 20,
+          radius: 24,
           backgroundImage: NetworkImage(user.avatarUrl!),
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-          child: Icon(
-            AppIcons.user,
-            size: 20,
-            color: AppColors.primary,
-          ),
         ),
       ),
     );

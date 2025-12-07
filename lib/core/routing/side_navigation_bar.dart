@@ -15,7 +15,7 @@ class SideNavigationBar extends StatelessWidget {
     final currentPath = GoRouterState.of(context).uri.path;
 
     return SizedBox(
-      width: 72,
+      width: 80,
       child: AppContainer(
         backgroundColor: AppColors.surface,
       child: Column(
