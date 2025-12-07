@@ -361,68 +361,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
   }
 
   @override
-  Future<Result<String>> getPxToken() async {
-    try {
-      final clientResult = await getClient();
-      final client = clientResult.fold(
-        onSuccess: (client) => client,
-        onFailure: (_) => null,
-      );
-
-      if (client == null) {
-        return failure(const UnknownFailure(details: 'Not authenticated'));
-      }
-
-      final accessToken = client.credentials.accessToken;
-
-      // Try POST request with token in JSON body (avoiding URL encoding issues)
-      const exchangeUrl = '${OAuthConfig.apiBaseUrl}/token/access/exchange';
-      _logger.d('Fetching PX token from exchange endpoint (POST): $exchangeUrl');
-      _logger.d('Sending access token in JSON body');
-
-      _logger.d('About to make HTTP POST request to /token/access/exchange...');
-      http.Response? response;
-      try {
-        response = await http.post(
-          Uri.parse(exchangeUrl),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'access_token': accessToken}),
-        ).timeout(const Duration(seconds: 10));
-        _logger.d('HTTP request completed, got response');
-        _logger.d('Exchange response status: ${response.statusCode}');
-      } on Exception catch (e) {
-        _logger.e('Network error during exchange request: $e');
-        if (e is http.ClientException) {
-          _logger.e('ClientException details: ${e.message}');
-          _logger.e('URI that failed: ${e.uri}');
-        }
-        return failure(UnknownFailure(details: 'Network error during token exchange: $e'));
-      }
-
-      if (response.statusCode != 200) {
-        _logger.e('Exchange request failed: ${response.body}');
-        return failure(UnknownFailure(details: 'Failed to get PX token: ${response.statusCode} - ${response.body}'));
-      }
-
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-      _logger.d('Exchange response keys: ${responseData.keys.toList()}');
-
-      final pxToken = responseData['pxtoken'] as String?;
-
-      if (pxToken == null || pxToken.isEmpty) {
-        _logger.e('Available keys: ${responseData.keys.toList()}');
-        return failure(UnknownFailure(details: 'PX token not found in response. Available keys: ${responseData.keys.toList()}'));
-      }
-
-      _logger.i('Successfully obtained PX token');
-      return success(pxToken);
-    } on Exception catch (e, stack) {
-      _logger.e('Error fetching PX token', error: e, stackTrace: stack);
-      return failure(UnknownFailure(details: 'Error fetching PX token: $e'));
-    }
-  }
-
-  @override
   Future<Result<oauth2.Client?>> getClient() async {
     try {
       if (_client != null) {
@@ -449,7 +387,7 @@ class OAuthRepositoryImpl implements OAuthRepository {
       final decodedBytes = base64Url.decode(normalizedPayload);
       final decodedString = utf8.decode(decodedBytes);
       return jsonDecode(decodedString) as Map<String, dynamic>;
-    }catch (e) {
+    } on Exception catch (e) {
       _logger.e('Error decoding JWT token', error: e);
       return null;
     }
