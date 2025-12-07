@@ -171,7 +171,7 @@ class MessageDetailView extends StatelessWidget {
                 message.channelIds.join(', '),
             ),
             _buildInfoRow('Conversation ID', message.conversationId),
-            _buildInfoRow('User', state.user?.name ?? message.userId),
+            _buildInfoRow('User', state.user?.fullName ?? message.userId),
           ],
         ),
       ),

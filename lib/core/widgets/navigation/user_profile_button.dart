@@ -70,7 +70,7 @@ class UserProfileButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => GoRouter.of(context).go(AppRoutes.settings),
       child: Tooltip(
-        message: 'Settings - ${user.name}',
+        message: 'Settings - ${user.fullName}',
         child: CircleAvatar(
           radius: 20,
           backgroundImage: NetworkImage(user.avatarUrl!),
@@ -89,7 +89,7 @@ class UserProfileButton extends StatelessWidget {
     return AppIconButton(
       icon: AppIcons.user,
       onPressed: () => GoRouter.of(context).go(AppRoutes.settings),
-      tooltip: 'Settings - ${user.name}',
+      tooltip: 'Settings - ${user.fullName}',
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.surface,
     );

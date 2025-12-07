@@ -165,7 +165,7 @@ class MessagesContentContainer extends StatelessWidget {
 
       // Owner
       Text(
-        message.creator?.name ?? message.creatorId,
+        message.creator?.fullName ?? message.creatorId,
         style: AppTextStyle.bodyMedium.copyWith(
           fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,

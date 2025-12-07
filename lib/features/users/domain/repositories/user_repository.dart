@@ -10,6 +10,6 @@ abstract class UserRepository {
   Future<Result<List<User>>> getUsers(List<String> userIds);
 
   /// Fetches current user information from /whoami endpoint
-  Future<Result<Map<String, dynamic>>> getCurrentUserInfo();
+  Future<Result<User>> getCurrentUserInfo();
 
 }
