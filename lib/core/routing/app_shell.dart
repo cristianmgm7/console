@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/routing/side_navigation_bar.dart';
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_cubit.dart';
@@ -75,6 +76,7 @@ class _AppShellState extends State<AppShell> {
           children: [
             // Fixed-width left navigation bar
             const SideNavigationBar(),
+            const VerticalDivider(width: 2, color: AppColors.divider),
             // Main content area
             Expanded(
               child: widget.child,

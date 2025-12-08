@@ -17,6 +17,7 @@ class SideNavigationBar extends StatelessWidget {
     return SizedBox(
       width: 80,
       child: AppContainer(
+        
         backgroundColor: AppColors.surface,
       child: Column(
         children: [
