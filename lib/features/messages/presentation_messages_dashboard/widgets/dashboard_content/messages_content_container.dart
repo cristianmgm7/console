@@ -5,6 +5,7 @@ import 'package:carbon_voice_console/core/utils/date_time_formatters.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/widgets/conversation_cover_art.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
@@ -102,6 +103,10 @@ class MessagesContentContainer extends StatelessWidget {
                   width: FixedColumnWidth(90),
                 ),
                 AppTableColumn(
+                  title: 'Cover',
+                  width: FixedColumnWidth(60),
+                ),
+                AppTableColumn(
                   title: 'Play',
                   width: FixedColumnWidth(60),
                 ),
@@ -150,6 +155,9 @@ class MessagesContentContainer extends StatelessWidget {
           color: AppColors.textPrimary,
         ),
       ),
+
+      // Conversation Cover Art
+      ConversationCoverArt(conversationId: message.conversationId),
 
       // Play
       if (message.hasPlayableAudio) MessagePlayButton(message: message, audioState: audioState)
