@@ -27,6 +27,7 @@ class SettingsScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
+        backgroundColor: AppColors.surface,
         appBar: AppBar(
           title: Text(
             'Settings',
@@ -35,6 +36,7 @@ class SettingsScreen extends StatelessWidget {
           backgroundColor: AppColors.surface,
         ),
         body: ListView(
+          
           padding: const EdgeInsets.all(24),
           children: const [
             // User Profile Section

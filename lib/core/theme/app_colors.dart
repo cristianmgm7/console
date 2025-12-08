@@ -4,6 +4,7 @@ class AppColors {
   // Primary Backgrounds
   static const Color background = Color(0xFFF9FAFC); // bgOffWhite
   static const Color surface = Color(0xFFFFFFFF); // surfaceWhite
+  static const Color divider = Color.fromARGB(57, 129, 129, 129); // surfaceSecondary
   
   // Primary Brand Colors
   static const Color primary = Color(0xFF5D5FEF); // Blurple Accent
