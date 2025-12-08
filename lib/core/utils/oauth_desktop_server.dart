@@ -128,7 +128,7 @@ class OAuthDesktopServer {
       align-items: center;
       height: 100vh;
       margin: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #E6E6FA 0%, #F3E5F5 100%);
     }
     .container {
       background: white;
