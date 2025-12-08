@@ -1,10 +1,9 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
-import 'package:carbon_voice_console/core/theme/app_text_style.dart';
-import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
+import 'package:carbon_voice_console/features/auth/presentation/components/login_branding_section.dart';
+import 'package:carbon_voice_console/features/auth/presentation/components/login_section.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,51 +50,43 @@ class LoginScreen extends StatelessWidget {
           );
         }
       },
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.gradientPurple,
-              AppColors.gradientPink,
-            ],
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.topCenter,
-              radius: 1.5,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                AppColors.gradientPurple.withValues(alpha: 0.3),
-                AppColors.gradientPink.withValues(alpha: 0.2),
-                Colors.transparent,
+                AppColors.gradientPurple,
+                AppColors.gradientPink,
               ],
-              stops: const [0.0, 0.5, 1.0],
             ),
           ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Carbon Voice Downloader',
-                    style: AppTextStyle.titleLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  AppButton(
-                    onPressed: () {
-                      context.read<AuthBloc>().add(const LoginRequested());
-                    },
-                    child: const Text('Login with OAuth'),
-                  ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.topCenter,
+                radius: 1.5,
+                colors: [
+                  AppColors.gradientPurple.withValues(alpha: 0.3),
+                  AppColors.gradientPink.withValues(alpha: 0.2),
+                  Colors.transparent,
                 ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    LoginBrandingSection(),
+                    SizedBox(height: 48),
+                    LoginSection(),
+                  ],
+                ),
               ),
             ),
           ),
