@@ -38,9 +38,11 @@ class PublishPreviewUsecase {
     }
 
     if (messageIds.length < 3 || messageIds.length > 5) {
-      return failure(const UnknownFailure(
-        details: 'Please select between 3 and 5 messages',
-      ));
+      return failure(
+        const UnknownFailure(
+          details: 'Please select between 3 and 5 messages',
+        ),
+      );
     }
 
     return _repository.publishPreview(

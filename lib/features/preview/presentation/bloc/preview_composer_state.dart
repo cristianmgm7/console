@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
+import 'package:carbon_voice_console/features/preview/presentation/models/preview_ui_model.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class PreviewComposerState extends Equatable {
@@ -24,6 +25,7 @@ class PreviewComposerLoaded extends PreviewComposerState {
   const PreviewComposerLoaded({
     required this.composerData,
     required this.currentMetadata,
+    required this.previewUiModel, // NEW
     this.titleError,
     this.descriptionError,
     this.coverImageUrlError,
@@ -31,6 +33,7 @@ class PreviewComposerLoaded extends PreviewComposerState {
 
   final PreviewComposerData composerData;
   final PreviewMetadata currentMetadata;
+  final PreviewUiModel previewUiModel; // NEW - UI model for visualization
   final String? titleError;
   final String? descriptionError;
   final String? coverImageUrlError;
@@ -44,16 +47,18 @@ class PreviewComposerLoaded extends PreviewComposerState {
 
   @override
   List<Object?> get props => [
-        composerData,
-        currentMetadata,
-        titleError,
-        descriptionError,
-        coverImageUrlError,
-      ];
+    composerData,
+    currentMetadata,
+    previewUiModel, // NEW
+    titleError,
+    descriptionError,
+    coverImageUrlError,
+  ];
 
   PreviewComposerLoaded copyWith({
     PreviewComposerData? composerData,
     PreviewMetadata? currentMetadata,
+    PreviewUiModel? previewUiModel, // NEW
     String? titleError,
     String? descriptionError,
     String? coverImageUrlError,
@@ -61,6 +66,7 @@ class PreviewComposerLoaded extends PreviewComposerState {
     return PreviewComposerLoaded(
       composerData: composerData ?? this.composerData,
       currentMetadata: currentMetadata ?? this.currentMetadata,
+      previewUiModel: previewUiModel ?? this.previewUiModel, // NEW
       titleError: titleError,
       descriptionError: descriptionError,
       coverImageUrlError: coverImageUrlError,

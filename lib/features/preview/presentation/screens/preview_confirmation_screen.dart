@@ -35,7 +35,7 @@ class PreviewConfirmationScreen extends StatelessWidget {
                     color: AppColors.success.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check_circle,
                     size: 48,
                     color: AppColors.success,
@@ -49,8 +49,8 @@ class PreviewConfirmationScreen extends StatelessWidget {
                 child: Text(
                   'Preview Published Successfully!',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -59,8 +59,8 @@ class PreviewConfirmationScreen extends StatelessWidget {
                 child: Text(
                   'This is a UI demo. In production, your conversation preview would be live and ready to share.',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),

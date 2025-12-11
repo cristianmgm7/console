@@ -5,19 +5,34 @@ import 'package:carbon_voice_console/features/messages/domain/entities/message.d
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
+import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
+import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
+
+/// Result containing conversation, messages, users, and initial metadata
+class EnrichedPreviewComposerData {
+  const EnrichedPreviewComposerData({
+    required this.composerData,
+    required this.userMap,
+  });
+
+  final PreviewComposerData composerData;
+  final Map<String, User> userMap; // userId -> User
+}
 
 @injectable
 class GetPreviewComposerDataUsecase {
   GetPreviewComposerDataUsecase(
     this._conversationRepository,
     this._messageRepository,
+    this._userRepository, // INJECT UserRepository
     this._logger,
   );
 
   final ConversationRepository _conversationRepository;
   final MessageRepository _messageRepository;
+  final UserRepository _userRepository; // NEW
   final Logger _logger;
 
   /// Fetches all data needed for the preview composer screen
@@ -25,8 +40,8 @@ class GetPreviewComposerDataUsecase {
   /// [conversationId] - The conversation to preview
   /// [messageIds] - List of 3-5 message IDs selected by user
   ///
-  /// Returns PreviewComposerData with conversation details, messages, and initial metadata
-  Future<Result<PreviewComposerData>> call({
+  /// Returns EnrichedPreviewComposerData with conversation, messages, users, and metadata
+  Future<Result<EnrichedPreviewComposerData>> call({
     required String conversationId,
     required List<String> messageIds,
   }) async {
@@ -38,9 +53,11 @@ class GetPreviewComposerDataUsecase {
       // Validate message count
       if (messageIds.length < 3 || messageIds.length > 5) {
         _logger.w('Invalid message count: ${messageIds.length}');
-        return failure(const UnknownFailure(
-          details: 'Please select between 3 and 5 messages',
-        ));
+        return failure(
+          const UnknownFailure(
+            details: 'Please select between 3 and 5 messages',
+          ),
+        );
       }
 
       // Fetch conversation details
@@ -58,14 +75,15 @@ class GetPreviewComposerDataUsecase {
       );
 
       if (conversation == null) {
-        return failure(const UnknownFailure(
-          details: 'Failed to fetch conversation',
-        ));
+        return failure(
+          const UnknownFailure(
+            details: 'Failed to fetch conversation',
+          ),
+        );
       }
 
       // Fetch all selected messages in parallel
-      final messageFutures = messageIds.map((messageId) =>
-        _messageRepository.getMessage(messageId)).toList();
+      final messageFutures = messageIds.map(_messageRepository.getMessage).toList();
 
       final messageResults = await Future.wait(messageFutures);
 
@@ -89,10 +107,48 @@ class GetPreviewComposerDataUsecase {
       // Ensure we have at least 3 messages
       if (messages.length < 3) {
         _logger.e('Insufficient messages fetched: ${messages.length}');
-        return failure(const UnknownFailure(
-          details: 'Could not load enough messages for preview',
-        ));
+        return failure(
+          const UnknownFailure(
+            details: 'Could not load enough messages for preview',
+          ),
+        );
       }
+
+      // Extract all user IDs from conversation collaborators and message creators
+      final userIds = <String>{};
+
+      // Add message creator IDs
+      for (final message in messages) {
+        userIds.add(message.creatorId);
+      }
+
+      // Add conversation collaborators
+      if (conversation.collaborators != null) {
+        for (final collaborator in conversation.collaborators!) {
+          if (collaborator.userGuid != null) {
+            userIds.add(collaborator.userGuid!);
+          }
+        }
+      }
+
+      _logger.d('Fetching ${userIds.length} user profiles');
+
+      // Fetch all user profiles in batch
+      final usersResult = await _userRepository.getUsers(userIds.toList());
+
+      final userMap = <String, User>{};
+      usersResult.fold(
+        onSuccess: (users) {
+          for (final user in users) {
+            userMap[user.id] = user;
+          }
+          _logger.d('Loaded ${userMap.length} user profiles');
+        },
+        onFailure: (failure) {
+          _logger.w('Failed to fetch some users: ${failure.failure.code}');
+          // Continue without user enrichment
+        },
+      );
 
       // Create initial metadata from conversation
       final initialMetadata = PreviewMetadata(
@@ -107,9 +163,14 @@ class GetPreviewComposerDataUsecase {
         initialMetadata: initialMetadata,
       );
 
-      _logger.i('Successfully fetched preview composer data');
-      return success(composerData);
-    } on Failure<PreviewComposerData> catch (failure) {
+      final enrichedData = EnrichedPreviewComposerData(
+        composerData: composerData,
+        userMap: userMap,
+      );
+
+      _logger.i('Successfully fetched preview composer data with ${userMap.length} users');
+      return success(enrichedData);
+    } on Failure<EnrichedPreviewComposerData> catch (failure) {
       // Already logged in fold
       return failure;
     } on Exception catch (e, stack) {
