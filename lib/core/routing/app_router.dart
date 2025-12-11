@@ -96,11 +96,20 @@ class AppRouter {
               path: AppRoutes.previewComposer,
               name: 'previewComposer',
               pageBuilder: (context, state) {
-                final conversationId = state.uri.queryParameters['conversationId'];
+                final conversationId = state.uri.queryParameters['conversationId'] ?? '';
+                final messageIdsParam = state.uri.queryParameters['messageIds'] ?? '';
+
+                // Parse comma-separated message IDs
+                final messageIds = messageIdsParam.isEmpty
+                    ? <String>[]
+                    : messageIdsParam.split(',');
 
                 return NoTransitionPage(
-                  child: PreviewComposerScreen(
-                    conversationId: conversationId ?? '',
+                  child: BlocProviders.blocProvidersPreview(
+                    child: PreviewComposerScreen(
+                      conversationId: conversationId,
+                      messageIds: messageIds,
+                    ),
                   ),
                 );
               },
@@ -112,8 +121,10 @@ class AppRouter {
                 final mockPreviewUrl = state.uri.queryParameters['url'];
 
                 return NoTransitionPage(
-                  child: PreviewConfirmationScreen(
-                    mockPreviewUrl: mockPreviewUrl ?? '',
+                  child: BlocProviders.blocProvidersPreview(
+                    child: PreviewConfirmationScreen(
+                      mockPreviewUrl: mockPreviewUrl ?? '',
+                    ),
                   ),
                 );
               },
