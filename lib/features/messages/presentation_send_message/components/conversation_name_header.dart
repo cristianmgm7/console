@@ -21,10 +21,10 @@ class ConversationNameHeader extends StatelessWidget {
         if (state is ConversationLoaded && state.selectedConversationIds.length == 1) {
           // Find conversation by channelId (which could be channelGuid or id)
           final conversations = state.conversations.where(
-            (c) => c.channelGuid == channelId || c.id == channelId,
+            (c) => c.channelGuid == channelId,
           );
           if (conversations.isNotEmpty) {
-            final conversationName = conversations.first.name;
+            final conversationName = conversations.first.channelName ?? 'Unknown Conversation';
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               margin: const EdgeInsets.only(bottom: 8),

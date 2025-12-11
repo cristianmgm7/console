@@ -144,7 +144,7 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            state.composerData.conversation.name,
+            state.composerData.conversation.channelName ?? 'Unknown Conversation',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),

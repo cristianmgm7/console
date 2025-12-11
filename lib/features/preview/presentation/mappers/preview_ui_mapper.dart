@@ -30,7 +30,7 @@ extension PreviewUiMapper on Conversation {
     }).toList();
 
     return PreviewUiModel(
-      conversationName: name,
+      conversationName: channelName ?? 'Unknown Conversation',
       conversationDescription: description ?? '',
       conversationCoverUrl: imageUrl,
       participants: participantsList,

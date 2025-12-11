@@ -152,7 +152,7 @@ class GetPreviewComposerDataUsecase {
 
       // Create initial metadata from conversation
       final initialMetadata = PreviewMetadata(
-        title: conversation.name,
+        title: conversation.channelName ?? 'Unknown Conversation',
         description: conversation.description ?? '',
         coverImageUrl: conversation.imageUrl,
       );

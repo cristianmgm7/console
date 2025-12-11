@@ -82,9 +82,9 @@ class ConversationSelectorSection extends StatelessWidget {
       dropdownKey: const Key('conversation_dropdown'),
       items: conversationState.conversations.map((conversation) {
         final isSelected =
-            conversationState.selectedConversationIds.contains(conversation.id);
+            conversationState.selectedConversationIds.contains(conversation.channelGuid);
         return DropdownMenuItem<String>(
-          value: conversation.id,
+          value: conversation.channelGuid,
           child: Row(
             children: [
               Icon(
@@ -94,7 +94,7 @@ class ConversationSelectorSection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                conversation.name,
+                conversation.channelName ?? 'Unknown Conversation',
                 style: AppTextStyle.bodyMedium.copyWith(
                   color: AppColors.textPrimary,
                 ),

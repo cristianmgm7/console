@@ -43,10 +43,10 @@ class ConversationLoaded extends ConversationState {
 
     switch (searchMode) {
       case ConversationSearchMode.id:
-        return conversations.where((c) => c.id == searchQuery).toList();
+        return conversations.where((c) => c.channelGuid == searchQuery).toList();
       case ConversationSearchMode.name:
         final lowerQuery = searchQuery.toLowerCase();
-        return conversations.where((c) => c.name.toLowerCase().contains(lowerQuery)).toList();
+        return conversations.where((c) => (c.channelName ?? '').toLowerCase().contains(lowerQuery)).toList();
     }
   }
 

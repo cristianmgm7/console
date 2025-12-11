@@ -4,19 +4,7 @@ import 'package:carbon_voice_console/features/conversations/domain/entities/conv
 /// Extension methods to convert ConversationDto to domain entities
 extension ConversationDtoMapper on ConversationDto {
   Conversation toDomain() {
-    // Use channelGuid as primary ID
-    final id = channelGuid ?? 'unknown';
-
-    // Use channelName as primary name
-    final name = channelName ?? 'Unknown Conversation';
-
-    // Use workspaceGuid as workspaceId
-    final workspaceId = workspaceGuid ?? 'unknown';
-
     return Conversation(
-      id: id,
-      name: name,
-      workspaceId: workspaceId,
       guid: channelGuid ?? channelGuid,
       description: channelDescription ?? channelDescription,
       createdAt: createdTs != null ? DateTime.fromMillisecondsSinceEpoch(createdTs!) : null,
