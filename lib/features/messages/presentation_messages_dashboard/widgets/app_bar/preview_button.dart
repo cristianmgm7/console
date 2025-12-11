@@ -67,7 +67,7 @@ class PreviewButton extends StatelessWidget {
         selectedCount < 3 || selectedCount > 5) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select exactly one conversation and 3-5 messages'),
+          content: Text('Please select 3-5 messages to create a preview'),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -75,6 +75,17 @@ class PreviewButton extends StatelessWidget {
     }
 
     final conversationId = conversationState.selectedConversationIds.first;
-    context.go('${AppRoutes.previewComposer}?conversationId=$conversationId');
+    final selectedMessageIds = selectionState.selectedMessageIds;
+
+    // Join message IDs with commas
+    final messageIdsParam = selectedMessageIds.join(',');
+
+    // Navigate to preview composer
+    context.go(
+      '${AppRoutes.previewComposer}?conversationId=$conversationId&messageIds=$messageIdsParam',
+    );
+
+    // Clear message selection
+    context.read<MessageSelectionCubit>().clearSelection();
   }
 }
