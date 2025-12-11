@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:carbon_voice_console/core/web/web_stub.dart'
-    if (dart.library.html) 'package:web/web.dart' as web;
+    if (dart.library.html) 'package:web/web.dart'
+    as web;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
+import 'package:path_provider/path_provider.dart';
 
 abstract class OAuthLocalDataSource {
   Future<void> saveCredentials(oauth2.Credentials credentials);
@@ -41,8 +44,21 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
         _logger.e('Error saving credentials to localStorage', error: e);
       }
     } else {
-      // Use secure storage for desktop/mobile
-      await _storage.write(key: _credentialsKey, value: json);
+      // Use file-based storage for desktop (works with ad-hoc signed apps)
+      // Keychain access fails with error -34018 on distributed builds
+      try {
+        await _saveToFile(json);
+        _logger.d('Credentials saved to file storage');
+      } on Exception catch (e) {
+        _logger.e('Error saving credentials to file', error: e);
+        // Fallback to secure storage (will fail on distributed builds but worth trying)
+        try {
+          await _storage.write(key: _credentialsKey, value: json);
+        } catch (e2) {
+          _logger.e('Fallback to secure storage also failed', error: e2);
+          rethrow;
+        }
+      }
     }
   }
 
@@ -59,8 +75,27 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
         return null;
       }
     } else {
-      // Use secure storage for desktop/mobile
-      jsonString = await _storage.read(key: _credentialsKey);
+      // Try file-based storage first (works with ad-hoc signed apps)
+      try {
+        jsonString = await _loadFromFile();
+        if (jsonString != null) {
+          _logger.d('Credentials loaded from file storage');
+        }
+      } on Exception catch (e) {
+        _logger.w('Error loading credentials from file', error: e);
+      }
+
+      // Fallback to secure storage if file doesn't exist
+      if (jsonString == null) {
+        try {
+          jsonString = await _storage.read(key: _credentialsKey);
+          if (jsonString != null) {
+            _logger.d('Credentials loaded from secure storage');
+          }
+        } catch (e) {
+          _logger.w('Error loading credentials from secure storage', error: e);
+        }
+      }
     }
 
     if (jsonString == null) return null;
@@ -85,8 +120,72 @@ class OAuthLocalDataSourceImpl implements OAuthLocalDataSource {
         _logger.e('Error deleting credentials from localStorage', error: e);
       }
     } else {
-      // Use secure storage for desktop/mobile
-      await _storage.delete(key: _credentialsKey);
+      // Delete from both file storage and secure storage
+      try {
+        await _deleteFile();
+        _logger.d('Credentials deleted from file storage');
+      } on Exception catch (e) {
+        _logger.w('Error deleting credentials from file', error: e);
+      }
+
+      try {
+        await _storage.delete(key: _credentialsKey);
+        _logger.d('Credentials deleted from secure storage');
+      } on Exception catch (e) {
+        _logger.w('Error deleting credentials from secure storage', error: e);
+      }
+    }
+  }
+
+  // Helper methods for file-based storage (works with ad-hoc signed apps)
+  Future<String> get _credentialsFilePath async {
+    final appDir = await getApplicationSupportDirectory();
+    return '${appDir.path}/$_credentialsKey.dat';
+  }
+
+  Future<void> _saveToFile(String data) async {
+    if (kIsWeb) return;
+    final filePath = await _credentialsFilePath;
+    final file = File(filePath);
+
+    // Ensure directory exists
+    await file.parent.create(recursive: true);
+
+    // Simple obfuscation (base64) - not encryption but better than plain text
+    final encoded = base64Encode(utf8.encode(data));
+    await file.writeAsString(encoded);
+  }
+
+  Future<String?> _loadFromFile() async {
+    if (kIsWeb) return null;
+    try {
+      final filePath = await _credentialsFilePath;
+      final file = File(filePath);
+
+      if (!file.existsSync()) {
+        return null;
+      }
+
+      final encoded = await file.readAsString();
+      final decoded = utf8.decode(base64Decode(encoded));
+      return decoded;
+    } on Exception catch (e) {
+      _logger.e('Error reading credentials file', error: e);
+      return null;
+    }
+  }
+
+  Future<void> _deleteFile() async {
+    if (kIsWeb) return;
+    try {
+      final filePath = await _credentialsFilePath;
+      final file = File(filePath);
+
+      if (file.existsSync()) {
+        await file.delete();
+      }
+    } on Exception catch (e) {
+      _logger.e('Error deleting credentials file', error: e);
     }
   }
 
