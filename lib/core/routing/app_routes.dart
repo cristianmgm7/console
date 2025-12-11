@@ -9,4 +9,8 @@ class AppRoutes {
   static const String users = '/dashboard/users';
   static const String voiceMemos = '/dashboard/voice-memos';
   static const String settings = '/dashboard/settings';
+
+  // Preview routes
+  static const String previewComposer = '/dashboard/preview/composer';
+  static const String previewConfirmation = '/dashboard/preview/confirmation';
 }
