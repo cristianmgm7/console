@@ -46,5 +46,10 @@ abstract class RegisterModule {
         iOptions: IOSOptions(
           accessibility: KeychainAccessibility.first_unlock,
         ),
+        mOptions: MacOsOptions(
+          // Use user's keychain instead of app-specific keychain group
+          // This allows the app to work when ad-hoc signed
+          accessibility: KeychainAccessibility.first_unlock,
+        ),
       );
 }
