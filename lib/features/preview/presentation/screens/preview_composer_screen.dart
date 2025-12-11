@@ -1,5 +1,4 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
-import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
@@ -10,7 +9,7 @@ import 'package:go_router/go_router.dart';
 
 /// Screen for composing a conversation preview
 /// Receives conversationId and messageIds as parameters, fetches own data
-class PreviewComposerScreen extends StatefulWidget {
+class PreviewComposerScreen extends StatelessWidget {
   const PreviewComposerScreen({
     required this.conversationId,
     required this.messageIds,
@@ -21,27 +20,17 @@ class PreviewComposerScreen extends StatefulWidget {
   final List<String> messageIds;
 
   @override
-  State<PreviewComposerScreen> createState() => _PreviewComposerScreenState();
-}
-
-class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
-  @override
-  void initState() {
-    super.initState();
-
+  Widget build(BuildContext context) {
     // Start the BLoC - it will fetch conversation and message data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PreviewComposerBloc>().add(
         PreviewComposerStarted(
-          conversationId: widget.conversationId,
-          messageIds: widget.messageIds,
+          conversationId: conversationId,
+          messageIds: messageIds,
         ),
       );
     });
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return BlocListener<PreviewComposerBloc, PreviewComposerState>(
       listener: (context, state) {
         // Listen for publish success
@@ -57,119 +46,54 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Create Preview'),
+          title: const Text('Publish Preview'),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => context.go(AppRoutes.dashboard),
           ),
         ),
         body: SafeArea(
-          child: BlocBuilder<PreviewComposerBloc, PreviewComposerState>(
-            builder: (context, state) {
-              return switch (state) {
-                PreviewComposerInitial() => const Center(
-                  child: Text('Initializing...'),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Preview Visualization (now handles all states internally)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 200),
+                  child: PreviewVisualization(),
                 ),
-                PreviewComposerLoading() => const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading conversation details...'),
-                    ],
-                  ),
+                const SizedBox(height: 32),
+
+                // Publish button (needs to be handled separately since it depends on state)
+                BlocBuilder<PreviewComposerBloc, PreviewComposerState>(
+                  builder: (context, state) {
+                    final selectedCount = state is PreviewComposerLoaded ? state.composerData.selectedMessages.length : 0;
+                    final isValidSelection = selectedCount >= 3 && selectedCount <= 5;
+                    final isValid = state is PreviewComposerLoaded && state.isValid;
+
+                    return SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.publish),
+                        label: const Text('Publish Preview'),
+                        onPressed: isValidSelection && isValid
+                            ? () {
+                                context.read<PreviewComposerBloc>().add(
+                                  const PreviewPublishRequested(),
+                                );
+                              }
+                            : null,
+                      ),
+                    );
+                  },
                 ),
-                PreviewComposerError(message: final message) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: AppColors.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        message,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => context.go(AppRoutes.dashboard),
-                        child: const Text('Back to Dashboard'),
-                      ),
-                    ],
-                  ),
-                ),
-                PreviewComposerLoaded() => _buildLoadedView(context, state),
-                PreviewComposerPublishing() => _buildPublishingView(context, state),
-                PreviewComposerPublishSuccess() => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              };
-            },
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildLoadedView(
-    BuildContext context,
-    PreviewComposerLoaded state,
-  ) {
-    final selectedCount = state.composerData.selectedMessages.length;
-    final isValidSelection = selectedCount >= 3 && selectedCount <= 5;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Preview Visualization
-          PreviewVisualization(preview: state.previewUiModel),
-          const SizedBox(height: 32),
-
-          // Publish button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.publish),
-              label: const Text('Publish Preview'),
-              onPressed: isValidSelection && state.isValid
-                  ? () {
-                      context.read<PreviewComposerBloc>().add(
-                        const PreviewPublishRequested(),
-                      );
-                    }
-                  : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPublishingView(
-    BuildContext context,
-    PreviewComposerPublishing state,
-  ) {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Publishing preview...'),
-        ],
-      ),
-    );
-  }
 }
