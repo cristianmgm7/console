@@ -1151,7 +1151,7 @@ ElevatedButton.icon(
 - [ ] Composer pre-fills title/description/image from conversation
 - [ ] Form validation works in real-time
 - [ ] Selection counter updates correctly
-- [ ] "Publish Preview (Mock)" button disabled when form invalid
+- [ ] "Publish Preview (Mock)" button disabled when form invalid  
 - [ ] Clicking publish shows loading state for ~1 second
 - [ ] Success navigates to confirmation screen
 - [ ] Confirmation screen shows success icon and mock URL
