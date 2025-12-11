@@ -3,8 +3,6 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
-import 'package:carbon_voice_console/features/preview/presentation/widgets/message_selection_counter.dart';
-import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_metadata_form.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_visualization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -86,7 +84,7 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.error_outline,
                         size: 64,
                         color: AppColors.error,
@@ -135,54 +133,6 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Conversation info
-          Text(
-            'Creating preview for:',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            state.composerData.conversation.channelName ?? 'Unknown Conversation',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Selection counter
-          MessageSelectionCounter(
-            selectedCount: selectedCount,
-            minCount: 3,
-            maxCount: 5,
-          ),
-
-          if (!isValidSelection) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Please select between 3 and 5 messages.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.warning,
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // Form title
-          Text(
-            'Preview Details',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Metadata form
-          const PreviewMetadataDisplay(),
-          const SizedBox(height: 32),
-
           // Preview Visualization
           PreviewVisualization(preview: state.previewUiModel),
           const SizedBox(height: 32),
