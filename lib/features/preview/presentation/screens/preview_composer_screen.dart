@@ -180,7 +180,7 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
           const SizedBox(height: 16),
 
           // Metadata form
-          const PreviewMetadataForm(),
+          const PreviewMetadataDisplay(),
           const SizedBox(height: 32),
 
           // Preview Visualization

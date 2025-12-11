@@ -20,56 +20,38 @@ class PreviewComposerLoading extends PreviewComposerState {
   const PreviewComposerLoading();
 }
 
-/// Data loaded successfully, ready for user input
+/// Data loaded successfully, ready for publishing
 class PreviewComposerLoaded extends PreviewComposerState {
   const PreviewComposerLoaded({
     required this.composerData,
     required this.currentMetadata,
     required this.previewUiModel, // NEW
-    this.titleError,
-    this.descriptionError,
-    this.coverImageUrlError,
   });
 
   final PreviewComposerData composerData;
   final PreviewMetadata currentMetadata;
   final PreviewUiModel previewUiModel; // NEW - UI model for visualization
-  final String? titleError;
-  final String? descriptionError;
-  final String? coverImageUrlError;
 
   bool get isValid =>
       currentMetadata.title.trim().isNotEmpty &&
-      currentMetadata.description.trim().isNotEmpty &&
-      titleError == null &&
-      descriptionError == null &&
-      coverImageUrlError == null;
+      currentMetadata.description.trim().isNotEmpty;
 
   @override
   List<Object?> get props => [
     composerData,
     currentMetadata,
     previewUiModel, // NEW
-    titleError,
-    descriptionError,
-    coverImageUrlError,
   ];
 
   PreviewComposerLoaded copyWith({
     PreviewComposerData? composerData,
     PreviewMetadata? currentMetadata,
     PreviewUiModel? previewUiModel, // NEW
-    String? titleError,
-    String? descriptionError,
-    String? coverImageUrlError,
   }) {
     return PreviewComposerLoaded(
       composerData: composerData ?? this.composerData,
       currentMetadata: currentMetadata ?? this.currentMetadata,
       previewUiModel: previewUiModel ?? this.previewUiModel, // NEW
-      titleError: titleError,
-      descriptionError: descriptionError,
-      coverImageUrlError: coverImageUrlError,
     );
   }
 }
