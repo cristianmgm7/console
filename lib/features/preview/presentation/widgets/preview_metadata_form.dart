@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
-import 'package:carbon_voice_console/features/preview/presentation/cubit/preview_composer_cubit.dart';
-import 'package:carbon_voice_console/features/preview/presentation/cubit/preview_composer_state.dart';
+import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
+import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
+import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,11 +25,15 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
     _descriptionController = TextEditingController();
     _coverImageUrlController = TextEditingController();
 
-    // Initialize with state values
-    final state = context.read<PreviewComposerCubit>().state;
-    _titleController.text = state.title;
-    _descriptionController.text = state.description;
-    _coverImageUrlController.text = state.coverImageUrl ?? '';
+    // Initialize with BLoC state values
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<PreviewComposerBloc>().state;
+      if (state is PreviewComposerLoaded) {
+        _titleController.text = state.currentMetadata.title;
+        _descriptionController.text = state.currentMetadata.description;
+        _coverImageUrlController.text = state.currentMetadata.coverImageUrl ?? '';
+      }
+    });
   }
 
   @override
@@ -41,8 +46,12 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PreviewComposerCubit, PreviewComposerState>(
+    return BlocBuilder<PreviewComposerBloc, PreviewComposerState>(
       builder: (context, state) {
+        if (state is! PreviewComposerLoaded) {
+          return const SizedBox.shrink();
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -59,9 +68,11 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              maxLength: 100,
+              maxLength: PreviewComposerBloc.maxTitleLength,
               onChanged: (value) {
-                context.read<PreviewComposerCubit>().updateTitle(value);
+                context.read<PreviewComposerBloc>().add(
+                      PreviewTitleUpdated(value),
+                    );
               },
             ),
             const SizedBox(height: 16),
@@ -71,8 +82,7 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
               controller: _descriptionController,
               decoration: InputDecoration(
                 labelText: 'Short Description *',
-                hintText:
-                    'Brief description to entice listeners (max 200 characters)',
+                hintText: 'Brief description (max ${PreviewComposerBloc.maxDescriptionLength} characters)',
                 errorText: state.descriptionError,
                 filled: true,
                 fillColor: AppColors.surface,
@@ -81,9 +91,11 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
                 ),
               ),
               maxLines: 3,
-              maxLength: PreviewComposerCubit.maxDescriptionLength,
+              maxLength: PreviewComposerBloc.maxDescriptionLength,
               onChanged: (value) {
-                context.read<PreviewComposerCubit>().updateDescription(value);
+                context.read<PreviewComposerBloc>().add(
+                      PreviewDescriptionUpdated(value),
+                    );
               },
             ),
             const SizedBox(height: 16),
@@ -103,9 +115,9 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
                 helperText: 'Leave empty to use conversation cover image',
               ),
               onChanged: (value) {
-                context
-                    .read<PreviewComposerCubit>()
-                    .updateCoverImageUrl(value);
+                context.read<PreviewComposerBloc>().add(
+                      PreviewCoverImageUpdated(value.isEmpty ? null : value),
+                    );
               },
             ),
           ],
