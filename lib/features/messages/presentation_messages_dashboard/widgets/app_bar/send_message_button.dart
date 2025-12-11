@@ -36,7 +36,7 @@ class SendMessageButton extends StatelessWidget {
     // Find the selected conversation to get the correct channel ID
     final selectedConversationId = conversationState.selectedConversationIds.first;
     final selectedConversation = conversationState.conversations
-        .where((c) => c.id == selectedConversationId)
+        .where((c) => c.channelGuid == selectedConversationId)
         .firstOrNull;
 
     if (selectedConversation == null) {
@@ -47,7 +47,7 @@ class SendMessageButton extends StatelessWidget {
     }
 
     // Use the conversation's channelGuid as the channelId
-    final channelId = selectedConversation.channelGuid ?? selectedConversation.id;
+    final channelId = selectedConversation.channelGuid!;
 
     context.read<MessageCompositionCubit>().openNewMessage(
       workspaceId: workspaceId,

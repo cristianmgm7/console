@@ -175,7 +175,7 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
     final messageIds = loadedState.composerData.selectedMessages.map((msg) => msg.id).toList();
 
     final result = await _publishPreviewUsecase(
-      conversationId: loadedState.composerData.conversation.id,
+      conversationId: loadedState.composerData.conversation.channelGuid!,
       metadata: loadedState.currentMetadata,
       messageIds: messageIds,
     );

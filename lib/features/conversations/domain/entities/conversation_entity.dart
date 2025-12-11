@@ -10,9 +10,6 @@ import 'package:equatable/equatable.dart';
 /// Domain entity representing a conversation (channel)
 class Conversation extends Equatable {
   const Conversation({
-    required this.id,
-    required this.name,
-    required this.workspaceId,
     this.guid,
     this.description,
     this.createdAt,
@@ -64,10 +61,6 @@ class Conversation extends Equatable {
     this.defaultRole,
     this.sources,
   });
-
-  final String id;
-  final String name;
-  final String workspaceId;
   final String? guid;
   final String? description;
   final DateTime? createdAt;
@@ -121,9 +114,6 @@ class Conversation extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        workspaceId,
         guid,
         description,
         createdAt,
@@ -178,9 +168,6 @@ class Conversation extends Equatable {
 
   /// Creates a copy of this Conversation with the given fields replaced.
   Conversation copyWith({
-    String? id,
-    String? name,
-    String? workspaceId,
     String? guid,
     String? description,
     DateTime? createdAt,
@@ -233,9 +220,6 @@ class Conversation extends Equatable {
     List<ConversationSource>? sources,
   }) {
     return Conversation(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      workspaceId: workspaceId ?? this.workspaceId,
       guid: guid ?? this.guid,
       description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,

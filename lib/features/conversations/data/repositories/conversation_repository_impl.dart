@@ -53,7 +53,7 @@ class ConversationRepositoryImpl implements ConversationRepository {
     try {
       // Check cache across all workspaces
       for (final conversations in _cachedConversations.values) {
-        final cached = conversations.where((c) => c.id == conversationId).firstOrNull;
+        final cached = conversations.where((c) => c.channelGuid == conversationId).firstOrNull;
         if (cached != null) {
           _logger.d('Returning cached conversation: $conversationId');
           return success(cached);
