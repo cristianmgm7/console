@@ -6,7 +6,6 @@ import 'package:carbon_voice_console/features/messages/domain/repositories/messa
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
-import 'package:carbon_voice_console/features/users/domain/repositories/user_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -26,13 +25,11 @@ class GetPreviewComposerDataUsecase {
   GetPreviewComposerDataUsecase(
     this._conversationRepository,
     this._messageRepository,
-    this._userRepository, // INJECT UserRepository
     this._logger,
   );
 
   final ConversationRepository _conversationRepository;
   final MessageRepository _messageRepository;
-  final UserRepository _userRepository; // NEW
   final Logger _logger;
 
   /// Fetches all data needed for the preview composer screen
@@ -114,41 +111,29 @@ class GetPreviewComposerDataUsecase {
         );
       }
 
-      // Extract all user IDs from conversation collaborators and message creators
-      final userIds = <String>{};
+      // Create user map from conversation collaborators
+      final userMap = <String, User>{};
 
-      // Add message creator IDs
-      for (final message in messages) {
-        userIds.add(message.creatorId);
-      }
-
-      // Add conversation collaborators
+      // Add conversation collaborators as User entities
       if (conversation.collaborators != null) {
         for (final collaborator in conversation.collaborators!) {
-          if (collaborator.userGuid != null) {
-            userIds.add(collaborator.userGuid!);
+          if (collaborator.userGuid != null &&
+              collaborator.firstName != null &&
+              collaborator.lastName != null) {
+            final user = User(
+              id: collaborator.userGuid!,
+              firstName: collaborator.firstName!,
+              lastName: collaborator.lastName!,
+              email: '', // Not available from collaborators
+              isVerified: false, // Default assumption
+              avatarUrl: collaborator.imageUrl,
+            );
+            userMap[collaborator.userGuid!] = user;
           }
         }
       }
 
-      _logger.d('Fetching ${userIds.length} user profiles');
-
-      // Fetch all user profiles in batch
-      final usersResult = await _userRepository.getUsers(userIds.toList());
-
-      final userMap = <String, User>{};
-      usersResult.fold(
-        onSuccess: (users) {
-          for (final user in users) {
-            userMap[user.id] = user;
-          }
-          _logger.d('Loaded ${userMap.length} user profiles');
-        },
-        onFailure: (failure) {
-          _logger.w('Failed to fetch some users: ${failure.failure.code}');
-          // Continue without user enrichment
-        },
-      );
+      _logger.d('Created ${userMap.length} user profiles from collaborators');
 
       // Create initial metadata from conversation
       final initialMetadata = PreviewMetadata(
@@ -168,7 +153,7 @@ class GetPreviewComposerDataUsecase {
         userMap: userMap,
       );
 
-      _logger.i('Successfully fetched preview composer data with ${userMap.length} users');
+      _logger.i('Successfully created preview composer data with ${userMap.length} users from collaborators');
       return success(enrichedData);
     } on Failure<EnrichedPreviewComposerData> catch (failure) {
       // Already logged in fold
