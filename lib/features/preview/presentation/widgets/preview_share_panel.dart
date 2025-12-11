@@ -40,16 +40,16 @@ class PreviewSharePanel extends StatelessWidget {
           Text(
             'Your preview is live! (Demo)',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'In production, this URL would lead to a shareable preview page:',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -64,9 +64,9 @@ class PreviewSharePanel extends StatelessWidget {
             child: SelectableText(
               publicUrl,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace',
-                    color: AppColors.primary,
-                  ),
+                fontFamily: 'monospace',
+                color: AppColors.primary,
+              ),
             ),
           ),
           const SizedBox(height: 16),

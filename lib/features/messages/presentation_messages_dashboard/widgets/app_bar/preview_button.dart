@@ -31,22 +31,25 @@ class PreviewButton extends StatelessWidget {
             final isValidSelection = selectedCount >= 3 && selectedCount <= 5;
 
             return Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: AppButton(
-                onPressed: isValidSelection ? () => _handlePreview(context) : null,
-                backgroundColor: isValidSelection
-                    ? AppColors.primary.withValues(alpha: 0.1)
-                    : AppColors.disabled.withValues(alpha: 0.1),
-                foregroundColor: isValidSelection
-                    ? AppColors.primary
-                    : AppColors.disabled,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(AppIcons.share, size: 18),
-                    const SizedBox(width: 8),
-                    const Text('Preview'),
-                  ],
+              padding: const EdgeInsets.only(left: 16, top: 24),
+              child: Tooltip(
+                message: 'Select 3-5 messages to create a conversation preview',
+                child: AppButton(
+                  onPressed: isValidSelection ? () => _handlePreview(context) : null,
+                  backgroundColor: isValidSelection
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : AppColors.disabled.withValues(alpha: 0.1),
+                  foregroundColor: isValidSelection
+                      ? AppColors.primary
+                      : AppColors.disabled,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(AppIcons.share, size: 18),
+                      const SizedBox(width: 8),
+                      const Text('Publish Preview'),
+                    ],
+                  ),
                 ),
               ),
             );

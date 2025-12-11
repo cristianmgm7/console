@@ -71,8 +71,8 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
               maxLength: PreviewComposerBloc.maxTitleLength,
               onChanged: (value) {
                 context.read<PreviewComposerBloc>().add(
-                      PreviewTitleUpdated(value),
-                    );
+                  PreviewTitleUpdated(value),
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -82,7 +82,8 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
               controller: _descriptionController,
               decoration: InputDecoration(
                 labelText: 'Short Description *',
-                hintText: 'Brief description (max ${PreviewComposerBloc.maxDescriptionLength} characters)',
+                hintText:
+                    'Brief description (max ${PreviewComposerBloc.maxDescriptionLength} characters)',
                 errorText: state.descriptionError,
                 filled: true,
                 fillColor: AppColors.surface,
@@ -94,8 +95,8 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
               maxLength: PreviewComposerBloc.maxDescriptionLength,
               onChanged: (value) {
                 context.read<PreviewComposerBloc>().add(
-                      PreviewDescriptionUpdated(value),
-                    );
+                  PreviewDescriptionUpdated(value),
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -116,8 +117,8 @@ class _PreviewMetadataFormState extends State<PreviewMetadataForm> {
               ),
               onChanged: (value) {
                 context.read<PreviewComposerBloc>().add(
-                      PreviewCoverImageUpdated(value.isEmpty ? null : value),
-                    );
+                  PreviewCoverImageUpdated(value.isEmpty ? null : value),
+                );
               },
             ),
           ],

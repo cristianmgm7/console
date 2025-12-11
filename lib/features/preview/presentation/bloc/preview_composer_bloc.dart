@@ -2,13 +2,13 @@ import 'package:carbon_voice_console/features/preview/domain/usecases/get_previe
 import 'package:carbon_voice_console/features/preview/domain/usecases/publish_preview_usecase.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
+import 'package:carbon_voice_console/features/preview/presentation/mappers/preview_ui_mapper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
 @injectable
-class PreviewComposerBloc
-    extends Bloc<PreviewComposerEvent, PreviewComposerState> {
+class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerState> {
   PreviewComposerBloc(
     this._getPreviewComposerDataUsecase,
     this._publishPreviewUsecase,
@@ -41,18 +41,30 @@ class PreviewComposerBloc
     );
 
     result.fold(
-      onSuccess: (composerData) {
+      onSuccess: (enrichedData) {
         _logger.i('Preview composer data loaded successfully');
-        emit(PreviewComposerLoaded(
-          composerData: composerData,
-          currentMetadata: composerData.initialMetadata,
-        ));
+
+        // Transform to UI model using mapper
+        final previewUiModel = enrichedData.composerData.conversation.toPreviewUiModel(
+          enrichedData.composerData.selectedMessages,
+          enrichedData.userMap,
+        );
+
+        emit(
+          PreviewComposerLoaded(
+            composerData: enrichedData.composerData,
+            currentMetadata: enrichedData.composerData.initialMetadata,
+            previewUiModel: previewUiModel, // NEW - UI model
+          ),
+        );
       },
       onFailure: (failure) {
         _logger.e('Failed to load preview composer data: ${failure.failure.code}');
-        emit(PreviewComposerError(
-          failure.failure.details ?? 'Failed to load preview data',
-        ));
+        emit(
+          PreviewComposerError(
+            failure.failure.details ?? 'Failed to load preview data',
+          ),
+        );
       },
     );
   }
@@ -76,10 +88,12 @@ class PreviewComposerBloc
       title: event.title,
     );
 
-    emit(loadedState.copyWith(
-      currentMetadata: updatedMetadata,
-      titleError: error,
-    ));
+    emit(
+      loadedState.copyWith(
+        currentMetadata: updatedMetadata,
+        titleError: error,
+      ),
+    );
   }
 
   void _onDescriptionUpdated(
@@ -101,10 +115,12 @@ class PreviewComposerBloc
       description: event.description,
     );
 
-    emit(loadedState.copyWith(
-      currentMetadata: updatedMetadata,
-      descriptionError: error,
-    ));
+    emit(
+      loadedState.copyWith(
+        currentMetadata: updatedMetadata,
+        descriptionError: error,
+      ),
+    );
   }
 
   void _onCoverImageUpdated(
@@ -127,10 +143,12 @@ class PreviewComposerBloc
       coverImageUrl: event.coverImageUrl?.trim(),
     );
 
-    emit(loadedState.copyWith(
-      currentMetadata: updatedMetadata,
-      coverImageUrlError: error,
-    ));
+    emit(
+      loadedState.copyWith(
+        currentMetadata: updatedMetadata,
+        coverImageUrlError: error,
+      ),
+    );
   }
 
   Future<void> _onPublishRequested(
@@ -147,14 +165,14 @@ class PreviewComposerBloc
       return;
     }
 
-    emit(PreviewComposerPublishing(
-      composerData: loadedState.composerData,
-      metadata: loadedState.currentMetadata,
-    ));
+    emit(
+      PreviewComposerPublishing(
+        composerData: loadedState.composerData,
+        metadata: loadedState.currentMetadata,
+      ),
+    );
 
-    final messageIds = loadedState.composerData.selectedMessages
-        .map((msg) => msg.id)
-        .toList();
+    final messageIds = loadedState.composerData.selectedMessages.map((msg) => msg.id).toList();
 
     final result = await _publishPreviewUsecase(
       conversationId: loadedState.composerData.conversation.id,
@@ -170,9 +188,11 @@ class PreviewComposerBloc
       onFailure: (failure) {
         _logger.e('Failed to publish preview: ${failure.failure.code}');
         // Return to loaded state with error message
-        emit(PreviewComposerError(
-          failure.failure.details ?? 'Failed to publish preview',
-        ));
+        emit(
+          PreviewComposerError(
+            failure.failure.details ?? 'Failed to publish preview',
+          ),
+        );
       },
     );
   }

@@ -5,6 +5,7 @@ import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/message_selection_counter.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_metadata_form.dart';
+import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_visualization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -33,11 +34,11 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
     // Start the BLoC - it will fetch conversation and message data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PreviewComposerBloc>().add(
-            PreviewComposerStarted(
-              conversationId: widget.conversationId,
-              messageIds: widget.messageIds,
-            ),
-          );
+        PreviewComposerStarted(
+          conversationId: widget.conversationId,
+          messageIds: widget.messageIds,
+        ),
+      );
     });
   }
 
@@ -69,51 +70,51 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
             builder: (context, state) {
               return switch (state) {
                 PreviewComposerInitial() => const Center(
-                    child: Text('Initializing...'),
-                  ),
+                  child: Text('Initializing...'),
+                ),
                 PreviewComposerLoading() => const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading conversation details...'),
-                      ],
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading conversation details...'),
+                    ],
                   ),
+                ),
                 PreviewComposerError(message: final message) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          message,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => context.go(AppRoutes.dashboard),
-                          child: const Text('Back to Dashboard'),
-                        ),
-                      ],
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: AppColors.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        message,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () => context.go(AppRoutes.dashboard),
+                        child: const Text('Back to Dashboard'),
+                      ),
+                    ],
                   ),
+                ),
                 PreviewComposerLoaded() => _buildLoadedView(context, state),
                 PreviewComposerPublishing() => _buildPublishingView(context, state),
                 PreviewComposerPublishSuccess() => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: CircularProgressIndicator(),
+                ),
               };
             },
           ),
@@ -138,15 +139,15 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
           Text(
             'Creating preview for:',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             state.composerData.conversation.name,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -162,8 +163,8 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
             Text(
               'Please select between 3 and 5 messages.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.warning,
-                  ),
+                color: AppColors.warning,
+              ),
             ),
           ],
 
@@ -173,13 +174,17 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
           Text(
             'Preview Details',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 16),
 
           // Metadata form
           const PreviewMetadataForm(),
+          const SizedBox(height: 32),
+
+          // Preview Visualization
+          PreviewVisualization(preview: state.previewUiModel),
           const SizedBox(height: 32),
 
           // Publish button
@@ -191,8 +196,8 @@ class _PreviewComposerScreenState extends State<PreviewComposerScreen> {
               onPressed: isValidSelection && state.isValid
                   ? () {
                       context.read<PreviewComposerBloc>().add(
-                            const PreviewPublishRequested(),
-                          );
+                        const PreviewPublishRequested(),
+                      );
                     }
                   : null,
             ),
