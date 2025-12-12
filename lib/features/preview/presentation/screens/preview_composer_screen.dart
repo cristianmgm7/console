@@ -8,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Screen for composing a conversation preview
-/// Receives conversationId and messageIds as parameters, fetches own data
+/// Receives conversationId and messageIds as parameters
 class PreviewComposerScreen extends StatelessWidget {
   const PreviewComposerScreen({
     required this.conversationId,
@@ -21,16 +21,6 @@ class PreviewComposerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Start the BLoC - it will fetch conversation and message data
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PreviewComposerBloc>().add(
-        PreviewComposerStarted(
-          conversationId: conversationId,
-          messageIds: messageIds,
-        ),
-      );
-    });
-
     return BlocListener<PreviewComposerBloc, PreviewComposerState>(
       listener: (context, state) {
         // Listen for publish success

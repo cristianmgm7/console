@@ -13,40 +13,45 @@ class ConversationHeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      spacing: 16,
       children: [
-        // Cover image
-        if (conversation.coverImageUrl != null)
-          Container(
-            height: 200,
-            width: 200,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(
-                image: NetworkImage(conversation.coverImageUrl!),
-                fit: BoxFit.cover,
+            // Cover image
+            if (conversation.coverImageUrl != null)
+              Container(
+                height: 200,
+                width: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: NetworkImage(conversation.coverImageUrl!),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            if (conversation.coverImageUrl != null) const SizedBox(height: 16),
+        Column(
+          children: [
+            // Conversation name
+            Text(
+              conversation.name,
+              style: AppTextStyle.headlineMedium.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        if (conversation.coverImageUrl != null) const SizedBox(height: 16),
-
-        // Conversation name
-        Text(
-          conversation.name,
-          style: AppTextStyle.headlineMedium.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+            const SizedBox(height: 8),
+        
+            // Conversation description
+            if (conversation.description.isNotEmpty)
+              Text(
+                conversation.description,
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 8),
-
-        // Conversation description
-        if (conversation.description.isNotEmpty)
-          Text(
-            conversation.description,
-            style: AppTextStyle.bodyMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
       ],
     );
   }
