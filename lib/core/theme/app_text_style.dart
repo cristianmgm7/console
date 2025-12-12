@@ -84,6 +84,12 @@ class AppTextStyle {
     fontWeight: FontWeight.w400,
     height: 1.55,
   );
+  static TextStyle bodyMediumBlack = GoogleFonts.dmSans(
+    color: AppColors.textPrimary,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.55,
+  );
 
   static TextStyle bodySmall = GoogleFonts.dmSans(
     color: AppColors.textSecondary,

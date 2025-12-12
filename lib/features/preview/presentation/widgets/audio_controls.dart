@@ -21,24 +21,17 @@ class AudioControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Duration display
-        const Icon(
-          Icons.access_time,
-          size: 14,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: 4),
+        // Play button
+        if (message.hasPlayableAudio) ...[
+          _buildAudioPlayerButton(),
+        ],
+        const SizedBox(width: 12),
         Text(
-          DateTimeFormatters.formatDuration(message.duration),
+          DateTimeFormatters.formatDuration(message.audioModels.first.duration),
           style: AppTextStyle.bodySmall.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
-        // Play button
-        if (message.hasPlayableAudio) ...[
-          const SizedBox(width: 12),
-          _buildAudioPlayerButton(),
-        ],
       ],
     );
   }
@@ -54,7 +47,7 @@ class AudioControls extends StatelessWidget {
           icon: Icon(
             isPlaying ? Icons.pause_circle : Icons.play_circle,
             color: AppColors.primary,
-            size: 20,
+            size: 30,
           ),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
