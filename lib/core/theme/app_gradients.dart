@@ -12,4 +12,15 @@ class AppGradients {
     ],
     stops: [0.0, 0.3, 1.0],
   );
+
+  static const LinearGradient darkAura = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color.fromARGB(255, 146, 122, 204), // Darker purple
+      Color.fromARGB(255, 148, 112, 127), // Darker pink
+      Color.fromARGB(255, 133, 149, 176), // Dark gray instead of white
+    ],
+    stops: [0.0, 0.3, 1.0],
+  );
 }

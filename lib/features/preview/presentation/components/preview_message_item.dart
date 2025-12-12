@@ -22,7 +22,6 @@ class PreviewMessageItem extends StatelessWidget {
       shadowColor: AppColors.transparent,
       borderOnForeground: false,
       color: AppColors.background,
-      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -40,5 +39,4 @@ class PreviewMessageItem extends StatelessWidget {
       ),
     );
   }
-
 }
