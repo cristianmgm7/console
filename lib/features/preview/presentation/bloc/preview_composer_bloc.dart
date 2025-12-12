@@ -1,8 +1,8 @@
+import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
 import 'package:carbon_voice_console/features/preview/domain/usecases/get_preview_composer_data_usecase.dart';
 import 'package:carbon_voice_console/features/preview/domain/usecases/publish_preview_usecase.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
-import 'package:carbon_voice_console/features/preview/presentation/mappers/preview_ui_mapper.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -23,6 +23,10 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
   final PublishPreviewUsecase _publishPreviewUsecase;
   final Logger _logger;
 
+  // Store data needed for publishing
+  late String? _conversationId;
+  late List<String>? _selectedMessageIds;
+
   Future<void> _onStarted(
     PreviewComposerStarted event,
     Emitter<PreviewComposerState> emit,
@@ -38,17 +42,18 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
       onSuccess: (enrichedData) {
         _logger.i('Preview composer data loaded successfully');
 
+        // Store data needed for publishing
+        _conversationId = enrichedData.composerData.conversation.channelGuid;
+        _selectedMessageIds = enrichedData.composerData.selectedMessages.map((msg) => msg.id).toList();
+
         // Transform to UI model using mapper
-        final previewUiModel = enrichedData.composerData.conversation.toPreviewUiModel(
-          enrichedData.composerData.selectedMessages,
-          enrichedData.userMap,
-        );
+        final previewUiModel = enrichedData.composerData.toPreviewUiModel(enrichedData.userMap);
 
         emit(
           PreviewComposerLoaded(
-            composerData: enrichedData.composerData,
-            currentMetadata: enrichedData.composerData.initialMetadata,
-            previewUiModel: previewUiModel, // NEW - UI model
+            previewUiModel: previewUiModel,
+            selectedMessageCount: enrichedData.composerData.selectedMessages.length,
+            metadata: enrichedData.composerData.initialMetadata,
           ),
         );
       },
@@ -74,26 +79,18 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
 
     final loadedState = state as PreviewComposerLoaded;
 
-    // Basic validation - check if initial metadata has required fields
-    if (loadedState.currentMetadata.title.trim().isEmpty ||
-        loadedState.currentMetadata.description.trim().isEmpty) {
-      _logger.w('Publish requested but metadata is incomplete');
+    // Basic validation - metadata is already validated in the state
+    if (!loadedState.canPublish) {
+      _logger.w('Publish requested but validation failed');
       return;
     }
 
-    emit(
-      PreviewComposerPublishing(
-        composerData: loadedState.composerData,
-        metadata: loadedState.currentMetadata,
-      ),
-    );
-
-    final messageIds = loadedState.composerData.selectedMessages.map((msg) => msg.id).toList();
+    emit(const PreviewComposerPublishing());
 
     final result = await _publishPreviewUsecase(
-      conversationId: loadedState.composerData.conversation.channelGuid!,
-      metadata: loadedState.currentMetadata,
-      messageIds: messageIds,
+      conversationId: _conversationId!,
+      metadata: loadedState.metadata,
+      messageIds: _selectedMessageIds!,
     );
 
     result.fold(

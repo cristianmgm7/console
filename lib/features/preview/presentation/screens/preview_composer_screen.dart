@@ -68,16 +68,14 @@ class PreviewComposerScreen extends StatelessWidget {
                 // Publish button (needs to be handled separately since it depends on state)
                 BlocBuilder<PreviewComposerBloc, PreviewComposerState>(
                   builder: (context, state) {
-                    final selectedCount = state is PreviewComposerLoaded ? state.composerData.selectedMessages.length : 0;
-                    final isValidSelection = selectedCount >= 3 && selectedCount <= 5;
-                    final isValid = state is PreviewComposerLoaded && state.isValid;
+                    final canPublish = state is PreviewComposerLoaded && state.canPublish;
 
                     return SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.publish),
                         label: const Text('Publish Preview'),
-                        onPressed: isValidSelection && isValid
+                        onPressed: canPublish
                             ? () {
                                 context.read<PreviewComposerBloc>().add(
                                   const PreviewPublishRequested(),
