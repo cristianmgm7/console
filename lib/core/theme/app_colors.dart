@@ -6,6 +6,7 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF); // surfaceWhite
   static const Color divider = Color.fromARGB(57, 129, 129, 129); // surfaceSecondary
   static const Color accentBackground = Color.fromARGB(255, 150, 151, 223); // bgAccent
+  static const Color cardBackground = Color.fromARGB(255, 226, 226, 247); // bgAccent
   
   // Primary Brand Colors
   static const Color primary = Color(0xFF5D5FEF); // Blurple Accent
