@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/models/conversation_ui_model.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/participant_avatar.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/participant_avatar_grid.dart';
