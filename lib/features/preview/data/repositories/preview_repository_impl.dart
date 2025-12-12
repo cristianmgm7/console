@@ -1,6 +1,5 @@
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
 import 'package:carbon_voice_console/features/preview/domain/repositories/preview_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -14,14 +13,15 @@ class PreviewRepositoryImpl implements PreviewRepository {
   @override
   Future<Result<String>> publishPreview({
     required String conversationId,
-    required PreviewMetadata metadata,
     required List<String> messageIds,
+    required String title,
+    required String description,
   }) async {
     try {
       _logger.i('Mock publishing preview');
       _logger.d('Conversation: $conversationId');
-      _logger.d('Title: ${metadata.title}');
-      _logger.d('Description: ${metadata.description}');
+      _logger.d('Title: $title');
+      _logger.d('Description: $description');
       _logger.d('Message IDs: ${messageIds.join(", ")}');
 
       // Simulate network delay

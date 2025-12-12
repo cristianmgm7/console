@@ -1,6 +1,6 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
-import 'package:carbon_voice_console/features/preview/presentation/models/preview_ui_model.dart';
+import 'package:carbon_voice_console/features/preview/presentation/widgets/participant_avatar.dart';
 import 'package:flutter/material.dart';
 
 /// Displays participant avatars and names in a grid layout
@@ -10,7 +10,7 @@ class ParticipantAvatarGrid extends StatelessWidget {
     super.key,
   });
 
-  final List<PreviewParticipant> participants;
+  final List<ParticipantAvatar> participants;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class ParticipantAvatarGrid extends StatelessWidget {
 
   Widget _buildParticipantItem(
     BuildContext context,
-    PreviewParticipant participant,
+    ParticipantAvatar participant,
   ) {
     return SizedBox(
       width: 80,

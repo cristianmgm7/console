@@ -94,21 +94,24 @@ class PreviewVisualization extends StatelessWidget {
         child: Column(
           children: [
             // Conversation header section
-            ConversationHeaderSection(previewUiModel: state.previewUiModel),
+            ConversationHeaderSection(conversation: state.conversation),
             const SizedBox(height: 24),
 
             // Participants section
-            if (state.previewUiModel.participants.isNotEmpty) ...[
-              ParticipantsSection(previewUiModel: state.previewUiModel),
+            if (state.conversation.collaborators?.isNotEmpty ?? false) ...[
+              ParticipantsSection(conversation: state.conversation),
               const SizedBox(height: 24),
             ],
 
             // Statistics section
-            StatisticsSection(previewUiModel: state.previewUiModel),
+            StatisticsSection(
+              messages: state.selectedMessages,
+              conversation: state.conversation,
+            ),
             const SizedBox(height: 24),
 
             // Messages section
-            MessagesSection(previewUiModel: state.previewUiModel),
+            MessagesSection(messages: state.selectedMessages),
           ],
         ),
       ),

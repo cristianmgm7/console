@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/preview/domain/usecases/get_preview_composer_data_usecase.dart';
 import 'package:carbon_voice_console/features/preview/domain/usecases/publish_preview_usecase.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
@@ -43,17 +43,24 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
         _logger.i('Preview composer data loaded successfully');
 
         // Store data needed for publishing
-        _conversationId = enrichedData.composerData.conversation.channelGuid;
-        _selectedMessageIds = enrichedData.composerData.selectedMessages.map((msg) => msg.id).toList();
+        _conversationId = enrichedData.conversation.channelGuid;
+        _selectedMessageIds = enrichedData.selectedMessages.map((msg) => msg.id).toList();
 
-        // Transform to UI model using mapper
-        final previewUiModel = enrichedData.composerData.toPreviewUiModel(enrichedData.userMap);
+        // Convert messages to UI models using existing mapper
+        final selectedMessageUiModels = enrichedData.selectedMessages
+            .map((message) => message.toUiModel()) // Uses existing MessageUiMapper
+            .toList();
+
+        final parentMessageUiModels = enrichedData.parentMessages
+            .map((message) => message.toUiModel()) // Uses existing MessageUiMapper
+            .toList();
 
         emit(
           PreviewComposerLoaded(
-            previewUiModel: previewUiModel,
-            selectedMessageCount: enrichedData.composerData.selectedMessages.length,
-            metadata: enrichedData.composerData.initialMetadata,
+            conversation: enrichedData.conversation,
+            selectedMessages: selectedMessageUiModels,
+            parentMessages: parentMessageUiModels,
+            selectedMessageCount: enrichedData.selectedMessages.length,
           ),
         );
       },
@@ -79,8 +86,8 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
 
     final loadedState = state as PreviewComposerLoaded;
 
-    // Basic validation - metadata is already validated in the state
-    if (!loadedState.canPublish) {
+    // Basic validation
+    if (!loadedState.isValidSelection) {
       _logger.w('Publish requested but validation failed');
       return;
     }
@@ -89,8 +96,9 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
 
     final result = await _publishPreviewUsecase(
       conversationId: _conversationId!,
-      metadata: loadedState.metadata,
       messageIds: _selectedMessageIds!,
+      title: loadedState.conversation.channelName ?? 'Untitled Conversation',
+      description: loadedState.conversation.description ?? '',
     );
 
     result.fold(

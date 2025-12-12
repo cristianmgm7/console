@@ -1,5 +1,5 @@
-import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
-import 'package:carbon_voice_console/features/preview/presentation/models/preview_ui_model.dart';
+import 'package:carbon_voice_console/features/conversations/domain/entities/conversation_entity.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class PreviewComposerState extends Equatable {
@@ -22,35 +22,38 @@ class PreviewComposerLoading extends PreviewComposerState {
 /// Data loaded successfully, ready for publishing
 class PreviewComposerLoaded extends PreviewComposerState {
   const PreviewComposerLoaded({
-    required this.previewUiModel,
+    required this.conversation,
+    required this.selectedMessages,
+    required this.parentMessages,
     required this.selectedMessageCount,
-    required this.metadata,
   });
 
-  final PreviewUiModel previewUiModel;
+  final Conversation conversation;
+  final List<MessageUiModel> selectedMessages;
+  final List<MessageUiModel> parentMessages;
   final int selectedMessageCount;
-  final PreviewMetadata metadata;
 
   bool get isValidSelection => selectedMessageCount >= 3 && selectedMessageCount <= 5;
-  bool get isMetadataValid => metadata.title.trim().isNotEmpty && metadata.description.trim().isNotEmpty;
-  bool get canPublish => isValidSelection && isMetadataValid;
 
   @override
   List<Object?> get props => [
-    previewUiModel,
+    conversation,
+    selectedMessages,
+    parentMessages,
     selectedMessageCount,
-    metadata,
   ];
 
   PreviewComposerLoaded copyWith({
-    PreviewUiModel? previewUiModel,
+    Conversation? conversation,
+    List<MessageUiModel>? selectedMessages,
+    List<MessageUiModel>? parentMessages,
     int? selectedMessageCount,
-    PreviewMetadata? metadata,
   }) {
     return PreviewComposerLoaded(
-      previewUiModel: previewUiModel ?? this.previewUiModel,
+      conversation: conversation ?? this.conversation,
+      selectedMessages: selectedMessages ?? this.selectedMessages,
+      parentMessages: parentMessages ?? this.parentMessages,
       selectedMessageCount: selectedMessageCount ?? this.selectedMessageCount,
-      metadata: metadata ?? this.metadata,
     );
   }
 }
