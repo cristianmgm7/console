@@ -21,20 +21,31 @@ class AudioControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Play button
-        if (message.hasPlayableAudio) ...[
-          _buildAudioPlayerButton(),
-        ],
-        const SizedBox(width: 12),
-        Text(
-          DateTimeFormatters.formatDuration(message.audioModels.first.duration),
-          style: AppTextStyle.bodySmall.copyWith(
-            color: isOwner ? AppColors.onPrimary : AppColors.textSecondary,
-          ),
-        ),
-      ],
+    return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
+      builder: (context, audioState) {
+        final isCurrentMessage = audioState is AudioPlayerReady && audioState.messageId == message.id;
+        final isLoadingForThisMessage = audioState is AudioPlayerLoading && message.hasPlayableAudio;
+
+        return Row(
+          children: [
+            // Play button or loading indicator
+            if (message.hasPlayableAudio) ...[
+              if (isLoadingForThisMessage) ...[
+                _buildLoadingIndicator(),
+              ] else ...[
+                _buildAudioPlayerButton(),
+              ],
+            ],
+            const SizedBox(width: 12),
+            Text(
+              _getDurationText(audioState, isCurrentMessage),
+              style: AppTextStyle.bodySmall.copyWith(
+                color: isOwner ? AppColors.onPrimary : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -48,7 +59,7 @@ class AudioControls extends StatelessWidget {
           onPressed: () => _handleAudioButtonPressed(context, isPlaying, isCurrentMessage),
           icon: Icon(
             isPlaying ? Icons.pause_circle : Icons.play_circle,
-            color: AppColors.primary,
+            color: isOwner ? AppColors.onPrimary : AppColors.primary,
             size: 30,
           ),
           padding: EdgeInsets.zero,
@@ -56,6 +67,30 @@ class AudioControls extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      width: 30,
+      height: 30,
+      padding: const EdgeInsets.all(6),
+      child: CircularProgressIndicator(
+        strokeWidth: 2,
+        valueColor: AlwaysStoppedAnimation<Color>(
+          isOwner ? AppColors.onPrimary : AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  String _getDurationText(AudioPlayerState audioState, bool isCurrentMessage) {
+    if (isCurrentMessage && audioState is AudioPlayerReady) {
+      // Show current position / total duration
+      return '${audioState.positionFormatted} / ${audioState.durationFormatted}';
+    } else {
+      // Show total duration only
+      return DateTimeFormatters.formatDuration(message.audioModels.first.duration);
+    }
   }
 
   void _handleAudioButtonPressed(BuildContext context, bool isPlaying, bool isCurrentMessage) {
