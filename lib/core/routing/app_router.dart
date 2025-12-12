@@ -106,6 +106,8 @@ class AppRouter {
 
                 return NoTransitionPage(
                   child: BlocProviders.blocProvidersPreview(
+                    conversationId: conversationId,
+                    messageIds: messageIds,
                     child: PreviewComposerScreen(
                       conversationId: conversationId,
                       messageIds: messageIds,
