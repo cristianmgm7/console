@@ -19,12 +19,6 @@ class ParticipantsSection extends StatelessWidget {
 
     return Column(
       children: [
-        Text(
-          'Participants',
-          style: AppTextStyle.titleMedium.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
         const SizedBox(height: 12),
         ParticipantAvatarGrid(participants: participants),
       ],
