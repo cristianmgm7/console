@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
@@ -86,6 +87,7 @@ class PreviewVisualization extends StatelessWidget {
 
   Widget _buildLoadedState(BuildContext context, PreviewComposerLoaded state) {
     return Card(
+      color: AppColors.background,
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(24),

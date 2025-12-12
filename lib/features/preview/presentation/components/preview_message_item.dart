@@ -19,6 +19,8 @@ class PreviewMessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shadowColor: AppColors.transparent,
+      borderOnForeground: false,
       color: AppColors.background,
       elevation: 1,
       child: Padding(
