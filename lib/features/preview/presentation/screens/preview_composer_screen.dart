@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/core/routing/app_routes.dart';
-import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_gradients.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
@@ -36,11 +36,15 @@ class PreviewComposerScreen extends StatelessWidget {
           context.read<PreviewComposerBloc>().add(const PreviewComposerReset());
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.accentBackground,
-        appBar: AppBar(
-          backgroundColor: AppColors.accentBackground,
-          title: const Text('Publish Preview'),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: AppGradients.darkAura,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            title: const Text('Publish Preview'),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => context.go(AppRoutes.dashboard),
@@ -63,6 +67,7 @@ class PreviewComposerScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 
