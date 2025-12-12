@@ -15,6 +15,7 @@ class StatisticsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Message count
         _buildStatItem(
@@ -52,25 +53,25 @@ class StatisticsSection extends StatelessWidget {
     required String label,
     required String value,
   }) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: AppColors.textSecondary),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Text(
+          label,
+          style: AppTextStyle.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Row(
           children: [
-            Text(
-              label,
-              style: AppTextStyle.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
             Text(
               value,
               style: AppTextStyle.bodyMedium.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
+            const SizedBox(width: 8),
+            Icon(icon, size: 20, color: AppColors.textSecondary),
           ],
         ),
       ],
