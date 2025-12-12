@@ -51,14 +51,14 @@ class ConversationRepositoryImpl implements ConversationRepository {
   @override
   Future<Result<Conversation>> getConversation(String conversationId) async {
     try {
-      // Check cache across all workspaces
-      for (final conversations in _cachedConversations.values) {
-        final cached = conversations.where((c) => c.id == conversationId).firstOrNull;
-        if (cached != null) {
-          _logger.d('Returning cached conversation: $conversationId');
-          return success(cached);
-        }
-      }
+      // // Check cache across all workspaces
+      // for (final conversations in _cachedConversations.values) {
+      //   final cached = conversations.where((c) => c.channelGuid == conversationId).firstOrNull;
+      //   if (cached != null) {
+      //     _logger.d('Returning cached conversation: $conversationId');
+      //     return success(cached);
+      //   }
+      // }
 
       final conversationDto = await _remoteDataSource.getConversation(conversationId);
       final conversation = conversationDto.toDomain();

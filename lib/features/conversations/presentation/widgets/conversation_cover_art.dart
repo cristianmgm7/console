@@ -38,16 +38,12 @@ class ConversationCoverArt extends StatelessWidget {
     if (state is ConversationLoaded) {
       // Find the conversation by ID
       final conversation = state.conversations.firstWhere(
-        (conv) => conv.id == conversationId,
-        orElse: () => const Conversation(
-          id: '',
-          name: '',
-          workspaceId: '',
-        ),
+        (conv) => conv.channelGuid == conversationId,
+        orElse: () => const Conversation(),
       );
 
       // If conversation found and has imageUrl, display it
-      if (conversation.id.isNotEmpty && conversation.imageUrl != null && conversation.imageUrl!.isNotEmpty) {
+      if ((conversation.channelGuid?.isNotEmpty ?? false) && conversation.imageUrl != null && conversation.imageUrl!.isNotEmpty) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(3), // Slightly less than container border radius
           child: Image.network(

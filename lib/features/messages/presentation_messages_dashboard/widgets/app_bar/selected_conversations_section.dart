@@ -35,7 +35,7 @@ class SelectedConversationsSection extends StatelessWidget {
 
   Widget _buildConversationsList(BuildContext context, ConversationLoaded conversationState) {
     final selectedConversations = conversationState.conversations
-        .where((c) => conversationState.selectedConversationIds.contains(c.id))
+        .where((c) => conversationState.selectedConversationIds.contains(c.channelGuid))
         .toList();
 
     return SingleChildScrollView(
@@ -53,7 +53,7 @@ class SelectedConversationsSection extends StatelessWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      conversation.name,
+                      conversation.channelName ?? 'Unknown Conversation',
                       style: AppTextStyle.bodySmall.copyWith(
                         fontWeight: FontWeight.w500,
                         color: AppColors.textPrimary,
@@ -66,7 +66,7 @@ class SelectedConversationsSection extends StatelessWidget {
                     icon: AppIcons.close,
                     onPressed: () {
                       context.read<ConversationBloc>().add(
-                        ToggleConversation(conversation.id),
+                        ToggleConversation(conversation.channelGuid!),
                       );
                     },
                     size: AppIconButtonSize.small,
