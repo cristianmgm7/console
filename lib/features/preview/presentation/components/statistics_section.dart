@@ -1,19 +1,27 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
-import 'package:carbon_voice_console/features/preview/presentation/models/preview_ui_model.dart';
+import 'package:carbon_voice_console/features/conversations/domain/entities/conversation_entity.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:flutter/material.dart';
 
 /// Component that displays conversation statistics (messages, duration, participants)
 class StatisticsSection extends StatelessWidget {
   const StatisticsSection({
-    required this.previewUiModel,
+    required this.messages,
+    required this.conversation,
     super.key,
   });
 
-  final PreviewUiModel previewUiModel;
+  final List<MessageUiModel> messages;
+  final Conversation conversation;
 
   @override
   Widget build(BuildContext context) {
+    final totalDuration = messages.fold<Duration>(
+      Duration.zero,
+      (sum, message) => sum + message.duration,
+    );
+
     return Row(
       children: [
         // Message count
@@ -21,7 +29,7 @@ class StatisticsSection extends StatelessWidget {
           context,
           icon: Icons.message_outlined,
           label: 'Messages',
-          value: previewUiModel.messageCount.toString(),
+          value: messages.length.toString(),
         ),
         const SizedBox(width: 24),
 
@@ -30,7 +38,7 @@ class StatisticsSection extends StatelessWidget {
           context,
           icon: Icons.access_time,
           label: 'Duration',
-          value: previewUiModel.totalDurationFormatted,
+          value: _formatDuration(totalDuration),
         ),
         const SizedBox(width: 24),
 
@@ -39,10 +47,16 @@ class StatisticsSection extends StatelessWidget {
           context,
           icon: Icons.people_outline,
           label: 'Participants',
-          value: previewUiModel.participants.length.toString(),
+          value: (conversation.collaborators?.length ?? 0).toString(),
         ),
       ],
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   Widget _buildStatItem(

@@ -1,24 +1,26 @@
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/conversations/domain/entities/conversation_entity.dart';
 import 'package:carbon_voice_console/features/conversations/domain/repositories/conversation_repository.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/repositories/message_repository.dart';
-import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
-import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
 import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
-/// Result containing conversation, messages, users, and initial metadata
+/// Result containing conversation, selected messages, and parent messages
 class EnrichedPreviewComposerData {
   const EnrichedPreviewComposerData({
-    required this.composerData,
-    required this.userMap,
+    required this.conversation,
+    required this.selectedMessages,
+    required this.parentMessages,
   });
 
-  final PreviewComposerData composerData;
-  final Map<String, User> userMap; // userId -> User
+  final Conversation conversation;
+  final List<Message> selectedMessages;
+  final List<Message> parentMessages;
 }
+
 
 @injectable
 class GetPreviewComposerDataUsecase {
@@ -37,7 +39,7 @@ class GetPreviewComposerDataUsecase {
   /// [conversationId] - The conversation to preview
   /// [messageIds] - List of 3-5 message IDs selected by user
   ///
-  /// Returns EnrichedPreviewComposerData with conversation, messages, users, and metadata
+  /// Returns EnrichedPreviewComposerData with conversation, selected messages, and parent messages
   Future<Result<EnrichedPreviewComposerData>> call({
     required String conversationId,
     required List<String> messageIds,
@@ -79,8 +81,10 @@ class GetPreviewComposerDataUsecase {
         );
       }
 
-      // Fetch all selected messages in parallel
-      final messageFutures = messageIds.map(_messageRepository.getMessage).toList();
+      // Fetch all selected messages in parallel with presigned URLs for audio playback
+      final messageFutures = messageIds.map(
+        (messageId) => _messageRepository.getMessage(messageId, includePreSignedUrls: true),
+      ).toList();
 
       final messageResults = await Future.wait(messageFutures);
 
@@ -111,6 +115,41 @@ class GetPreviewComposerDataUsecase {
         );
       }
 
+      // Fetch parent messages for replies
+      final parentMessageIds = messages
+          .where((message) => message.parentMessageId != null)
+          .map((message) => message.parentMessageId!)
+          .toSet() // Remove duplicates
+          .toList();
+
+      final parentMessageMap = <String, Message>{};
+      if (parentMessageIds.isNotEmpty) {
+        _logger.d('Fetching ${parentMessageIds.length} parent messages');
+
+        final parentMessageFutures = parentMessageIds.map(
+          (parentId) => _messageRepository.getMessage(parentId, includePreSignedUrls: true),
+        ).toList();
+
+        final parentMessageResults = await Future.wait(parentMessageFutures);
+
+        for (var i = 0; i < parentMessageResults.length; i++) {
+          final result = parentMessageResults[i];
+          result.fold(
+            onSuccess: (parentMessage) {
+              parentMessageMap[parentMessage.id] = parentMessage;
+            },
+            onFailure: (failure) {
+              _logger.w(
+                'Failed to fetch parent message ${parentMessageIds[i]}: ${failure.failure.code}',
+              );
+              // Continue even if parent message fetch fails
+            },
+          );
+        }
+
+        _logger.d('Fetched ${parentMessageMap.length} parent messages');
+      }
+
       // Create user map from conversation collaborators
       final userMap = <String, User>{};
 
@@ -135,22 +174,11 @@ class GetPreviewComposerDataUsecase {
 
       _logger.d('Created ${userMap.length} user profiles from collaborators');
 
-      // Create initial metadata from conversation
-      final initialMetadata = PreviewMetadata(
-        title: conversation.channelName ?? 'Unknown Conversation',
-        description: conversation.description ?? '',
-        coverImageUrl: conversation.imageUrl,
-      );
-
-      final composerData = PreviewComposerData(
-        conversation: conversation,
-        selectedMessages: messages,
-        initialMetadata: initialMetadata,
-      );
 
       final enrichedData = EnrichedPreviewComposerData(
-        composerData: composerData,
-        userMap: userMap,
+        conversation: conversation,
+        selectedMessages: messages,
+        parentMessages: parentMessageMap.values.toList(),
       );
 
       _logger.i('Successfully created preview composer data with ${userMap.length} users from collaborators');

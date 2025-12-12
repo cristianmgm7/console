@@ -1,6 +1,6 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
-import 'package:carbon_voice_console/features/preview/presentation/models/preview_ui_model.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:flutter/material.dart';
 
 /// Displays a single message in the preview visualization
@@ -10,7 +10,7 @@ class PreviewMessageItem extends StatelessWidget {
     super.key,
   });
 
-  final PreviewMessage message;
+  final MessageUiModel message;
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +25,12 @@ class PreviewMessageItem extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              backgroundImage: message.creatorAvatarUrl != null
-                  ? NetworkImage(message.creatorAvatarUrl!)
+              backgroundImage: message.creator?.avatarUrl != null
+                  ? NetworkImage(message.creator!.avatarUrl!)
                   : null,
-              child: message.creatorAvatarUrl == null
+              child: message.creator?.avatarUrl == null
                   ? Text(
-                      _getInitials(message.creatorName),
+                      _getInitials(message.creator?.fullName ?? message.creatorId),
                       style: AppTextStyle.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -50,13 +50,13 @@ class PreviewMessageItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        message.creatorName,
+                        message.creator?.fullName ?? message.creatorId,
                         style: AppTextStyle.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        message.createdAtFormatted,
+                        _formatDateTime(message.createdAt),
                         style: AppTextStyle.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -68,14 +68,14 @@ class PreviewMessageItem extends StatelessWidget {
                   // Duration
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.access_time,
                         size: 14,
                         color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        message.durationFormatted,
+                        _formatDuration(message.duration),
                         style: AppTextStyle.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -85,9 +85,9 @@ class PreviewMessageItem extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Message summary/text
-                  if (message.summary != null)
+                  if (message.text != null)
                     Text(
-                      message.summary!,
+                      message.text!,
                       style: AppTextStyle.bodyMedium,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -99,6 +99,24 @@ class PreviewMessageItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final year = dateTime.year.toString().substring(2);
+    final hour = dateTime.hour > 12
+        ? dateTime.hour - 12
+        : (dateTime.hour == 0 ? 12 : dateTime.hour);
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    return '$month/$day/$year $hour:$minute $period';
   }
 
   String _getInitials(String fullName) {

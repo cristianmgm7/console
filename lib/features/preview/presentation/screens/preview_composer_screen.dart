@@ -68,7 +68,7 @@ class PreviewComposerScreen extends StatelessWidget {
                 // Publish button (needs to be handled separately since it depends on state)
                 BlocBuilder<PreviewComposerBloc, PreviewComposerState>(
                   builder: (context, state) {
-                    final canPublish = state is PreviewComposerLoaded && state.canPublish;
+                    final canPublish = state is PreviewComposerLoaded && state.isValidSelection;
 
                     return SizedBox(
                       width: double.infinity,
