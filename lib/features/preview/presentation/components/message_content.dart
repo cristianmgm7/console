@@ -28,32 +28,31 @@ class MessageContent extends StatelessWidget {
     );
 
     return Container(
+      width: 600,
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         gradient: isOwner ? AppGradients.ownerMessage : null,
         color: isOwner ? null : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-        spacing: 16,
-        children: [
-          Text(
-            transcriptModel.text,
-            style: isOwner
-                ? AppTextStyle.bodyMediumBlack.copyWith(color: AppColors.onPrimary)
-                : AppTextStyle.bodyMediumBlack,
-            // Removed maxLines and overflow to show full text
-          ),
-          Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AudioControls(message: message, isOwner: isOwner),
-                MessageDate(createdAt: message.createdAt, isOwner: isOwner),
-              ],
-              ),
-          ],
+      child: Column(
+      spacing: 16,
+      children: [
+        Text(
+          transcriptModel.text,
+          style: isOwner
+              ? AppTextStyle.bodyMediumBlack.copyWith(color: AppColors.onPrimary)
+              : AppTextStyle.bodyMediumBlack,
+          // Removed maxLines and overflow to show full text
         ),
+        Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AudioControls(message: message, isOwner: isOwner),
+              MessageDate(createdAt: message.createdAt, isOwner: isOwner),
+            ],
+            ),
+        ],
       ),
     );
   }

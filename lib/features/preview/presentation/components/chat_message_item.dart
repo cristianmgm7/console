@@ -56,7 +56,6 @@ class ChatMessageItem extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 4),
                       child: ReplyIndicator(
                         parentMessageText: parentMessage.text ?? parentMessage.notes,
-                        isDarkTheme: isOwner,
                       ),
                     ),
 
@@ -66,6 +65,7 @@ class ChatMessageItem extends StatelessWidget {
                     child: MessageHeader(
                       participants: participants,
                       creatorId: message.creatorId,
+                      isOwner: isOwner,
                     ),
                   ),
 

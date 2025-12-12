@@ -98,6 +98,7 @@ class PreviewVisualization extends StatelessWidget {
               conversation: state.conversation,
             ),
             const SizedBox(height: 24),
+            const Divider(color: AppColors.divider),
 
             // Messages section
             MessagesSection(
