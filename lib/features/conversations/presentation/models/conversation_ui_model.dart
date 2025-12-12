@@ -59,6 +59,7 @@ class ConversationParticipantUiModel extends Equatable {
     required this.fullName,
     required this.avatarUrl,
     this.role,
+    this.permissions,
     this.lastActiveAt,
   });
 
@@ -66,6 +67,7 @@ class ConversationParticipantUiModel extends Equatable {
   final String fullName;
   final String? avatarUrl;
   final String? role;
+  final String? permissions;
   final DateTime? lastActiveAt;
 
   /// Get initials for avatar fallback
@@ -77,5 +79,5 @@ class ConversationParticipantUiModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, fullName, avatarUrl, role, lastActiveAt];
+  List<Object?> get props => [id, fullName, avatarUrl, role, permissions, lastActiveAt];
 }

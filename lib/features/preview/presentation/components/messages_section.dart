@@ -16,18 +16,26 @@ class MessagesSection extends StatelessWidget {
   final ConversationUiModel conversation;
   final List<MessageUiModel> parentMessages;
 
-  /// Get the conversation owner ID (first participant with 'owner' role, or first participant if none found)
+  /// Get the conversation owner ID (first participant with 'owner' permissions, or 'owner' role as fallback)
   String? get _conversationOwnerId {
     ConversationParticipantUiModel? ownerParticipant;
     try {
+      // First try to find by permissions = owner
       ownerParticipant = conversation.participants.firstWhere(
-        (participant) => participant.role?.toLowerCase() == 'owner',
+        (participant) => participant.permissions?.toLowerCase() == 'owner',
       );
     } on Exception {
-      // No owner found, use first participant if available
-      ownerParticipant = conversation.participants.isNotEmpty
-          ? conversation.participants.first
-          : null;
+      try {
+        // Fallback to role = owner
+        ownerParticipant = conversation.participants.firstWhere(
+          (participant) => participant.role?.toLowerCase() == 'owner',
+        );
+      } on Exception {
+        // No owner found, use first participant if available
+        ownerParticipant = conversation.participants.isNotEmpty
+            ? conversation.participants.first
+            : null;
+      }
     }
     return ownerParticipant?.id;
   }

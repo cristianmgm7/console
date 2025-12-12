@@ -50,6 +50,7 @@ extension ConversationUiMapper on Conversation {
         fullName: fullName.isEmpty ? participantId : fullName,
         avatarUrl: collaborator.imageUrl,
         role: role,
+        permissions: collaborator.permission,
         lastActiveAt: lastActiveAt,
       );
     }).toList();
