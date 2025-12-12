@@ -98,7 +98,10 @@ class PreviewVisualization extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Messages section
-            MessagesSection(messages: state.selectedMessages),
+            MessagesSection(
+              messages: state.selectedMessages,
+              conversation: state.conversation,
+            ),
           ],
         ),
       ),
