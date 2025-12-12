@@ -98,7 +98,7 @@ class PreviewVisualization extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Participants section
-            if (state.conversation.collaborators?.isNotEmpty ?? false) ...[
+            if (state.conversation.hasParticipants) ...[
               ParticipantsSection(conversation: state.conversation),
               const SizedBox(height: 24),
             ],

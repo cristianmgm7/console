@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/conversations/domain/entities/conversation_entity.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/models/conversation_ui_model.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:equatable/equatable.dart';
 
@@ -28,7 +28,7 @@ class PreviewComposerLoaded extends PreviewComposerState {
     required this.selectedMessageCount,
   });
 
-  final Conversation conversation;
+  final ConversationUiModel conversation;
   final List<MessageUiModel> selectedMessages;
   final List<MessageUiModel> parentMessages;
   final int selectedMessageCount;
@@ -44,7 +44,7 @@ class PreviewComposerLoaded extends PreviewComposerState {
   ];
 
   PreviewComposerLoaded copyWith({
-    Conversation? conversation,
+    ConversationUiModel? conversation,
     List<MessageUiModel>? selectedMessages,
     List<MessageUiModel>? parentMessages,
     int? selectedMessageCount,

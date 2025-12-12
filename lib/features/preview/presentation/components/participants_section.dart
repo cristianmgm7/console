@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
-import 'package:carbon_voice_console/features/conversations/domain/entities/conversation_entity.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/models/conversation_ui_model.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/participant_avatar.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/participant_avatar_grid.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +11,7 @@ class ParticipantsSection extends StatelessWidget {
     super.key,
   });
 
-  final Conversation conversation;
+  final ConversationUiModel conversation;
 
   @override
   Widget build(BuildContext context) {
@@ -31,17 +31,12 @@ class ParticipantsSection extends StatelessWidget {
     );
   }
 
-  List<ParticipantAvatar> _mapParticipants(Conversation conversation) {
-    if (conversation.collaborators == null || conversation.collaborators!.isEmpty) {
-      return [];
-    }
-
-    return conversation.collaborators!.map((collaborator) {
-      final fullName = '${collaborator.firstName ?? ''} ${collaborator.lastName ?? ''}'.trim();
+  List<ParticipantAvatar> _mapParticipants(ConversationUiModel conversation) {
+    return conversation.participants.map((participant) {
       return ParticipantAvatar(
-        id: collaborator.userGuid ?? 'unknown-user',
-        fullName: fullName.isEmpty ? collaborator.userGuid ?? 'Unknown' : fullName,
-        avatarUrl: collaborator.imageUrl,
+        id: participant.id,
+        fullName: participant.fullName,
+        avatarUrl: participant.avatarUrl,
       );
     }).toList();
   }
