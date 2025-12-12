@@ -7,17 +7,19 @@ import 'package:flutter/material.dart';
 class MessageDate extends StatelessWidget {
   const MessageDate({
     required this.createdAt,
+    this.isOwner = false,
     super.key,
   });
 
   final DateTime createdAt;
+  final bool isOwner;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       DateTimeFormatters.formatDate(createdAt),
       style: AppTextStyle.bodySmall.copyWith(
-        color: AppColors.textSecondary,
+        color: isOwner ? AppColors.onPrimary : AppColors.textSecondary,
       ),
     );
   }

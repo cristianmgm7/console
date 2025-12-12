@@ -9,10 +9,12 @@ import 'package:flutter/material.dart';
 class MessageContent extends StatelessWidget {
   const MessageContent({
     required this.message,
+    this.isOwner = false,
     super.key,
   });
 
   final MessageUiModel message;
+  final bool isOwner;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class MessageContent extends StatelessWidget {
     );
 
     return Card(
-      color: AppColors.cardBackground,
+      color: isOwner ? AppColors.primary.withValues(alpha: 0.9) : AppColors.cardBackground,
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
@@ -33,14 +35,16 @@ class MessageContent extends StatelessWidget {
         children: [
           Text(
             transcriptModel.text,
-            style: AppTextStyle.bodyMediumBlack,
+            style: isOwner
+                ? AppTextStyle.bodyMediumBlack.copyWith(color: AppColors.onPrimary)
+                : AppTextStyle.bodyMediumBlack,
             // Removed maxLines and overflow to show full text
           ),
           Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                AudioControls(message: message),
-                MessageDate(createdAt: message.createdAt),
+                AudioControls(message: message, isOwner: isOwner),
+                MessageDate(createdAt: message.createdAt, isOwner: isOwner),
               ],
               ),
           ],

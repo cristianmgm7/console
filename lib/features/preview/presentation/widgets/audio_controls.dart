@@ -12,10 +12,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class AudioControls extends StatelessWidget {
   const AudioControls({
     required this.message,
+    this.isOwner = false,
     super.key,
   });
 
   final MessageUiModel message;
+  final bool isOwner;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,7 @@ class AudioControls extends StatelessWidget {
         Text(
           DateTimeFormatters.formatDuration(message.audioModels.first.duration),
           style: AppTextStyle.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            color: isOwner ? AppColors.onPrimary : AppColors.textSecondary,
           ),
         ),
       ],
