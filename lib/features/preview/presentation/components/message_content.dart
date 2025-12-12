@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_gradients.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:carbon_voice_console/features/preview/presentation/components/message_date.dart';
@@ -26,8 +27,12 @@ class MessageContent extends StatelessWidget {
       orElse: () => message.textModels.first, // Fallback to first if no transcript found
     );
 
-    return Card(
-      color: isOwner ? AppColors.primary.withValues(alpha: 0.9) : AppColors.cardBackground,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: isOwner ? AppGradients.ownerMessage : null,
+        color: isOwner ? null : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
