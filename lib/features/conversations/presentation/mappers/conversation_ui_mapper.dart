@@ -32,15 +32,12 @@ extension ConversationUiMapper on Conversation {
       // Use userGuid as ID, fallback to a generated one
       final participantId = collaborator.userGuid ?? 'user_${collaborators!.indexOf(collaborator)}';
 
-      // Determine role from permission or default to 'member'
-      final role = _mapPermissionToRole(collaborator.permission);
-
       // Parse last posted time if available
       DateTime? lastActiveAt;
       if (collaborator.lastPosted != null) {
         try {
           lastActiveAt = DateTime.fromMillisecondsSinceEpoch(int.parse(collaborator.lastPosted!));
-        } catch (_) {
+        } on Exception {
           // Ignore parsing errors
         }
       }
@@ -49,30 +46,10 @@ extension ConversationUiMapper on Conversation {
         id: participantId,
         fullName: fullName.isEmpty ? participantId : fullName,
         avatarUrl: collaborator.imageUrl,
-        role: role,
         permissions: collaborator.permission,
         lastActiveAt: lastActiveAt,
       );
     }).toList();
   }
 
-  /// Maps permission string to user-friendly role name
-  String? _mapPermissionToRole(String? permission) {
-    if (permission == null) return null;
-
-    switch (permission.toLowerCase()) {
-      case 'owner':
-      case 'admin':
-        return 'Admin';
-      case 'editor':
-      case 'write':
-        return 'Editor';
-      case 'viewer':
-      case 'read':
-        return 'Viewer';
-      case 'member':
-      default:
-        return 'Member';
-    }
-  }
 }
