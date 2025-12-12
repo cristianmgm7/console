@@ -103,6 +103,7 @@ class PreviewVisualization extends StatelessWidget {
             MessagesSection(
               messages: state.selectedMessages,
               conversation: state.conversation,
+              parentMessages: state.parentMessages,
             ),
           ],
         ),

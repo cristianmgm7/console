@@ -8,11 +8,13 @@ class MessagesSection extends StatelessWidget {
   const MessagesSection({
     required this.messages,
     required this.conversation,
+    required this.parentMessages,
     super.key,
   });
 
   final List<MessageUiModel> messages;
   final ConversationUiModel conversation;
+  final List<MessageUiModel> parentMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,7 @@ class MessagesSection extends StatelessWidget {
             child: PreviewMessageItem(
               message: message,
               participants: conversation.participants,
+              parentMessages: parentMessages,
             ),
           );
         }),

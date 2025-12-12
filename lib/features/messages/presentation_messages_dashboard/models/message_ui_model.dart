@@ -23,6 +23,7 @@ class MessageUiModel extends Equatable {
     required this.isTextMessage,
     required this.notes,
     required this.lastUpdatedAt,
+    required this.parentMessageId,
     // Computed properties for UI
     required this.conversationId, required this.userId, required this.text, required this.transcriptText, required this.audioUrl, // User profile data
     this.creator,
@@ -45,6 +46,7 @@ class MessageUiModel extends Equatable {
   final bool isTextMessage;
   final String notes;
   final DateTime? lastUpdatedAt;
+  final String? parentMessageId;
 
   // User profile data
   final User? creator;
@@ -84,6 +86,7 @@ class MessageUiModel extends Equatable {
         isTextMessage,
         notes,
         lastUpdatedAt,
+        parentMessageId,
         creator,
         conversationId,
         userId,
