@@ -4,6 +4,8 @@ import 'package:carbon_voice_console/core/routing/app_shell.dart';
 import 'package:carbon_voice_console/core/routing/route_guard.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
+import 'package:carbon_voice_console/features/preview/presentation/screens/preview_composer_screen.dart';
+import 'package:carbon_voice_console/features/preview/presentation/screens/preview_confirmation_screen.dart';
 import 'package:carbon_voice_console/features/settings/presentation/screen/settings_screen.dart';
 import 'package:carbon_voice_console/features/users/presentation/users_screen.dart';
 import 'package:flutter/material.dart';
@@ -87,6 +89,47 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(
                 child: SettingsScreen(),
               ),
+            ),
+
+            // Preview routes
+            GoRoute(
+              path: AppRoutes.previewComposer,
+              name: 'previewComposer',
+              pageBuilder: (context, state) {
+                final conversationId = state.uri.queryParameters['conversationId'] ?? '';
+                final messageIdsParam = state.uri.queryParameters['messageIds'] ?? '';
+
+                // Parse comma-separated message IDs
+                final messageIds = messageIdsParam.isEmpty
+                    ? <String>[]
+                    : messageIdsParam.split(',');
+
+                return NoTransitionPage(
+                  child: BlocProviders.blocProvidersPreview(
+                    conversationId: conversationId,
+                    messageIds: messageIds,
+                    child: PreviewComposerScreen(
+                      conversationId: conversationId,
+                      messageIds: messageIds,
+                    ),
+                  ),
+                );
+              },
+            ),
+            GoRoute(
+              path: AppRoutes.previewConfirmation,
+              name: 'previewConfirmation',
+              pageBuilder: (context, state) {
+                final mockPreviewUrl = state.uri.queryParameters['url'];
+
+                return NoTransitionPage(
+                  child: BlocProviders.blocProvidersPreview(
+                    child: PreviewConfirmationScreen(
+                      mockPreviewUrl: mockPreviewUrl ?? '',
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

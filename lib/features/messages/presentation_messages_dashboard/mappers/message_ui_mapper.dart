@@ -62,6 +62,7 @@ extension MessageUiMapper on Message {
       isTextMessage: isTextMessage,
       notes: notes,
       lastUpdatedAt: lastUpdatedAt,
+      parentMessageId: parentMessageId,
       // User profile data
       creator: creator,
       // Computed UI properties

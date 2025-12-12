@@ -134,6 +134,7 @@ extension MessageDetailDtoMapper on MessageDetailDto {
       type: type ?? 'unknown',
       notes: (aiSummary?.isNotEmpty ?? false) ? aiSummary! : (transcript ?? ''),
       lastUpdatedAt: updatedAt,
+      parentMessageId: parentMessageId,
     );
   }
 }

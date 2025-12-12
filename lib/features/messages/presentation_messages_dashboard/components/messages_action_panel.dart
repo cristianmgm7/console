@@ -126,6 +126,7 @@ class MessagesActionPanel extends StatelessWidget {
             ),
 
                 const SizedBox(height: 8),
+
                 // Cancel Button
                 AppButton(
                   onPressed: () => context.read<MessageSelectionCubit>().clearSelection(),

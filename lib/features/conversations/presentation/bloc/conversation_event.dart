@@ -14,11 +14,11 @@ sealed class ConversationEvent extends Equatable {
 }
 
 class LoadConversations extends ConversationEvent {
-  const LoadConversations(this.workspaceId);
-  final String workspaceId;
+  const LoadConversations(this.workspaceGuid);
+  final String workspaceGuid;
 
   @override
-  List<Object?> get props => [workspaceId];
+  List<Object?> get props => [workspaceGuid];
 }
 
 class ToggleConversation extends ConversationEvent {
@@ -43,11 +43,11 @@ class ClearConversationSelection extends ConversationEvent {
 
 // Internal event for reacting to workspace changes
 class WorkspaceSelectedEvent extends ConversationEvent {
-  const WorkspaceSelectedEvent(this.workspaceId);
-  final String workspaceId;
+  const WorkspaceSelectedEvent(this.workspaceGuid);
+  final String workspaceGuid;
 
   @override
-  List<Object?> get props => [workspaceId];
+  List<Object?> get props => [workspaceGuid];
 }
 
 /// Event to open the conversation search panel

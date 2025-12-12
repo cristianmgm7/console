@@ -46,7 +46,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     WorkspaceSelectedEvent event,
     Emitter<ConversationState> emit,
   ) async {
-    add(LoadConversations(event.workspaceId));
+    add(LoadConversations(event.workspaceGuid));
   }
 
   Future<void> _onLoadConversations(
@@ -55,7 +55,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   ) async {
     emit(const ConversationLoading());
 
-    final result = await _conversationRepository.getConversations(event.workspaceId);
+    final result = await _conversationRepository.getConversations(event.workspaceGuid);
 
     result.fold(
       onSuccess: (conversations) {
@@ -72,14 +72,14 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
         final colorMap = <String, int>{};
         for (var i = 0; i < sortedConversations.length; i++) {
-          colorMap[sortedConversations[i].id] = i % 10;
+          colorMap[sortedConversations[i].channelGuid!] = i % 10;
         }
 
         final selected = sortedConversations.first;
 
         emit(ConversationLoaded(
           conversations: sortedConversations,
-          selectedConversationIds: {selected.id},
+          selectedConversationIds: {selected.channelGuid!},
           conversationColorMap: colorMap,
         ),);
         // State change will trigger dashboard screen to notify MessageBloc

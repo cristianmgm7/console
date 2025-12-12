@@ -28,6 +28,8 @@ class RouteGuard {
     AppRoutes.users,
     AppRoutes.voiceMemos,
     AppRoutes.settings,
+    AppRoutes.previewComposer,
+    AppRoutes.previewConfirmation,
   ];
 
   /// Check if a path looks like a file system path that should be redirected

@@ -261,7 +261,7 @@ class _SearchResultItem extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         context.read<ConversationBloc>().add(
-              SelectConversationFromSearch(conversation.id),
+              SelectConversationFromSearch(conversation.channelGuid!),
             );
       },
       child: AppContainer(
@@ -285,7 +285,7 @@ class _SearchResultItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.name,
+                    conversation.channelName ?? 'Unknown Conversation',
                     style: AppTextStyle.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
@@ -293,7 +293,7 @@ class _SearchResultItem extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    'ID: ${conversation.id}',
+                    'ID: ${conversation.channelGuid ?? 'Unknown'}',
                     style: AppTextStyle.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
