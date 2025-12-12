@@ -3,8 +3,6 @@ import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
 import 'package:carbon_voice_console/features/preview/presentation/components/conversation_header_section.dart';
 import 'package:carbon_voice_console/features/preview/presentation/components/messages_section.dart';
-import 'package:carbon_voice_console/features/preview/presentation/components/participants_section.dart';
-import 'package:carbon_voice_console/features/preview/presentation/components/statistics_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -93,19 +91,8 @@ class PreviewVisualization extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // Conversation header section
-            ConversationHeaderSection(conversation: state.conversation),
-            const SizedBox(height: 24),
-
-            // Participants section
-            if (state.conversation.hasParticipants) ...[
-              ParticipantsSection(conversation: state.conversation),
-              const SizedBox(height: 24),
-            ],
-
-            // Statistics section
-            StatisticsSection(
-              messages: state.selectedMessages,
+            // Conversation header section (now includes participants and statistics)
+            ConversationHeaderSection(
               conversation: state.conversation,
             ),
             const SizedBox(height: 24),
