@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/features/conversations/presentation/mappers/conversation_ui_mapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/mappers/message_ui_mapper.dart';
 import 'package:carbon_voice_console/features/preview/domain/usecases/get_preview_composer_data_usecase.dart';
 import 'package:carbon_voice_console/features/preview/domain/usecases/publish_preview_usecase.dart';
@@ -46,6 +47,9 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
         _conversationId = enrichedData.conversation.channelGuid;
         _selectedMessageIds = enrichedData.selectedMessages.map((msg) => msg.id).toList();
 
+        // Convert conversation to UI model
+        final conversationUiModel = enrichedData.conversation.toUiModel();
+
         // Convert messages to UI models using existing mapper
         final selectedMessageUiModels = enrichedData.selectedMessages
             .map((message) => message.toUiModel()) // Uses existing MessageUiMapper
@@ -57,7 +61,7 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
 
         emit(
           PreviewComposerLoaded(
-            conversation: enrichedData.conversation,
+            conversation: conversationUiModel,
             selectedMessages: selectedMessageUiModels,
             parentMessages: parentMessageUiModels,
             selectedMessageCount: enrichedData.selectedMessages.length,
@@ -97,8 +101,8 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
     final result = await _publishPreviewUsecase(
       conversationId: _conversationId!,
       messageIds: _selectedMessageIds!,
-      title: loadedState.conversation.channelName ?? 'Untitled Conversation',
-      description: loadedState.conversation.description ?? '',
+      title: loadedState.conversation.name,
+      description: loadedState.conversation.description,
     );
 
     result.fold(
