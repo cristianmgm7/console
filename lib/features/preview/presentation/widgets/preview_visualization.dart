@@ -57,9 +57,9 @@ class PreviewVisualization extends StatelessWidget {
   );
 
   Widget _buildErrorState(String message) => Card(
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(24),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -82,8 +82,8 @@ class PreviewVisualization extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    ),
+              ),
+            ),
   );
 
   Widget _buildLoadedState(BuildContext context, PreviewComposerLoaded state) {
@@ -126,7 +126,7 @@ class PreviewVisualization extends StatelessWidget {
             CircularProgressIndicator(),
             SizedBox(height: 16),
             Text('Publishing preview...'),
-          ],
+      ],
         ),
       ),
     ),
@@ -140,6 +140,6 @@ class PreviewVisualization extends StatelessWidget {
         child: CircularProgressIndicator(),
       ),
     ),
-  );
+    );
 
 }

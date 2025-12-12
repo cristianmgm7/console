@@ -1,4 +1,3 @@
-import 'package:carbon_voice_console/features/preview/domain/entities/preview_composer_data.dart';
 import 'package:carbon_voice_console/features/preview/domain/entities/preview_metadata.dart';
 import 'package:carbon_voice_console/features/preview/presentation/models/preview_ui_model.dart';
 import 'package:equatable/equatable.dart';
@@ -23,51 +22,45 @@ class PreviewComposerLoading extends PreviewComposerState {
 /// Data loaded successfully, ready for publishing
 class PreviewComposerLoaded extends PreviewComposerState {
   const PreviewComposerLoaded({
-    required this.composerData,
-    required this.currentMetadata,
-    required this.previewUiModel, // NEW
+    required this.previewUiModel,
+    required this.selectedMessageCount,
+    required this.metadata,
   });
 
-  final PreviewComposerData composerData;
-  final PreviewMetadata currentMetadata;
-  final PreviewUiModel previewUiModel; // NEW - UI model for visualization
+  final PreviewUiModel previewUiModel;
+  final int selectedMessageCount;
+  final PreviewMetadata metadata;
 
-  bool get isValid =>
-      currentMetadata.title.trim().isNotEmpty &&
-      currentMetadata.description.trim().isNotEmpty;
+  bool get isValidSelection => selectedMessageCount >= 3 && selectedMessageCount <= 5;
+  bool get isMetadataValid => metadata.title.trim().isNotEmpty && metadata.description.trim().isNotEmpty;
+  bool get canPublish => isValidSelection && isMetadataValid;
 
   @override
   List<Object?> get props => [
-    composerData,
-    currentMetadata,
-    previewUiModel, // NEW
+    previewUiModel,
+    selectedMessageCount,
+    metadata,
   ];
 
   PreviewComposerLoaded copyWith({
-    PreviewComposerData? composerData,
-    PreviewMetadata? currentMetadata,
-    PreviewUiModel? previewUiModel, // NEW
+    PreviewUiModel? previewUiModel,
+    int? selectedMessageCount,
+    PreviewMetadata? metadata,
   }) {
     return PreviewComposerLoaded(
-      composerData: composerData ?? this.composerData,
-      currentMetadata: currentMetadata ?? this.currentMetadata,
-      previewUiModel: previewUiModel ?? this.previewUiModel, // NEW
+      previewUiModel: previewUiModel ?? this.previewUiModel,
+      selectedMessageCount: selectedMessageCount ?? this.selectedMessageCount,
+      metadata: metadata ?? this.metadata,
     );
   }
 }
 
 /// Publishing preview in progress
 class PreviewComposerPublishing extends PreviewComposerState {
-  const PreviewComposerPublishing({
-    required this.composerData,
-    required this.metadata,
-  });
-
-  final PreviewComposerData composerData;
-  final PreviewMetadata metadata;
+  const PreviewComposerPublishing();
 
   @override
-  List<Object?> get props => [composerData, metadata];
+  List<Object?> get props => [];
 }
 
 /// Preview published successfully
