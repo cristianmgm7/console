@@ -19,7 +19,7 @@ class PreviewMessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppColors.cardBackground,
+      color: AppColors.background,
       elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -30,8 +30,7 @@ class PreviewMessageItem extends StatelessWidget {
             MessageHeader(
               participants: participants,
               creatorId: message.creatorId,
-            ),
-            const SizedBox(height: 16), // Spacing between header and content
+            ), // Spacing between header and content
             // Message content below header
             MessageContent(message: message),
           ],

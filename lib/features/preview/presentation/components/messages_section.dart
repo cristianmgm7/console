@@ -1,6 +1,6 @@
 import 'package:carbon_voice_console/features/conversations/presentation/models/conversation_ui_model.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
-import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_message_item.dart';
+import 'package:carbon_voice_console/features/preview/presentation/components/preview_message_item.dart';
 import 'package:flutter/material.dart';
 
 /// Component that displays the selected messages section
