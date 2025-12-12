@@ -1,18 +1,15 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/models/conversation_ui_model.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
 import 'package:flutter/material.dart';
 
 /// Component that displays conversation statistics (messages, duration, participants)
 class StatisticsSection extends StatelessWidget {
   const StatisticsSection({
-    required this.messages,
     required this.conversation,
     super.key,
   });
 
-  final List<MessageUiModel> messages;
   final ConversationUiModel conversation;
 
   @override
@@ -48,11 +45,6 @@ class StatisticsSection extends StatelessWidget {
     );
   }
 
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
 
   Widget _buildStatItem(
     BuildContext context, {
