@@ -5,49 +5,34 @@ import 'package:flutter/material.dart';
 class ReplyIndicator extends StatelessWidget {
   const ReplyIndicator({
     required this.parentMessageText,
-    this.isDarkTheme = false,
     super.key,
   });
 
   final String parentMessageText;
-  final bool isDarkTheme;
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isDarkTheme
-        ? AppColors.surface.withValues(alpha: 0.2)
-        : AppColors.surface.withValues(alpha: 0.7);
-    final borderColor = isDarkTheme
-        ? AppColors.divider.withValues(alpha: 0.1)
-        : AppColors.divider.withValues(alpha: 0.3);
-    final iconColor = isDarkTheme
-        ? AppColors.onPrimary.withValues(alpha: 0.7)
-        : AppColors.primary.withValues(alpha: 0.7);
-    final textColor = isDarkTheme
-        ? AppColors.onPrimary.withValues(alpha: 0.7)
-        : AppColors.textPrimary.withValues(alpha: 0.7);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: AppColors.surface.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(
             Icons.reply,
             size: 14,
-            color: iconColor,
+            color: AppColors.primary.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               'This is a reply to: ${parentMessageText.length > 100 ? '${parentMessageText.substring(0, 100)}...' : parentMessageText}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: textColor,
+                    color: AppColors.textPrimary.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
                   ),
             ),
