@@ -6,15 +6,15 @@ part 'workspace_setting_dto.g.dart';
 @JsonSerializable()
 class WorkspaceSettingDto {
   const WorkspaceSettingDto({
-    required this.value,
-    required this.reason,
+    this.value,
+    this.reason,
   });
 
   factory WorkspaceSettingDto.fromJson(Map<String, dynamic> json) =>
       _$WorkspaceSettingDtoFromJson(json);
 
-  final bool value;
-  final String reason;
+  final bool? value;
+  final String? reason;
 
   Map<String, dynamic> toJson() => _$WorkspaceSettingDtoToJson(this);
 }
