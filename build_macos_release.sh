@@ -36,26 +36,34 @@ echo "   Token URL: $OAUTH_TOKEN_URL"
 echo "   API Base URL: $API_BASE_URL"
 echo ""
 
-# Warn if not using localhost
-if [[ ! "$OAUTH_REDIRECT_URL" =~ ^http://localhost ]]; then
-  echo "⚠️  WARNING: OAuth redirect URL is not localhost!"
+# Check redirect URL configuration
+if [[ "$OAUTH_REDIRECT_URL" =~ ^https:// ]]; then
+  echo "✅ Using HTTPS redirect URL - correct for DMG distribution"
+  echo "   Make sure this URL hosts the redirect page (web_redirect_page.html)"
+  echo ""
+elif [[ "$OAUTH_REDIRECT_URL" =~ ^http://localhost ]]; then
+  echo "⚠️  WARNING: Using localhost redirect URL!"
   echo "   Current: $OAUTH_REDIRECT_URL"
-  echo "   For desktop distribution, it should be: http://localhost/callback"
+  echo "   For DMG distribution, use an HTTPS URL that redirects to carbonvoice://"
+  echo "   Localhost only works in development mode."
   echo ""
   read -p "Continue anyway? (y/n) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Build cancelled."
-    echo ""
-    echo "💡 Tip: Use .env.desktop for desktop builds:"
-    echo "   cp .env.desktop .env.desktop.local"
-    echo "   # Edit .env.desktop.local with your credentials"
-    echo "   # Then run: ENV_FILE=.env.desktop.local ./build_macos_release.sh"
     exit 1
   fi
 else
-  echo "✅ Using localhost redirect (correct for desktop apps)"
+  echo "⚠️  WARNING: OAuth redirect URL uses non-standard format!"
+  echo "   Current: $OAUTH_REDIRECT_URL"
+  echo "   For desktop distribution, use an HTTPS URL"
   echo ""
+  read -p "Continue anyway? (y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Build cancelled."
+    exit 1
+  fi
 fi
 
 echo ""
