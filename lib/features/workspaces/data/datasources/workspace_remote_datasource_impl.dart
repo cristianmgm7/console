@@ -18,7 +18,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   Future<List<WorkspaceDto>> getWorkspaces() async {
     try {
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/workspaces',
+        '${OAuthConfig.apiBaseUrl}/v3/workspaces',
       );
 
       // Parse response body to check for error details
@@ -87,6 +87,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         return [];
       }
 
+      // DTOs will fail loudly on malformed data (required fields)
       final workspaces = <WorkspaceDto>[];
       var skipped = 0;
       for (final item in workspacesJson) {
@@ -96,7 +97,7 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
           continue;
         }
         try {
-          workspaces.add(WorkspaceDto.fromApiJson(item));
+          workspaces.add(WorkspaceDto.fromJson(item));
         } on Exception catch (e, stack) {
           skipped++;
           _logger.w('Skipping malformed workspace entry', error: e, stackTrace: stack);
@@ -122,13 +123,13 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
   Future<WorkspaceDto> getWorkspace(String workspaceId) async {
     try {
       final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/workspaces/$workspaceId',
+        '${OAuthConfig.apiBaseUrl}/v3/workspaces/$workspaceId',
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         _logger.i('Workspace detail keys from API: ${data.keys.toList()}');
-        final workspace = WorkspaceDto.fromApiJson(data);
+        final workspace = WorkspaceDto.fromJson(data);
         return workspace;
       } else {
         _logger.e('Failed to fetch workspace: ${response.statusCode}');
@@ -144,5 +145,6 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
       throw NetworkException(message: 'Failed to fetch workspace: $e');
     }
   }
+
 
 }

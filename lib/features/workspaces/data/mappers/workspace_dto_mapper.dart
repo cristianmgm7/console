@@ -1,74 +1,83 @@
-import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_dto.dart';
 import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_phone_dto.dart';
+import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_setting_dto.dart';
 import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_user_dto.dart';
+import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_dto.dart';
+import 'package:carbon_voice_console/features/workspaces/domain/entities/domain_referral.dart';
+import 'package:carbon_voice_console/features/workspaces/domain/entities/retention_policy.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace_enums.dart';
+import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace_setting.dart';
 
 /// Extension methods to convert DTOs to domain entities
 extension WorkspaceDtoMapper on WorkspaceDto {
   Workspace toDomain() {
-    // Validate required fields
-    if (id == null || name == null) {
-      throw FormatException(
-        'Required workspace fields are missing: id=${id == null}, name=${name == null}',
-      );
-    }
-
     return Workspace(
-      id: id!,
-      name: name!,
+      id: id,
+      name: name,
       type: WorkspaceType.fromString(type),
       planType: PlanType.fromString(planType),
-      createdAt: createdAt ?? DateTime.now(),
-      vanityName: vanityName,
-      description: description,
-      imageUrl: imageUrl,
+      createdAt: createdAt,
+      vanityName: vanityName.isEmpty ? null : vanityName,
+      description: description.isEmpty ? null : description,
+      imageUrl: imageUrl.isEmpty ? null : imageUrl,
       lastUpdatedAt: lastUpdatedAt,
-      users: users == null
-          ? []
-          : users!
-              .map((dto) {
-                try {
-                  return dto.toDomain();
-                } on FormatException {
-                  // Skip invalid user entries rather than failing the workspace
-                  return null;
-                }
-              })
-              .whereType<WorkspaceUser>()
-              .toList(),
-      phones: phones == null
-          ? []
-          : phones!
-              .map((dto) {
-                try {
-                  return dto.toDomain();
-                } on FormatException {
-                  // Skip invalid phone entries rather than failing the workspace
-                  return null;
-                }
-              })
-              .whereType<WorkspacePhone>()
-              .toList(),
-      backgroundColor: backgroundColor,
-      watermarkImageUrl: watermarkImageUrl,
+      users: users
+          .map((dto) {
+            try {
+              return dto.toDomain();
+            } on Exception {
+              // Skip invalid user entries
+              return null;
+            }
+          })
+          .whereType<WorkspaceUser>()
+          .toList(),
+      phones: phones
+          .map((dto) {
+            try {
+              return dto.toDomain();
+            } on Exception {
+              // Skip invalid phone entries
+              return null;
+            }
+          })
+          .whereType<WorkspacePhone>()
+          .toList(),
+      settings: settings.map(
+        (key, value) => MapEntry(key, value.toDomain()),
+      ),
+      backgroundColor: backgroundColor.isEmpty ? null : backgroundColor,
+      watermarkImageUrl: watermarkImageUrl.isEmpty ? null : watermarkImageUrl,
       conversationDefault: conversationDefault,
       invitationMode: InvitationMode.fromString(invitationMode),
-      isRetentionEnabled: isRetentionEnabled,
-      retentionDays: retentionDays,
-      domains: domains ?? [],
+      ssoEmailDomain: ssoEmailDomain.isEmpty ? null : ssoEmailDomain,
+      scimProvider: scimProvider.isEmpty ? null : scimProvider,
+      scimConnectionName: scimConnectionName.isEmpty ? null : scimConnectionName,
+      retentionPolicy: RetentionPolicy(
+        isEnabled: isRetentionEnabled,
+        retentionDays: retentionDays,
+        retentionDaysAsyncMeeting: retentionDaysAsyncMeeting,
+        whoCanChangeConversationRetention: whoCanChangeConversationRetention
+            .map(WorkspaceUserRole.fromString)
+            .toList(),
+        whoCanMarkMessagesAsPreserved: whoCanMarkMessagesAsPreserved
+            .map(WorkspaceUserRole.fromString)
+            .toList(),
+      ),
+      domainReferral: DomainReferral(
+        mode: DomainReferralMode.fromString(domainReferralMode),
+        message: domainReferralMessage,
+        title: domainReferralTitle,
+        domains: domains,
+      ),
     );
   }
 }
 
 extension WorkspaceUserDtoMapper on WorkspaceUserDto {
   WorkspaceUser toDomain() {
-    if (userId == null) {
-      throw const FormatException('WorkspaceUser missing required userId');
-    }
-
     return WorkspaceUser(
-      userId: userId!,
+      userId: userId,
       role: WorkspaceUserRole.fromString(role),
       status: WorkspaceUserStatus.fromString(status),
       statusChangedAt: statusChangedAt,
@@ -78,21 +87,24 @@ extension WorkspaceUserDtoMapper on WorkspaceUserDto {
 
 extension WorkspacePhoneDtoMapper on WorkspacePhoneDto {
   WorkspacePhone toDomain() {
-    if (id == null || number == null) {
-      throw FormatException(
-        'WorkspacePhone missing required fields: id=${id == null}, number=${number == null}',
-      );
-    }
-
     return WorkspacePhone(
-      id: id!,
-      number: number!,
+      id: id,
+      number: number,
       type: WorkspacePhoneType.fromString(type),
-      destinationWorkspaceId: destinationWorkspaceId,
-      parentPhone: parentPhone,
-      label: label,
-      messageUrl: messageUrl,
-      phoneSid: phoneSid,
+      destinationWorkspaceId: destinationWorkspaceId.isEmpty ? null : destinationWorkspaceId,
+      parentPhone: parentPhone.isEmpty ? null : parentPhone,
+      label: label.isEmpty ? null : label,
+      messageUrl: messageUrl.isEmpty ? null : messageUrl,
+      phoneSid: phoneSid.isEmpty ? null : phoneSid,
+    );
+  }
+}
+
+extension WorkspaceSettingDtoMapper on WorkspaceSettingDto {
+  WorkspaceSetting toDomain() {
+    return WorkspaceSetting(
+      value: value,
+      reason: WorkspaceSettingReason.fromString(reason),
     );
   }
 }

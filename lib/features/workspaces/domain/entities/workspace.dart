@@ -1,4 +1,7 @@
+import 'package:carbon_voice_console/features/workspaces/domain/entities/domain_referral.dart';
+import 'package:carbon_voice_console/features/workspaces/domain/entities/retention_policy.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace_enums.dart';
+import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace_setting.dart';
 import 'package:equatable/equatable.dart';
 
 /// Domain entity for workspace user
@@ -68,14 +71,29 @@ class Workspace extends Equatable {
     this.lastUpdatedAt,
     this.users = const [],
     this.phones = const [],
+    this.settings = const {},
     this.backgroundColor,
     this.watermarkImageUrl,
     this.conversationDefault,
     this.invitationMode,
-    this.isRetentionEnabled,
-    this.retentionDays,
-    this.domains = const [],
-  });
+    this.ssoEmailDomain,
+    this.scimProvider,
+    this.scimConnectionName,
+    RetentionPolicy? retentionPolicy,
+    DomainReferral? domainReferral,
+  })  : retentionPolicy = retentionPolicy ?? const RetentionPolicy(
+          isEnabled: false,
+          retentionDays: 0,
+          retentionDaysAsyncMeeting: 0,
+          whoCanChangeConversationRetention: [],
+          whoCanMarkMessagesAsPreserved: [],
+        ),
+        domainReferral = domainReferral ?? const DomainReferral(
+          mode: DomainReferralMode.doNotInform,
+          message: '',
+          title: '',
+          domains: [],
+        );
 
   final String id;
   final String name;
@@ -88,13 +106,25 @@ class Workspace extends Equatable {
   final DateTime? lastUpdatedAt;
   final List<WorkspaceUser> users;
   final List<WorkspacePhone> phones;
+  final Map<String, WorkspaceSetting> settings;
   final String? backgroundColor;
   final String? watermarkImageUrl;
   final bool? conversationDefault;
   final InvitationMode? invitationMode;
-  final bool? isRetentionEnabled;
-  final int? retentionDays;
-  final List<String> domains;
+
+  // SSO/SCIM fields
+  final String? ssoEmailDomain;
+  final String? scimProvider;
+  final String? scimConnectionName;
+
+  // Value objects for grouped concepts
+  final RetentionPolicy retentionPolicy;
+  final DomainReferral domainReferral;
+
+  // Legacy compatibility - expose retention fields directly
+  bool get isRetentionEnabled => retentionPolicy.isEnabled;
+  int get retentionDays => retentionPolicy.retentionDays;
+  List<String> get domains => domainReferral.domains;
 
   /// Gets the current user's role in this workspace (if available)
   WorkspaceUserRole? getCurrentUserRole(String currentUserId) {
@@ -158,13 +188,16 @@ class Workspace extends Equatable {
         lastUpdatedAt,
         users,
         phones,
+        settings,
         backgroundColor,
         watermarkImageUrl,
         conversationDefault,
         invitationMode,
-        isRetentionEnabled,
-        retentionDays,
-        domains,
+        ssoEmailDomain,
+        scimProvider,
+        scimConnectionName,
+        retentionPolicy,
+        domainReferral,
       ];
 }
 

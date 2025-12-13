@@ -3,6 +3,7 @@ import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/workspaces/data/datasources/workspace_remote_datasource.dart';
 import 'package:carbon_voice_console/features/workspaces/data/mappers/workspace_dto_mapper.dart';
+import 'package:carbon_voice_console/features/workspaces/data/models/api/workspace_dto.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/entities/workspace.dart';
 import 'package:carbon_voice_console/features/workspaces/domain/repositories/workspace_repository.dart';
 import 'package:injectable/injectable.dart';
@@ -28,24 +29,7 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
       }
 
       final workspaceDtos = await _remoteDataSource.getWorkspaces();
-
-      // Convert DTOs defensively so one bad entry does not drop the rest
-      final workspaces = <Workspace>[];
-      var skipped = 0;
-      for (final dto in workspaceDtos) {
-        try {
-          workspaces.add(dto.toDomain());
-        } on FormatException catch (e, stack) {
-          skipped++;
-          _logger.w('Skipping workspace DTO due to format issue', error: e, stackTrace: stack);
-        } on Exception catch (e, stack) {
-          skipped++;
-          _logger.w('Skipping workspace DTO due to unexpected issue', error: e, stackTrace: stack);
-        }
-      }
-      if (skipped > 0) {
-        _logger.w('Skipped $skipped workspace DTO(s); delivered ${workspaces.length}');
-      }
+      final workspaces = workspaceDtos.map((dto) => (dto as WorkspaceDto).toDomain()).toList() as List<Workspace>;
 
       // Cache the result
       _cachedWorkspaces = workspaces;
@@ -76,7 +60,7 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
       }
 
       final workspaceDto = await _remoteDataSource.getWorkspace(workspaceId);
-      return success(workspaceDto.toDomain());
+      return success((workspaceDto as WorkspaceDto).toDomain());
     } on ServerException catch (e) {
       _logger.e('Server error fetching workspace', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
@@ -88,6 +72,7 @@ class WorkspaceRepositoryImpl implements WorkspaceRepository {
       return failure(UnknownFailure(details: e.toString()));
     }
   }
+
 
   /// Clears the workspace cache (useful for refresh)
   void clearCache() {
