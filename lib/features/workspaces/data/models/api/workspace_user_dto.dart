@@ -6,7 +6,7 @@ part 'workspace_user_dto.g.dart';
 @JsonSerializable()
 class WorkspaceUserDto {
   const WorkspaceUserDto({
-    required this.userId,
+    this.userId,
     this.role,
     this.statusChangedAt,
     this.status,
@@ -16,7 +16,7 @@ class WorkspaceUserDto {
       _$WorkspaceUserDtoFromJson(json);
 
   @JsonKey(name: 'user_id')
-  final String userId;
+  final String? userId;
 
   final String? role;
 

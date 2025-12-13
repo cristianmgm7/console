@@ -6,7 +6,7 @@ part 'workspace_phone_dto.g.dart';
 @JsonSerializable()
 class WorkspacePhoneDto {
   const WorkspacePhoneDto({
-    required this.id,
+    this.id,
     this.destinationWorkspaceId,
     this.number,
     this.parentPhone,
@@ -20,7 +20,7 @@ class WorkspacePhoneDto {
       _$WorkspacePhoneDtoFromJson(json);
 
   @JsonKey(name: '_id')
-  final String id;
+  final String? id;
 
   @JsonKey(name: 'destination_workspace_id')
   final String? destinationWorkspaceId;
