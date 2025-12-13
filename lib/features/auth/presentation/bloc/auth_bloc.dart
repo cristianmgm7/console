@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/errors/failure_mapper.dart';
+import 'package:carbon_voice_console/core/services/deep_linking_service.dart';
 import 'package:carbon_voice_console/features/auth/domain/repositories/oauth_repository.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
@@ -9,13 +10,21 @@ import 'package:injectable/injectable.dart';
 @LazySingleton()
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
-  AuthBloc(this._oauthRepository) : super(const AuthInitial()) {
+  AuthBloc(this._oauthRepository, this._deepLinkingService) : super(const AuthInitial()) {
     on<AppStarted>(_onAppStarted);
     on<LoginRequested>(_onLoginRequested);
     on<AuthorizationResponseReceived>(_onAuthorizationResponseReceived);
     on<LogoutRequested>(_onLogoutRequested);
+
+    // Setup deep link handler for desktop OAuth callbacks
+    if (!kIsWeb) {
+      _deepLinkingService.setDeepLinkHandler((url) {
+        add(AuthorizationResponseReceived(url));
+      });
+    }
   }
   final OAuthRepository _oauthRepository;
+  final DeepLinkingService _deepLinkingService;
 
   Future<void> _onAppStarted(
     AppStarted event,
@@ -65,15 +74,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         },
       );
     } else {
-      // Desktop flow: Handle everything automatically
+      // Desktop flow: Open browser and wait for deep link callback
       final result = await _oauthRepository.loginWithDesktop();
       result.fold(
         onSuccess: (_) {
+          // Should not happen - desktop flow returns PENDING failure
           emit(const Authenticated(message: 'Login successful'));
         },
         onFailure: (error) {
-          emit(AuthError(FailureMapper.mapToMessage(error.failure)));
-          emit(const Unauthenticated());
+          // PENDING means browser opened successfully, waiting for callback
+          if (error.failure.toString().contains('PENDING')) {
+            emit(const AuthLoading());
+          } else {
+            emit(AuthError(FailureMapper.mapToMessage(error.failure)));
+            emit(const Unauthenticated());
+          }
         },
       );
     }

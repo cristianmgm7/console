@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
-import 'package:carbon_voice_console/core/utils/oauth_desktop_server.dart';
 import 'package:carbon_voice_console/core/utils/pkce_generator.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/auth/data/datasources/oauth_local_datasource.dart';
@@ -14,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
+import 'package:url_launcher/url_launcher.dart';
 
 @LazySingleton(as: OAuthRepository)
 class OAuthRepositoryImpl implements OAuthRepository {
@@ -21,14 +21,13 @@ class OAuthRepositoryImpl implements OAuthRepository {
   OAuthRepositoryImpl(
     this._localDataSource,
     this._logger,
-  ) : _desktopServer = kIsWeb ? null : OAuthDesktopServer();
+  );
 
   final OAuthLocalDataSource _localDataSource;
-  final OAuthDesktopServer? _desktopServer;
   final Logger _logger;
 
   oauth2.Client? _client;
-  
+
   // Store code verifiers for desktop OAuth (since we can't use sessionStorage)
   final Map<String, String> _desktopOAuthStates = {};
 
@@ -57,8 +56,8 @@ class OAuthRepositoryImpl implements OAuthRepository {
         _desktopOAuthStates[state] = codeVerifier;
       }
 
-      // Determine redirect URI according to platform
-      const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
+      // Use configured redirect URI for all platforms
+      const redirectUri = OAuthConfig.redirectUrl;
 
       // Manually build the authorization URL with PKCE
       final authUrl = Uri.parse(OAuthConfig.authorizationEndpoint).replace(
@@ -82,22 +81,41 @@ class OAuthRepositoryImpl implements OAuthRepository {
     }
   }
 
-  /// Desktop OAuth flow - handles everything including opening browser and capturing callback
+  /// Desktop OAuth flow - opens browser and waits for deep link callback
   @override
   Future<Result<oauth2.Client>> loginWithDesktop() async {
-    if (_desktopServer == null || kIsWeb) {
-      _logger.e('Desktop server not available (kIsWeb: $kIsWeb)');
+    if (kIsWeb) {
+      _logger.e('Desktop OAuth not available on web');
       return failure(const ConfigurationFailure(
         details: 'Desktop OAuth is only available on desktop platforms',
       ),);
     }
     try {
       final urlResult = await getAuthorizationUrl();
-      
+
       return urlResult.fold(
         onSuccess: (authUrl) async {
-          final callbackUrl = await _desktopServer.authenticate(authUrl);
-          return handleAuthorizationResponse(callbackUrl);
+          // Just open the browser - the callback will be handled via deep linking
+          final uri = Uri.parse(authUrl);
+          if (await canLaunchUrl(uri)) {
+            final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+            if (!launched) {
+              return failure(const AuthFailure(
+                code: 'LAUNCH_FAILED',
+                details: 'Could not open browser for authentication',
+              ),);
+            }
+            // Return a pending state - the actual auth will complete via deep link
+            return failure(const AuthFailure(
+              code: 'PENDING',
+              details: 'Waiting for browser authentication...',
+            ),);
+          } else {
+            return failure(AuthFailure(
+              code: 'CANNOT_LAUNCH',
+              details: 'Could not launch URL: $authUrl',
+            ),);
+          }
         },
         onFailure: (error) {
           return failure(error.failure);
@@ -105,7 +123,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
       );
     } on Exception catch (e, stack) {
       _logger.e('❌ Desktop OAuth failed', error: e, stackTrace: stack);
-      await _desktopServer.close(); // Cleanup
       return failure(AuthFailure(
         code: 'DESKTOP_OAUTH_FAILED',
         details: 'Desktop OAuth flow failed: $e',
@@ -171,8 +188,8 @@ class OAuthRepositoryImpl implements OAuthRepository {
         _desktopOAuthStates.remove(state);
       }
 
-      // Use the correct redirect URI according to the platform
-      const redirectUri = kIsWeb ? OAuthConfig.redirectUrl : 'http://localhost:3000/auth/callback';
+      // Use configured redirect URI for all platforms
+      const redirectUri = OAuthConfig.redirectUrl;
 
       final tokenBody = {
         'grant_type': 'authorization_code',

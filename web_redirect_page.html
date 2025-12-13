@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Voice Console - Authentication</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #E6E6FA 0%, #F3E5F5 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 500px;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #9C27B0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .success {
+            color: #4CAF50;
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .error {
+            color: #f44336;
+        }
+        .manual-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #9C27B0;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .manual-link:hover {
+            background: #7B1FA2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="spinner"></div>
+        <h1>Redirecting to Carbon Voice Console...</h1>
+        <p>Opening the app. This window will close automatically.</p>
+        <p id="status"></p>
+        <div id="manual-action" style="display: none;">
+            <p class="error">The app didn't open automatically.</p>
+            <a href="#" id="manual-link" class="manual-link">Click here to open the app</a>
+            <p style="margin-top: 20px; font-size: 14px;">
+                Or copy this URL and paste it in your browser:<br>
+                <code id="deep-link" style="word-break: break-all;"></code>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+
+        const statusEl = document.getElementById('status');
+        const containerEl = document.getElementById('container');
+        const manualActionEl = document.getElementById('manual-action');
+        const manualLinkEl = document.getElementById('manual-link');
+        const deepLinkEl = document.getElementById('deep-link');
+
+        if (error) {
+            // OAuth error
+            containerEl.innerHTML = `
+                <div class="error" style="font-size: 60px;">❌</div>
+                <h1>Authentication Failed</h1>
+                <p class="error"><strong>Error:</strong> ${error}</p>
+                ${errorDescription ? `<p>${errorDescription}</p>` : ''}
+                <p>Please close this window and try again.</p>
+            `;
+        } else if (!code) {
+            // Missing code parameter
+            containerEl.innerHTML = `
+                <div class="error" style="font-size: 60px;">⚠️</div>
+                <h1>Invalid Callback</h1>
+                <p class="error">Missing authorization code.</p>
+                <p>Please close this window and try logging in again.</p>
+            `;
+        } else {
+            // Success - build deep link
+            let deepLink = `carbonvoice://auth/callback?code=${encodeURIComponent(code)}`;
+            if (state) {
+                deepLink += `&state=${encodeURIComponent(state)}`;
+            }
+
+            // Set manual link
+            manualLinkEl.href = deepLink;
+            deepLinkEl.textContent = deepLink;
+
+            // Try to automatically open the app
+            statusEl.textContent = 'Opening Carbon Voice Console...';
+
+            // Attempt to redirect
+            window.location.href = deepLink;
+
+            // Show manual action after 3 seconds if still on page
+            setTimeout(() => {
+                statusEl.textContent = 'If the app doesn\'t open automatically, use the button below:';
+                manualActionEl.style.display = 'block';
+                document.querySelector('.spinner').style.display = 'none';
+            }, 3000);
+
+            // Try to close window after redirect (may not work in all browsers)
+            setTimeout(() => {
+                try {
+                    window.close();
+                } catch (e) {
+                    console.log('Could not auto-close window:', e);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
