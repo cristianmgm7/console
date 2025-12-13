@@ -191,3 +191,26 @@ enum WorkspacePhoneType {
     );
   }
 }
+
+/// Workspace setting reason (why a setting has a particular value)
+enum WorkspaceSettingReason {
+  /// Limited by system constraints
+  systemLimitation('system_limitation'),
+
+  /// Set by user preference
+  userPreference('user_preference'),
+
+  /// Unknown or unrecognized reason
+  unknown('unknown');
+
+  const WorkspaceSettingReason(this.value);
+  final String value;
+
+  static WorkspaceSettingReason fromString(String? value) {
+    if (value == null) return WorkspaceSettingReason.unknown;
+    return WorkspaceSettingReason.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => WorkspaceSettingReason.unknown,
+    );
+  }
+}
