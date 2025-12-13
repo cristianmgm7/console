@@ -66,9 +66,9 @@ class WorkspaceDto {
   @JsonKey(name: 'plan_type')
   final String? planType;
 
-  final List<WorkspaceUserDto>? users;
-  final Map<String, WorkspaceSettingDto>? settings;
-  final List<WorkspacePhoneDto>? phones;
+  final List<WorkspaceUserDto?>? users;
+  final Map<String, WorkspaceSettingDto?>? settings;
+  final List<WorkspacePhoneDto?>? phones;
 
   @JsonKey(name: 'background_color')
   final String? backgroundColor;
@@ -98,10 +98,10 @@ class WorkspaceDto {
   final int? retentionDays;
 
   @JsonKey(name: 'who_can_change_conversation_retention')
-  final List<String>? whoCanChangeConversationRetention;
+  final List<String?>? whoCanChangeConversationRetention;
 
   @JsonKey(name: 'who_can_mark_messages_as_preserved')
-  final List<String>? whoCanMarkMessagesAsPreserved;
+  final List<String?>? whoCanMarkMessagesAsPreserved;
 
   @JsonKey(name: 'retention_days_async_meeting')
   final int? retentionDaysAsyncMeeting;
@@ -115,7 +115,7 @@ class WorkspaceDto {
   @JsonKey(name: 'domain_referral_title')
   final String? domainReferralTitle;
 
-  final List<String>? domains;
+  final List<String?>? domains;
 
   Map<String, dynamic> toJson() => _$WorkspaceDtoToJson(this);
 }

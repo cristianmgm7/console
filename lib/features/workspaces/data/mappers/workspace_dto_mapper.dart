@@ -22,9 +22,10 @@ extension WorkspaceDtoMapper on WorkspaceDto {
       imageUrl: imageUrl?.isEmpty ?? true ? null : imageUrl,
       lastUpdatedAt: lastUpdatedAt,
       users: users
-          ?.map((dto) {
+          ?.where((dto) => dto != null)
+          .map((dto) {
             try {
-              return dto.toDomain();
+              return dto!.toDomain();
             } on Exception {
               // Skip invalid user entries
               return null;
@@ -33,9 +34,10 @@ extension WorkspaceDtoMapper on WorkspaceDto {
           .whereType<WorkspaceUser>()
           .toList() ?? [],
       phones: phones
-          ?.map((dto) {
+          ?.where((dto) => dto != null)
+          .map((dto) {
             try {
-              return dto.toDomain();
+              return dto!.toDomain();
             } on Exception {
               // Skip invalid phone entries
               return null;
@@ -43,9 +45,12 @@ extension WorkspaceDtoMapper on WorkspaceDto {
           })
           .whereType<WorkspacePhone>()
           .toList() ?? [],
-      settings: settings?.map(
-        (key, value) => MapEntry(key, value.toDomain()),
-      ) ?? {},
+      settings: settings?.entries
+              .where((entry) => entry.value != null)
+              .fold<Map<String, WorkspaceSetting>>(
+                {},
+                (map, entry) => map..[entry.key] = entry.value!.toDomain(),
+              ) ?? {},
       backgroundColor: backgroundColor?.isEmpty ?? true ? null : backgroundColor,
       watermarkImageUrl: watermarkImageUrl?.isEmpty ?? true ? null : watermarkImageUrl,
       conversationDefault: conversationDefault,
@@ -58,17 +63,19 @@ extension WorkspaceDtoMapper on WorkspaceDto {
         retentionDays: retentionDays ?? 0,
         retentionDaysAsyncMeeting: retentionDaysAsyncMeeting ?? 0,
         whoCanChangeConversationRetention: whoCanChangeConversationRetention
-            ?.map(WorkspaceUserRole.fromString)
+            ?.where((role) => role != null)
+            .map(WorkspaceUserRole.fromString)
             .toList() ?? [],
         whoCanMarkMessagesAsPreserved: whoCanMarkMessagesAsPreserved
-            ?.map(WorkspaceUserRole.fromString)
+            ?.where((role) => role != null)
+            .map(WorkspaceUserRole.fromString)
             .toList() ?? [],
       ),
       domainReferral: DomainReferral(
         mode: DomainReferralMode.fromString(domainReferralMode ?? 'do_not_inform'),
         message: domainReferralMessage ?? '',
         title: domainReferralTitle ?? '',
-        domains: domains ?? [],
+        domains: domains?.where((domain) => domain != null).cast<String>().toList() ?? [],
       ),
     );
   }
@@ -77,7 +84,7 @@ extension WorkspaceDtoMapper on WorkspaceDto {
 extension WorkspaceUserDtoMapper on WorkspaceUserDto {
   WorkspaceUser toDomain() {
     return WorkspaceUser(
-      userId: userId,
+      userId: userId ?? 'unknown',
       role: WorkspaceUserRole.fromString(role ?? 'unknown'),
       status: WorkspaceUserStatus.fromString(status ?? 'unknown'),
       statusChangedAt: statusChangedAt,
@@ -88,7 +95,7 @@ extension WorkspaceUserDtoMapper on WorkspaceUserDto {
 extension WorkspacePhoneDtoMapper on WorkspacePhoneDto {
   WorkspacePhone toDomain() {
     return WorkspacePhone(
-      id: id,
+      id: id ?? 'unknown',
       number: number ?? '',
       type: WorkspacePhoneType.fromString(type ?? 'unknown'),
       destinationWorkspaceId: destinationWorkspaceId?.isEmpty ?? true ? null : destinationWorkspaceId,
