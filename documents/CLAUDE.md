@@ -7,14 +7,14 @@ This document provides comprehensive context about the Carbon Voice Console proj
 **Carbon Voice Console** is a Flutter admin console application for managing Carbon Voice services. It's a multi-platform application (macOS, iOS, Android, Web) built with clean architecture principles and modern Flutter best practices.
 
 **Current Version:** 1.0.0+1
-**Status:** Phase 1 Complete ✅ | OAuth 2.0 Complete ✅
+**Status:** Phase 1 Complete ✅ | OAuth 2.0 Complete ✅ | Preview Feature Complete ✅ | UI Refactor Complete ✅
 
 ## Tech Stack
 
 ### Core Technologies
 - **Flutter:** 3.35.6 (stable) - Cross-platform UI framework
 - **Dart:** 3.9.2 - Programming language
-- **SDK:** ^3.5.0
+- **SDK:** ^3.8.0
 
 ### Key Dependencies
 
@@ -48,11 +48,16 @@ This document provides comprehensive context about the Carbon Voice Console proj
 #### Audio
 - **just_audio:** ^0.9.40 - Audio playback
 
+#### UI & Design
+- **google_fonts:** ^6.1.0 - DM Sans font family (design system)
+- **phosphor_flutter:** ^2.1.0 - Phosphor icon library (67+ icons)
+
 #### Utilities
 - **logger:** ^2.6.2 - Logging
 - **path_provider:** ^2.1.1 - File system paths
 - **path:** ^1.9.0 - Path manipulation
 - **universal_html:** ^2.2.4 - Platform-specific implementations
+- **uuid:** ^4.5.1 - UUID generation
 
 #### Development Tools
 - **build_runner:** ^2.4.13 - Code generation
@@ -89,10 +94,29 @@ lib/
   │   ├── providers/           # BLoC providers
   │   │   └── bloc_providers.dart
   │   ├── models/              # Shared models
-  │   ├── common/              # Shared widgets
+  │   ├── services/            # Core services
+  │   │   └── deep_linking_service.dart  # Deep linking handler
+  │   ├── theme/               # Design system (Soft Modernism)
+  │   │   ├── app_colors.dart         # Color palette
+  │   │   ├── app_text_styles.dart    # DM Sans typography
+  │   │   ├── app_icons.dart          # Phosphor icon library
+  │   │   ├── app_borders.dart        # Border radius system
+  │   │   ├── app_shadows.dart        # Shadow system
+  │   │   ├── app_animations.dart     # Animation constants
+  │   │   ├── app_gradients.dart      # Mesh gradients
+  │   │   └── app_dimensions.dart     # Spacing system
+  │   ├── widgets/             # Reusable themed widgets (17 components)
+  │   │   ├── buttons/               # AppButton, AppOutlinedButton, etc.
+  │   │   ├── cards/                 # AppCard, GlassCard, etc.
+  │   │   ├── containers/            # GlassContainer, AppPillContainer
+  │   │   ├── interactive/           # AppCheckbox, AppSwitch, AppTextField
+  │   │   └── app_table.dart         # Table component
+  │   ├── common/              # Legacy shared widgets (being phased out)
   │   └── web/                 # Web-specific code
   │
   ├── dtos/                    # Shared DTOs and mappers
+  │   ├── user_profile_dto.dart      # User profile DTO
+  │   └── mappers/                   # DTO mappers
   │
   └── features/                # Feature modules (clean architecture)
       ├── auth/                # OAuth 2.0 Authentication
@@ -114,11 +138,42 @@ lib/
       ├── users/               # User management
       ├── workspaces/          # Workspace management
       ├── conversations/       # Conversation management
-      ├── messages/            # Message management
-      ├── message_download/    # Message download feature
+      ├── messages/            # Message management (3 presentation modules)
+      │   ├── domain/
+      │   ├── data/
+      │   ├── presentation_messages_dashboard/  # Main inbox view
+      │   ├── presentation_messages_detail/     # Message detail views
+      │   └── presentation_send_message/        # Message composition
+      ├── message_download/    # Message download feature (audio + transcripts)
+      ├── preview/             # Public conversation preview feature ⭐ NEW
+      │   ├── domain/         # PreviewComposerData, ConversationPreview
+      │   ├── data/           # Repository implementation
+      │   ├── presentation/   # Composer & confirmation screens
+      │   └── widgets/        # Chat messages, statistics, participants
       ├── audio_player/        # Audio playback
       ├── voice_memos/         # Voice memos
       └── settings/            # Settings
+
+documents/                    # Documentation and guides
+  ├── CLAUDE.md              # This file
+  ├── DISTRIBUTION_README.md
+  ├── GATEKEEPER_FIX_SUMMARY.md
+  ├── KEYCHAIN_FIX.md
+  ├── OAUTH_DMG_SETUP.md
+  ├── QUICK_START_DMG.md
+  └── TESTER_INSTRUCTIONS.md
+
+scripts/                      # Build and development scripts
+  ├── build_macos_release.sh
+  ├── create_dmg.sh
+  ├── run_dev.sh
+  ├── run_web_with_ngrok.sh
+  └── ... (more scripts)
+
+.claude/                      # Claude AI integration
+  ├── agents/                # Custom AI agents
+  ├── commands/              # Slash commands
+  └── skills/                # AI skills (build-desktop-web-ui-components)
 ```
 
 ### Feature Structure (Clean Architecture)
@@ -149,6 +204,82 @@ feature_name/
       ├── pages/              # Screen widgets
       └── widgets/            # Feature-specific widgets
 ```
+
+## Design System
+
+### "Soft Modernism" / "Ethereal Tech" Design Language
+
+The application follows a professional, polished design language with these characteristics:
+
+**Visual Principles:**
+- Glassmorphism effects with backdrop blur
+- Soft mesh gradients (e.g., "darkAura")
+- Geometric typography using DM Sans
+- Subtle shadows and borders
+- Pill-shaped elements (rounded corners)
+- Professional spacing and hierarchy
+
+**Color System** ([app_colors.dart](lib/core/theme/app_colors.dart)):
+- Semantic color naming (primary, secondary, accent, etc.)
+- Background gradients and surface colors
+- Status colors (success, warning, error, info)
+- Text colors with opacity variants
+- Glass effect colors
+
+**Typography** ([app_text_styles.dart](lib/core/theme/app_text_styles.dart)):
+- DM Sans font family (via google_fonts)
+- Display, heading, title, body, label, caption variants
+- Consistent font weights and sizes
+- Line height optimization
+
+**Icon System** ([app_icons.dart](lib/core/theme/app_icons.dart)):
+- 67+ Phosphor icons organized by category:
+  - Navigation (house, user, gear, etc.)
+  - Communication (chat, envelope, phone, etc.)
+  - Media (play, pause, microphone, etc.)
+  - Actions (plus, minus, trash, etc.)
+  - Status (check, warning, info, etc.)
+- Consistent sizing and visual weight
+
+### Widget Library (17 Components)
+
+Comprehensive themed widget library in [lib/core/widgets/](lib/core/widgets/). See [docs/WIDGET_LIBRARY.md](docs/WIDGET_LIBRARY.md) for complete documentation.
+
+**Buttons** (5 components):
+- `AppButton` - Primary filled button
+- `AppOutlinedButton` - Secondary outlined button
+- `AppTextButton` - Minimal text button
+- `AppIconButton` - Circular icon button
+- `MessagePlayButton` - Specialized audio play button
+
+**Cards** (4 components):
+- `AppCard` - Standard card with shadow
+- `AppOutlinedCard` - Bordered card
+- `AppInteractiveCard` - Clickable card with hover effects
+- `GlassCard` - Glassmorphism card with backdrop blur
+
+**Containers** (3 components):
+- `AppContainer` - Basic themed container
+- `GlassContainer` - Glassmorphism with backdrop blur
+- `AppPillContainer` - Pill-shaped tags/chips
+
+**Interactive** (4 components):
+- `AppCheckbox` - Themed checkbox
+- `AppSwitch` - Themed toggle switch
+- `AppDropdown` - Themed dropdown selector
+- `AppTextField` - Themed text input
+
+**Others**:
+- `AppProgressIndicator` - Circular/linear progress
+- `AppTable` - Data table component
+- `AppEmptyState` - Empty state display
+
+**Benefits:**
+- ~40% code reduction in refactored files
+- Consistent design across all screens
+- DRY principle applied
+- Type-safe APIs
+- Easy to maintain and extend
 
 ## Architecture Patterns
 
@@ -511,18 +642,87 @@ See [docs/API_ENDPOINTS.md](docs/API_ENDPOINTS.md) for complete documentation.
 - Automatic retry on 401 responses
 - Seamless background operation
 
+## Preview Feature (Public Conversation Previews)
+
+**Purpose:** Create podcast-style public previews of conversations with shareable URLs.
+
+### Feature Overview
+
+The Preview feature allows users to:
+1. Select 3-5 messages from a conversation
+2. Compose preview metadata (title, description, cover art)
+3. Publish to receive a shareable public URL
+4. View statistics (participants, duration, message count)
+
+### Architecture
+
+**Domain Layer** ([lib/features/preview/domain/](lib/features/preview/domain/)):
+- `PreviewComposerData` - Composer state entity
+- `ConversationPreview` - Published preview entity
+- `PreviewRepository` - Repository interface
+- Use cases:
+  - `GetPreviewComposerDataUsecase` - Fetch composer data
+  - `PublishPreviewUsecase` - Publish preview to server
+
+**Data Layer** ([lib/features/preview/data/](lib/features/preview/data/)):
+- `PreviewRepositoryImpl` - Repository implementation with caching
+- `PreviewRemoteDataSource` - API integration
+
+**Presentation Layer** ([lib/features/preview/presentation/](lib/features/preview/presentation/)):
+- `PreviewComposerBloc` - State management
+- `PreviewComposerScreen` - Main composer UI
+- `PreviewConfirmationScreen` - Post-publish confirmation
+
+**Specialized Widgets** ([lib/features/preview/widgets/](lib/features/preview/widgets/)):
+- `ChatMessageItem` - Chat-style message display
+- `ConversationHeader` - Conversation metadata header
+- `ConversationStatistics` - Stats display (duration, messages, etc.)
+- `ParticipantsList` - Participant avatars and names
+- `AudioControls` - Audio playback controls
+- `PreviewVisualization` - Preview mockup display
+
+### User Flow
+
+1. User navigates to `/dashboard/preview/composer`
+2. System loads conversation data (messages, participants, metadata)
+3. User selects 3-5 messages for preview
+4. User composes title, description (optional cover art)
+5. System shows preview visualization
+6. User publishes
+7. System redirects to `/dashboard/preview/confirmation` with shareable URL
+
+### Key Patterns
+
+**Message Selection:**
+- Multi-select cubit for message selection state
+- Minimum 3, maximum 5 messages
+- Visual feedback for selected messages
+
+**State Management:**
+- BLoC pattern with events/states
+- Optimistic updates with rollback on error
+- Loading, loaded, error, publishing, published states
+
+**UI Design:**
+- Glassmorphism cards for message display
+- Chat-style layout with avatars and timestamps
+- Pill-shaped tags for participants
+- "darkAura" gradient backgrounds
+
 ## Routing
 
 Uses **go_router** with declarative routing:
 
 ```dart
 AppRoutes:
-  /login               -> LoginScreen
-  /auth/callback       -> OAuthCallbackScreen
-  /dashboard           -> DashboardScreen (with AppShell)
-  /dashboard/users     -> UsersScreen (with AppShell)
-  /dashboard/voice_memos -> VoiceMemosScreen (with AppShell)
-  /dashboard/settings  -> SettingsScreen (with AppShell)
+  /login                           -> LoginScreen
+  /auth/callback                   -> OAuthCallbackScreen
+  /dashboard                       -> DashboardScreen (with AppShell)
+  /dashboard/users                 -> UsersScreen (with AppShell)
+  /dashboard/voice-memos           -> VoiceMemosScreen (with AppShell)
+  /dashboard/preview/composer      -> PreviewComposerScreen (with AppShell) ⭐ NEW
+  /dashboard/preview/confirmation  -> PreviewConfirmationScreen (with AppShell) ⭐ NEW
+  /dashboard/settings              -> SettingsScreen (with AppShell)
 ```
 
 **AppShell** wraps authenticated routes with side navigation.
@@ -715,8 +915,17 @@ flutter analyze
 ### Platform Differences
 
 - **Web**: Uses OAuth redirect flow
-- **Desktop**: Uses local server for OAuth callback
+- **Desktop**: Uses local server for OAuth callback + deep linking (`carbonvoice://`)
 - **Mobile**: Uses deep linking (configured in platform-specific files)
+
+### Storage Solutions
+
+**OAuth Token Storage:**
+- **Primary**: `flutter_secure_storage` (encrypted keychain/keystore)
+- **Fallback**: File-based storage for macOS (resolves keychain error -34018)
+- **Web**: Browser secure storage
+
+See [documents/FILE_STORAGE_SOLUTION.md](documents/FILE_STORAGE_SOLUTION.md) and [documents/KEYCHAIN_FIX.md](documents/KEYCHAIN_FIX.md) for details.
 
 ### Environment Variables
 
@@ -737,10 +946,32 @@ OAUTH_REDIRECT_URI=your_redirect_uri
 
 ### Documentation
 
-Comprehensive docs in `docs/` folder:
+**Core Documentation** (`docs/`):
 - `docs/API_ENDPOINTS.md` - API documentation
 - `docs/OAUTH2_EXPLAINED.md` - OAuth flow explanation
-- Additional phase-specific docs may exist
+- `docs/WIDGET_LIBRARY.md` - Widget library reference
+- `docs/REFACTOR_EXAMPLE.md` - Before/after refactoring examples
+- `docs/REFACTORING_PROGRESS.md` - UI refactoring progress tracker
+
+**Distribution & Setup** (`documents/`):
+- `documents/CLAUDE.md` - This file (AI agent context)
+- `documents/DISTRIBUTION_README.md` - Distribution guide
+- `documents/OAUTH_DMG_SETUP.md` - OAuth setup for DMG
+- `documents/QUICK_START_DMG.md` - Quick start guide
+- `documents/TESTER_INSTRUCTIONS.md` - Testing instructions
+- `documents/GATEKEEPER_FIX_SUMMARY.md` - macOS Gatekeeper solutions
+- `documents/KEYCHAIN_FIX.md` - Keychain error solutions
+- `documents/FILE_STORAGE_SOLUTION.md` - File storage documentation
+
+**Implementation Plans** (`thoughts/shared/plans/`):
+Detailed plans for 15+ features including:
+- Preview feature (composer, BLoC, UI)
+- Message download feature
+- Dashboard refactors
+- Audio player enhancements
+- Voice memos backend integration
+- Message pagination
+- Send message reply feature
 
 ## Key Files Reference
 
@@ -755,6 +986,25 @@ Comprehensive docs in `docs/` folder:
 - `lib/core/utils/failure_mapper.dart` - Error mapping
 - `lib/core/utils/json_normalizer.dart` - API field normalization
 
+### Core Services
+- `lib/core/services/deep_linking_service.dart` - Deep linking handler
+
+### Design System
+- `lib/core/theme/app_colors.dart` - Color palette
+- `lib/core/theme/app_text_styles.dart` - Typography system
+- `lib/core/theme/app_icons.dart` - Icon library
+- `lib/core/theme/app_borders.dart` - Border radius system
+- `lib/core/theme/app_shadows.dart` - Shadow system
+- `lib/core/theme/app_gradients.dart` - Gradient definitions
+- `lib/core/theme/app_dimensions.dart` - Spacing system
+
+### Widget Library
+- `lib/core/widgets/buttons/` - Button components
+- `lib/core/widgets/cards/` - Card components
+- `lib/core/widgets/containers/` - Container components
+- `lib/core/widgets/interactive/` - Interactive components
+- `lib/core/widgets/app_table.dart` - Table component
+
 ### Routing
 - `lib/core/routing/app_router.dart` - Router configuration
 - `lib/core/routing/app_routes.dart` - Route definitions
@@ -763,6 +1013,12 @@ Comprehensive docs in `docs/` folder:
 ### Error Handling
 - `lib/core/errors/failures.dart` - Domain failures
 - `lib/core/errors/exceptions.dart` - Data exceptions
+
+### Scripts
+- `scripts/run_dev.sh` - Development runner (recommended)
+- `scripts/build_macos_release.sh` - macOS release builds
+- `scripts/create_dmg.sh` - DMG creation
+- `scripts/run_web_with_ngrok.sh` - Web development with ngrok
 
 ## Quick Reference Commands
 
@@ -773,10 +1029,13 @@ flutter pub get
 # Code generation
 flutter pub run build_runner build --delete-conflicting-outputs
 
-# Run
-./run_dev.sh                    # Recommended (with OAuth)
+# Run (Development)
+./scripts/run_dev.sh            # Recommended (with OAuth config)
 flutter run -d chrome           # Web
-flutter run -d macos           # macOS
+flutter run -d macos            # macOS
+
+# Run (Web with ngrok for OAuth testing)
+./scripts/run_web_with_ngrok.sh
 
 # Testing
 flutter test
@@ -785,6 +1044,10 @@ flutter test --coverage
 # Code quality
 flutter analyze
 dart format lib/
+
+# Build (macOS)
+./scripts/build_macos_release.sh
+./scripts/create_dmg.sh
 
 # Clean
 flutter clean
@@ -799,16 +1062,44 @@ This is a well-architected Flutter application following:
 - ✅ Dependency Injection (GetIt + Injectable)
 - ✅ Type-safe error handling (Result<T>)
 - ✅ OAuth 2.0 with PKCE
-- ✅ Multi-platform support
+- ✅ Multi-platform support (Web, macOS, iOS, Android)
 - ✅ In-memory caching
 - ✅ Comprehensive logging
 - ✅ API field normalization
+- ✅ **"Soft Modernism" / "Ethereal Tech" Design Language**
+- ✅ **17-component themed widget library**
+- ✅ **Google Fonts (DM Sans) + Phosphor Icons**
+- ✅ **Glassmorphism effects and mesh gradients**
+- ✅ **Deep linking support**
+- ✅ **File-based OAuth storage fallback**
+
+**Major Features:**
+1. **OAuth 2.0 Authentication** - Complete with PKCE, token refresh, secure storage
+2. **Dashboard** - Message inbox with workspace/conversation filtering
+3. **User Management** - User profile with permissions
+4. **Workspace Management** - Multi-workspace support
+5. **Conversation Management** - Full conversation lifecycle
+6. **Message Management** - Reply, compose, view, download (audio + transcripts)
+7. **Preview Feature** - Public conversation previews with shareable URLs (podcast-style)
+8. **Audio Player** - Just Audio integration with playback controls
+9. **Voice Memos** - Voice memo management
+10. **Settings** - Application configuration
+
+**Code Quality:**
+- 99% UI refactor complete with themed components
+- ~40% code reduction in refactored files
+- DRY principle applied throughout
+- Type-safe APIs
+- Comprehensive documentation
 
 When working on this codebase, always:
-1. Follow the clean architecture layers
-2. Use Result<T> for error handling
-3. Mark new classes with appropriate DI annotations
-4. Run code generation after changes
-5. Add proper logging
-6. Write tests for new features
-7. Keep consistent naming conventions
+1. **Follow the clean architecture layers** (Domain → Data → Presentation)
+2. **Use Result<T> for error handling** (no throwing exceptions)
+3. **Use themed widgets from `lib/core/widgets/`** (don't use Material widgets directly)
+4. **Follow the "Soft Modernism" design language** (glassmorphism, DM Sans, Phosphor icons)
+5. **Mark new classes with appropriate DI annotations** (@injectable, @lazySingleton)
+6. **Run code generation after changes** (build_runner)
+7. **Add proper logging** (use Logger with appropriate levels)
+8. **Write tests for new features** (unit, widget, BLoC tests)
+9. **Keep consistent naming conventions** (PascalCase for classes, camelCase for variables)
+10. **Consult documentation** (WIDGET_LIBRARY.md, API_ENDPOINTS.md, etc.)

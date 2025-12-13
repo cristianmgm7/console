@@ -8,12 +8,12 @@ import 'package:carbon_voice_console/features/message_download/presentation/bloc
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/dashboard_screen.dart';
-import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
-import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/bloc/send_message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_send_message/cubit/message_composition_cubit.dart';
+import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_bloc.dart';
+import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_cubit.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/bloc/voice_memo_bloc.dart';
 import 'package:carbon_voice_console/features/voice_memos/presentation/voice_memos_screen.dart';
