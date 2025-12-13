@@ -14,13 +14,11 @@ class AccountSettingsSection extends StatelessWidget {
           SettingsListTile(
             icon: AppIcons.user,
             title: 'Edit Profile',
-            onTap: null, // TODO: Implement edit profile
           ),
           const Divider(height: 1),
           SettingsListTile(
             icon: AppIcons.lock,
             title: 'Change Password',
-            onTap: null, // TODO: Implement change password
           ),
         ],
       ),

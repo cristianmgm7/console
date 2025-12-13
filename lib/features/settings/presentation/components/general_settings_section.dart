@@ -23,14 +23,12 @@ class GeneralSettingsSection extends StatelessWidget {
             icon: AppIcons.globe,
             title: 'Language',
             subtitle: 'English',
-            onTap: null, // TODO: Implement language selection
           ),
           const Divider(height: 1),
           SettingsListTile(
             icon: AppIcons.palette,
             title: 'Theme',
             subtitle: 'System default',
-            onTap: null, // TODO: Implement theme selection
           ),
         ],
       ),
