@@ -21,98 +21,30 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
         '${OAuthConfig.apiBaseUrl}/v3/workspaces',
       );
 
-      // Parse response body to check for error details
-      Map<String, dynamic>? errorData;
-      try {
-        final parsed = jsonDecode(response.body);
-        if (parsed is Map<String, dynamic>) {
-          errorData = parsed;
-        }
-      } on Exception catch (e) {
-        _logger.e('Failed to parse response body', error: e.toString());
-        // If parsing fails, we'll use the raw body
-      }
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        List<dynamic> workspacesList;
 
-      if (response.statusCode != 200) {
-        // Extract error message from JSON if available
-        var errorMessage = 'Failed to fetch workspaces';
-        if (errorData != null) {
-          final errmsg = errorData['errmsg'] as String?;
-          if (errmsg != null) {
-            errorMessage = errmsg;
-          } else if (errorData['message'] != null) {
-            errorMessage = errorData['message'].toString();
-          }
-        } else {
-          errorMessage = response.body;
-        }
+        workspacesList = data as List<dynamic>;
 
-        _logger.e(
-          'Failed to fetch workspaces: ${response.statusCode}',
-          error: errorMessage,
-        );
+        try {
+          final workspaceDtos = workspacesList
+              .map((json) => WorkspaceDto.fromJson(json as Map<String, dynamic>))
+              .toList();
+          return workspaceDtos;
+        } on Exception catch (e, stack) {
+          _logger.e('Failed to parse workspaces: $e', error: e, stackTrace: stack);
+          throw ServerException(statusCode: 422, message: 'Failed to parse workspaces: $e');
+        }
+      } else {
+        _logger.e('Failed to fetch workspaces: ${response.statusCode}');
         throw ServerException(
           statusCode: response.statusCode,
-          message: errorMessage,
+          message: 'Failed to fetch workspaces',
         );
       }
-
-      final data = jsonDecode(response.body);
-
-      // API might return {workspaces: [...]}, {data: [...]}, or just [...]
-      final List<dynamic> workspacesJson;
-      if (data is List) {
-        workspacesJson = data;
-      } else if (data is Map<String, dynamic>) {
-        // Check success field if present
-        if (data.containsKey('success') && data['success'] != true) {
-          // Extract error message if available
-          final errmsg = data['errmsg'] as String?;
-          final errorMsg = errmsg ?? 'API returned success=false';
-          _logger.e('API returned success=false: $errorMsg');
-          throw ServerException(
-            statusCode: response.statusCode,
-            message: errorMsg,
-          );
-        }
-        
-        workspacesJson = (data['workspaces'] as List<dynamic>?) ??
-            (data['data'] as List<dynamic>?) ??
-            [];
-      } else {
-        throw const FormatException('Unexpected response format');
-      }
-
-      if (workspacesJson.isEmpty) {
-        return [];
-      }
-
-      // DTOs will fail loudly on malformed data (required fields)
-      final workspaces = <WorkspaceDto>[];
-      var skipped = 0;
-      for (final item in workspacesJson) {
-        if (item is! Map<String, dynamic>) {
-          skipped++;
-          _logger.w('Skipping workspace entry with unexpected type', error: item.runtimeType);
-          continue;
-        }
-        try {
-          workspaces.add(WorkspaceDto.fromJson(item));
-        } on Exception catch (e, stack) {
-          skipped++;
-          _logger.w('Skipping malformed workspace entry', error: e, stackTrace: stack);
-        }
-      }
-      if (skipped > 0) {
-        _logger.w('Skipped $skipped workspace entries; delivering ${workspaces.length}');
-      }
-
-      return workspaces;
     } on ServerException {
       rethrow;
-    } on FormatException catch (e, stack) {
-      _logger.e('Format error parsing workspaces response', error: e, stackTrace: stack);
-      throw FormatException('Failed to parse workspaces response: $e');
     } on Exception catch (e, stack) {
       _logger.e('Network error fetching workspaces', error: e, stackTrace: stack);
       throw NetworkException(message: 'Failed to fetch workspaces: $e');
@@ -128,9 +60,14 @@ class WorkspaceRemoteDataSourceImpl implements WorkspaceRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        _logger.i('Workspace detail keys from API: ${data.keys.toList()}');
-        final workspace = WorkspaceDto.fromJson(data);
-        return workspace;
+
+        try {
+          final workspaceDto = WorkspaceDto.fromJson(data);
+          return workspaceDto;
+        } on Exception catch (e, stack) {
+          _logger.e('Failed to parse workspace JSON: $e', error: e, stackTrace: stack);
+          throw ServerException(statusCode: 422, message: 'Invalid workspace JSON structure: $e');
+        }
       } else {
         _logger.e('Failed to fetch workspace: ${response.statusCode}');
         throw ServerException(

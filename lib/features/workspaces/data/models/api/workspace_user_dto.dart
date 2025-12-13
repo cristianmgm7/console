@@ -7,9 +7,9 @@ part 'workspace_user_dto.g.dart';
 class WorkspaceUserDto {
   const WorkspaceUserDto({
     required this.userId,
-    required this.role,
-    required this.statusChangedAt,
-    required this.status,
+    this.role,
+    this.statusChangedAt,
+    this.status,
   });
 
   factory WorkspaceUserDto.fromJson(Map<String, dynamic> json) =>
@@ -18,12 +18,12 @@ class WorkspaceUserDto {
   @JsonKey(name: 'user_id')
   final String userId;
 
-  final String role;
+  final String? role;
 
   @JsonKey(name: 'status_changed_at')
-  final DateTime statusChangedAt;
+  final DateTime? statusChangedAt;
 
-  final String status;
+  final String? status;
 
   Map<String, dynamic> toJson() => _$WorkspaceUserDtoToJson(this);
 }

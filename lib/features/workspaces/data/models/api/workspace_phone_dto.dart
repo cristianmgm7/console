@@ -7,13 +7,13 @@ part 'workspace_phone_dto.g.dart';
 class WorkspacePhoneDto {
   const WorkspacePhoneDto({
     required this.id,
-    required this.destinationWorkspaceId,
-    required this.number,
-    required this.parentPhone,
-    required this.type,
-    required this.label,
-    required this.messageUrl,
-    required this.phoneSid,
+    this.destinationWorkspaceId,
+    this.number,
+    this.parentPhone,
+    this.type,
+    this.label,
+    this.messageUrl,
+    this.phoneSid,
   });
 
   factory WorkspacePhoneDto.fromJson(Map<String, dynamic> json) =>
@@ -23,22 +23,22 @@ class WorkspacePhoneDto {
   final String id;
 
   @JsonKey(name: 'destination_workspace_id')
-  final String destinationWorkspaceId;
+  final String? destinationWorkspaceId;
 
-  final String number;
+  final String? number;
 
   @JsonKey(name: 'parent_phone')
-  final String parentPhone;
+  final String? parentPhone;
 
-  final String type;
+  final String? type;
 
-  final String label;
+  final String? label;
 
   @JsonKey(name: 'message_url')
-  final String messageUrl;
+  final String? messageUrl;
 
   @JsonKey(name: 'phone_sid')
-  final String phoneSid;
+  final String? phoneSid;
 
   Map<String, dynamic> toJson() => _$WorkspacePhoneDtoToJson(this);
 }
