@@ -35,13 +35,12 @@ class _MessageContentState extends State<MessageContent> {
     );
 
     // Check if text is long enough to need truncation (more than 200 characters or 3 lines)
-    final isLongText = transcriptModel.text.length > 200 || transcriptModel.text.split('\n').length > 3;
+    final isLongText = transcriptModel.text.length > 500 || transcriptModel.text.split('\n').length > 3;
     final displayText = !_isExpanded && isLongText
         ? _truncateText(transcriptModel.text)
         : transcriptModel.text;
 
     return Container(
-      width: 600,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         gradient: widget.isOwner ? AppGradients.ownerMessage : null,

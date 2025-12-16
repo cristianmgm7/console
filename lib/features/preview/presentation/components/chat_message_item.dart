@@ -48,8 +48,16 @@ class ChatMessageItem extends StatelessWidget {
                 maxWidth: MediaQuery.of(context).size.width * 0.75, // Limit width to 75% of screen
               ),
               child: Column(
-                crossAxisAlignment: isRightAligned ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment:CrossAxisAlignment.start,
                 children: [
+                  // Header with avatar and name for all messages
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: MessageHeader(
+                      participants: participants,
+                      creatorId: message.creatorId,
+                    ),
+                  ),
                   // Reply indicator if this message is a reply
                   if (parentMessage != null)
                     Container(
@@ -59,15 +67,6 @@ class ChatMessageItem extends StatelessWidget {
                       ),
                     ),
 
-                  // Header with avatar and name for all messages
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: MessageHeader(
-                      participants: participants,
-                      creatorId: message.creatorId,
-                      isOwner: isOwner,
-                    ),
-                  ),
 
                   // Message content with owner styling
                   MessageContent(
