@@ -50,8 +50,11 @@ class PreviewComposerBloc extends Bloc<PreviewComposerEvent, PreviewComposerStat
         // Convert conversation to UI model
         final conversationUiModel = enrichedData.conversation.toUiModel();
 
-        // Convert messages to UI models using existing mapper
-        final selectedMessageUiModels = enrichedData.selectedMessages
+        // Sort messages by creation date (oldest first) and convert to UI models
+        final sortedSelectedMessages = enrichedData.selectedMessages
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt)); // Sort oldest first
+
+        final selectedMessageUiModels = sortedSelectedMessages
             .map((message) => message.toUiModel()) // Uses existing MessageUiMapper
             .toList();
 

@@ -4,7 +4,7 @@ import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_event.dart';
 import 'package:carbon_voice_console/features/preview/presentation/bloc/preview_composer_state.dart';
 import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_publish_button.dart';
-import 'package:carbon_voice_console/features/preview/presentation/widgets/preview_visualization.dart';
+import 'package:carbon_voice_console/features/preview/presentation/components/preview_visualization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -50,9 +50,9 @@ class PreviewComposerScreen extends StatelessWidget {
             onPressed: () => context.go(AppRoutes.dashboard),
           ),
         ),
-        body: const SingleChildScrollView(
-          padding: EdgeInsets.all(24),
-          child: Padding(
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 200),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
