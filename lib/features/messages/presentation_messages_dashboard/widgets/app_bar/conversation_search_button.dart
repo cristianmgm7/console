@@ -19,17 +19,14 @@ class ConversationSearchButton extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Padding(
-          padding: const EdgeInsets.only(top: 22),
-          child: AppIconButton(
-            icon: AppIcons.search,
-            onPressed: () {
-              context.read<ConversationBloc>().add(const OpenConversationSearch());
-            },
-            backgroundColor: AppColors.surface,
-            foregroundColor: AppColors.primary,
-            tooltip: 'Search conversations',
-          ),
+        return AppIconButton(
+          icon: AppIcons.search,
+          onPressed: () {
+            context.read<ConversationBloc>().add(const OpenConversationSearch());
+          },
+          backgroundColor: AppColors.surface,
+          foregroundColor: AppColors.primary,
+          tooltip: 'Search conversations',
         );
       },
     );

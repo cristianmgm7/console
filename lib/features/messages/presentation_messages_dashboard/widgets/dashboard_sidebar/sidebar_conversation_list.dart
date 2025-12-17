@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/conversation_search_button.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_sidebar/sidebar_conversation_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -81,13 +82,15 @@ class SidebarConversationList extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 '${state.conversations.length}',
                 style: AppTextStyle.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
+              const Spacer(),
+              const ConversationSearchButton(),
             ],
           ),
         ),
