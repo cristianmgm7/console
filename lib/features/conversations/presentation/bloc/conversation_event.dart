@@ -86,3 +86,22 @@ class SelectConversationFromSearch extends ConversationEvent {
   @override
   List<Object?> get props => [conversationId];
 }
+
+/// Event to load recent conversations with pagination
+class LoadRecentConversations extends ConversationEvent {
+  const LoadRecentConversations({
+    required this.workspaceId,
+    this.beforeDate,
+  });
+
+  final String workspaceId;
+  final String? beforeDate; // For pagination
+
+  @override
+  List<Object?> get props => [workspaceId, beforeDate];
+}
+
+/// Event to load more recent conversations (pagination)
+class LoadMoreRecentConversations extends ConversationEvent {
+  const LoadMoreRecentConversations();
+}

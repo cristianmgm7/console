@@ -14,6 +14,8 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     this._logger,
   ) : super(const ConversationInitial()) {
     on<LoadConversations>(_onLoadConversations);
+    on<LoadRecentConversations>(_onLoadRecentConversations);        // NEW
+    on<LoadMoreRecentConversations>(_onLoadMoreRecentConversations); // NEW
     on<ToggleConversation>(_onToggleConversation);
     on<SelectMultipleConversations>(_onSelectMultipleConversations);
     on<ClearConversationSelection>(_onClearConversationSelection);
@@ -27,6 +29,9 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
   final ConversationRepository _conversationRepository;
   final Logger _logger;
+
+  // Configuration
+  static const int _conversationsPerPage = 20;
 
   /// Helper method to sort conversations by most recent activity
   List<Conversation> _sortConversationsByRecency(List<Conversation> conversations) {
@@ -42,13 +47,17 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     return sorted;
   }
 
+  /// Update WorkspaceSelectedEvent to use new endpoint
   Future<void> _onWorkspaceSelected(
     WorkspaceSelectedEvent event,
     Emitter<ConversationState> emit,
   ) async {
-    add(LoadConversations(event.workspaceGuid));
+    // Use new recent conversations endpoint instead
+    add(LoadRecentConversations(workspaceId: event.workspaceGuid));
   }
 
+  /// DEPRECATED: Use LoadRecentConversations instead
+  /// This handler remains for backward compatibility but should not be used
   Future<void> _onLoadConversations(
     LoadConversations event,
     Emitter<ConversationState> emit,
@@ -220,5 +229,158 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       searchQuery: '',
     ));
     // State change will trigger dashboard screen to notify MessageBloc
+  }
+
+  /// Handler for loading recent conversations (initial load)
+  Future<void> _onLoadRecentConversations(
+    LoadRecentConversations event,
+    Emitter<ConversationState> emit,
+  ) async {
+    emit(const ConversationLoading());
+
+    final result = await _conversationRepository.getRecentConversations(
+      workspaceId: event.workspaceId,
+      limit: _conversationsPerPage,
+      beforeDate: event.beforeDate,
+    );
+
+    result.fold(
+      onSuccess: (conversations) {
+        if (conversations.isEmpty) {
+          emit(const ConversationLoaded(
+            conversations: [],
+            selectedConversationIds: {},
+            conversationColorMap: {},
+            hasMoreConversations: false,
+          ));
+          return;
+        }
+
+        final sortedConversations = _sortConversationsByRecency(conversations);
+
+        final colorMap = <String, int>{};
+        for (var i = 0; i < sortedConversations.length; i++) {
+          colorMap[sortedConversations[i].channelGuid!] = i % 10;
+        }
+
+        final selected = sortedConversations.first;
+
+        // Determine if there are more conversations
+        // If we received exactly the limit, assume there might be more
+        final hasMore = conversations.length == _conversationsPerPage;
+
+        // Get the last conversation's timestamp for pagination
+        String? lastDate;
+        if (hasMore && sortedConversations.isNotEmpty) {
+          final lastConv = sortedConversations.last;
+          final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
+          if (timestamp != null) {
+            lastDate = DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
+          }
+        }
+
+        emit(ConversationLoaded(
+          conversations: sortedConversations,
+          selectedConversationIds: {selected.channelGuid!},
+          conversationColorMap: colorMap,
+          hasMoreConversations: hasMore,
+          lastFetchedDate: lastDate,
+        ));
+      },
+      onFailure: (failure) {
+        emit(ConversationError(FailureMapper.mapToMessage(failure.failure)));
+      },
+    );
+  }
+
+  /// Handler for loading more conversations (pagination)
+  Future<void> _onLoadMoreRecentConversations(
+    LoadMoreRecentConversations event,
+    Emitter<ConversationState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ConversationLoaded) {
+      _logger.w('Cannot load more: current state is not ConversationLoaded');
+      return;
+    }
+
+    if (currentState.isLoadingMore) {
+      _logger.d('Already loading more conversations, ignoring request');
+      return;
+    }
+
+    if (!currentState.hasMoreConversations) {
+      _logger.d('No more conversations to load');
+      return;
+    }
+
+    // Mark as loading more
+    emit(currentState.copyWith(isLoadingMore: true));
+
+    // Extract workspace ID from existing conversations
+    final workspaceId = currentState.conversations.first.workspaceGuid;
+    if (workspaceId == null) {
+      _logger.e('Cannot load more: workspace ID not found in current conversations');
+      emit(currentState.copyWith(isLoadingMore: false));
+      return;
+    }
+
+    final result = await _conversationRepository.getRecentConversations(
+      workspaceId: workspaceId,
+      limit: _conversationsPerPage,
+      beforeDate: currentState.lastFetchedDate,
+    );
+
+    result.fold(
+      onSuccess: (newConversations) {
+        if (newConversations.isEmpty) {
+          emit(currentState.copyWith(
+            hasMoreConversations: false,
+            isLoadingMore: false,
+          ));
+          return;
+        }
+
+        // Merge with existing conversations
+        final allConversations = [
+          ...currentState.conversations,
+          ...newConversations,
+        ];
+
+        final sortedConversations = _sortConversationsByRecency(allConversations);
+
+        // Update color map for new conversations
+        final colorMap = Map<String, int>.from(currentState.conversationColorMap);
+        for (var i = 0; i < sortedConversations.length; i++) {
+          colorMap[sortedConversations[i].channelGuid!] = i % 10;
+        }
+
+        // Determine if there are more
+        final hasMore = newConversations.length == _conversationsPerPage;
+
+        // Get the last conversation's timestamp
+        String? lastDate;
+        if (hasMore && sortedConversations.isNotEmpty) {
+          final lastConv = sortedConversations.last;
+          final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
+          if (timestamp != null) {
+            lastDate = DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
+          }
+        }
+
+        emit(currentState.copyWith(
+          conversations: sortedConversations,
+          conversationColorMap: colorMap,
+          hasMoreConversations: hasMore,
+          isLoadingMore: false,
+          lastFetchedDate: lastDate,
+        ));
+      },
+      onFailure: (failure) {
+        // On error, just stop loading more but keep current state
+        _logger.e('Failed to load more conversations: ${FailureMapper.mapToMessage(failure.failure)}');
+        emit(currentState.copyWith(isLoadingMore: false));
+      },
+    );
   }
 }

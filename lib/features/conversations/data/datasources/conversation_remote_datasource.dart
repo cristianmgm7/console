@@ -8,6 +8,22 @@ abstract class ConversationRemoteDataSource {
   /// Throws [NetworkException] on network errors
   Future<List<ConversationDto>> getConversations(String workspaceId);
 
+  /// Fetches recent channels using cursor-based pagination.
+  ///
+  /// - [limit]: number of channels to fetch
+  /// - [direction]: "older" or "newer"
+  /// - [date]: ISO8601 timestamp for pagination cursor
+  /// - [includeDeleted]: whether to include deleted channels
+  ///
+  /// Throws [ServerException] on API errors
+  /// Throws [NetworkException] on network errors
+  Future<List<ConversationDto>> getRecentChannels({
+    required int limit,
+    required String date,
+    String direction = 'older',
+    bool includeDeleted = false,
+  });
+
   /// Fetches a single conversation by ID
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
