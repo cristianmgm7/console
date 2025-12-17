@@ -22,21 +22,20 @@ class ConversationRepositoryImpl implements ConversationRepository {
     String? beforeDate,
   }) async {
     try {
-      // For the first page, use "now" to fetch the most recent channels.
-      // Use UTC ISO8601 ("...Z") to match the common backend expectation for date-time cursors.
-      final dateToUse = beforeDate ?? DateTime.now().toUtc().toIso8601String();
-
-      // Use the new derived endpoint with workspace_guid as source
-      final conversationDtos = await _remoteDataSource.getRecentChannelsBySource(
-        sourceType: 'workspace_id',
-        sourceValue: workspaceId,
+      // Use the global /channels/recent endpoint and filter by workspace client-side
+      // (as per backend guidance: derived endpoints are for AI channels, not user conversations)
+      final conversationDtos = await _remoteDataSource.getRecentChannels(
         limit: limit,
-        date: dateToUse,
+        date: beforeDate,
       );
 
-      final conversations = conversationDtos.map((dto) => dto.toDomain()).toList();
+      // Filter conversations by the requested workspace
+      final filteredConversations = conversationDtos
+          .map((dto) => dto.toDomain())
+          .where((conversation) => conversation.workspaceGuid == workspaceId)
+          .toList();
 
-      return success(conversations);
+      return success(filteredConversations);
     } on ServerException catch (e) {
       _logger.e('Server error fetching recent conversations', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));

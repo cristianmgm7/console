@@ -5,7 +5,7 @@ import 'package:carbon_voice_console/features/conversations/domain/entities/conv
 abstract class ConversationRepository {
   /// Fetches recent channels with pagination filtered by workspace.
   ///
-  /// Uses the /channels/recent/derived endpoint with workspace_guid as source.
+  /// Uses the global /channels/recent endpoint and filters by workspace client-side.
   ///
   /// - [workspaceId]: workspace to filter conversations by
   /// - [limit]: number of conversations to fetch
