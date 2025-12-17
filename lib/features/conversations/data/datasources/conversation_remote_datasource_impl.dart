@@ -20,18 +20,20 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     required String sourceType,
     required String sourceValue,
     required int limit,
-    required String date,
+    String? date,
     String direction = 'older',
     bool includeDeleted = false,
   }) async {
     try {
       // Build query parameters
-      final queryParams = {
+      final queryParams = <String, String>{
         'limit': limit.toString(),
         'direction': direction,
-        'date': date,
         'includeDeleted': includeDeleted.toString(),
       };
+      if (date != null && date.trim().isNotEmpty) {
+        queryParams['date'] = date;
+      }
 
       final uri = Uri.parse(
         '${OAuthConfig.apiBaseUrl}/channels/recent/derived/$sourceType/$sourceValue',

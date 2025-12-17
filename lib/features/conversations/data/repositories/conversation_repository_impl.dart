@@ -23,7 +23,8 @@ class ConversationRepositoryImpl implements ConversationRepository {
   }) async {
     try {
       // For the first page, use "now" to fetch the most recent channels.
-      final dateToUse = beforeDate ?? DateTime.now().toIso8601String();
+      // Use UTC ISO8601 ("...Z") to match the common backend expectation for date-time cursors.
+      final dateToUse = beforeDate ?? DateTime.now().toUtc().toIso8601String();
 
       // Use the new derived endpoint with workspace_guid as source
       final conversationDtos = await _remoteDataSource.getRecentChannelsBySource(

@@ -11,7 +11,7 @@ abstract class ConversationRemoteDataSource {
   /// - [sourceValue]: value for the source filter (e.g., workspace ID)
   /// - [limit]: number of channels to fetch
   /// - [direction]: "older" or "newer"
-  /// - [date]: ISO8601 timestamp for pagination cursor
+  /// - [date]: ISO8601 timestamp for pagination cursor (optional)
   /// - [includeDeleted]: whether to include deleted channels
   ///
   /// Throws [ServerException] on API errors
@@ -20,7 +20,7 @@ abstract class ConversationRemoteDataSource {
     required String sourceType,
     required String sourceValue,
     required int limit,
-    required String date,
+    String? date,
     String direction = 'older',
     bool includeDeleted = false,
   });
