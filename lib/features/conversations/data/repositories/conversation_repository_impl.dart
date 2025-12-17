@@ -27,7 +27,7 @@ class ConversationRepositoryImpl implements ConversationRepository {
 
       // Use the new derived endpoint with workspace_guid as source
       final conversationDtos = await _remoteDataSource.getRecentChannelsBySource(
-        sourceType: 'workspace_guid',
+        sourceType: 'workspace_id',
         sourceValue: workspaceId,
         limit: limit,
         date: dateToUse,
