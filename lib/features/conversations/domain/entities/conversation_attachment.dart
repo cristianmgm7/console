@@ -33,17 +33,17 @@ class ConversationAttachment extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        clientId,
-        creatorId,
-        createdAt,
-        type,
-        link,
-        activeBegin,
-        activeEnd,
-        filename,
-        mimeType,
-        lengthInBytes,
-        location,
-      ];
+    id,
+    clientId,
+    creatorId,
+    createdAt,
+    type,
+    link,
+    activeBegin,
+    activeEnd,
+    filename,
+    mimeType,
+    lengthInBytes,
+    location,
+  ];
 }

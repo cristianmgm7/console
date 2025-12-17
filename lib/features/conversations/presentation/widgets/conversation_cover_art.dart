@@ -43,7 +43,9 @@ class ConversationCoverArt extends StatelessWidget {
       );
 
       // If conversation found and has imageUrl, display it
-      if ((conversation.channelGuid?.isNotEmpty ?? false) && conversation.imageUrl != null && conversation.imageUrl!.isNotEmpty) {
+      if ((conversation.channelGuid?.isNotEmpty ?? false) &&
+          conversation.imageUrl != null &&
+          conversation.imageUrl!.isNotEmpty) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(3), // Slightly less than container border radius
           child: Image.network(

@@ -25,9 +25,9 @@ class ConversationLoaded extends ConversationState {
     this.isSearchOpen = false,
     this.searchQuery = '',
     this.searchMode = ConversationSearchMode.name,
-    this.hasMoreConversations = false,  // NEW: Track if more conversations exist
-    this.isLoadingMore = false,         // NEW: Track pagination loading state
-    this.lastFetchedDate,                // NEW: Track last pagination cursor
+    this.hasMoreConversations = false, // NEW: Track if more conversations exist
+    this.isLoadingMore = false, // NEW: Track pagination loading state
+    this.lastFetchedDate, // NEW: Track last pagination cursor
   });
   final List<Conversation> conversations;
   final Set<String> selectedConversationIds;
@@ -39,9 +39,9 @@ class ConversationLoaded extends ConversationState {
   final ConversationSearchMode searchMode;
 
   // Pagination-related fields
-  final bool hasMoreConversations;     // NEW
-  final bool isLoadingMore;            // NEW
-  final String? lastFetchedDate;       // NEW
+  final bool hasMoreConversations; // NEW
+  final bool isLoadingMore; // NEW
+  final String? lastFetchedDate; // NEW
 
   /// Filtered conversations based on search query and mode
   List<Conversation> get filteredConversations {
@@ -54,22 +54,24 @@ class ConversationLoaded extends ConversationState {
         return conversations.where((c) => c.channelGuid == searchQuery).toList();
       case ConversationSearchMode.name:
         final lowerQuery = searchQuery.toLowerCase();
-        return conversations.where((c) => (c.channelName ?? '').toLowerCase().contains(lowerQuery)).toList();
+        return conversations
+            .where((c) => (c.channelName ?? '').toLowerCase().contains(lowerQuery))
+            .toList();
     }
   }
 
   @override
   List<Object?> get props => [
-        conversations,
-        selectedConversationIds,
-        conversationColorMap,
-        isSearchOpen,
-        searchQuery,
-        searchMode,
-        hasMoreConversations,    // NEW
-        isLoadingMore,           // NEW
-        lastFetchedDate,         // NEW
-      ];
+    conversations,
+    selectedConversationIds,
+    conversationColorMap,
+    isSearchOpen,
+    searchQuery,
+    searchMode,
+    hasMoreConversations, // NEW
+    isLoadingMore, // NEW
+    lastFetchedDate, // NEW
+  ];
 
   ConversationLoaded copyWith({
     List<Conversation>? conversations,
@@ -78,9 +80,9 @@ class ConversationLoaded extends ConversationState {
     bool? isSearchOpen,
     String? searchQuery,
     ConversationSearchMode? searchMode,
-    bool? hasMoreConversations,     // NEW
-    bool? isLoadingMore,            // NEW
-    String? lastFetchedDate,        // NEW
+    bool? hasMoreConversations, // NEW
+    bool? isLoadingMore, // NEW
+    String? lastFetchedDate, // NEW
   }) {
     return ConversationLoaded(
       conversations: conversations ?? this.conversations,

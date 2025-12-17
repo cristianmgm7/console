@@ -13,9 +13,8 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     this._conversationRepository,
     this._logger,
   ) : super(const ConversationInitial()) {
-    on<LoadConversations>(_onLoadConversations);
-    on<LoadRecentConversations>(_onLoadRecentConversations);        // NEW
-    on<LoadMoreRecentConversations>(_onLoadMoreRecentConversations); // NEW
+    on<LoadRecentConversations>(_onLoadRecentConversations);
+    on<LoadMoreRecentConversations>(_onLoadMoreRecentConversations);
     on<ToggleConversation>(_onToggleConversation);
     on<SelectMultipleConversations>(_onSelectMultipleConversations);
     on<ClearConversationSelection>(_onClearConversationSelection);
@@ -47,56 +46,12 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     return sorted;
   }
 
-  /// Update WorkspaceSelectedEvent to use new endpoint
+  /// Handles workspace selection by loading recent conversations
   Future<void> _onWorkspaceSelected(
     WorkspaceSelectedEvent event,
     Emitter<ConversationState> emit,
   ) async {
-    // Use new recent conversations endpoint instead
     add(LoadRecentConversations(workspaceId: event.workspaceGuid));
-  }
-
-  /// DEPRECATED: Use LoadRecentConversations instead
-  /// This handler remains for backward compatibility but should not be used
-  Future<void> _onLoadConversations(
-    LoadConversations event,
-    Emitter<ConversationState> emit,
-  ) async {
-    emit(const ConversationLoading());
-
-    final result = await _conversationRepository.getConversations(event.workspaceGuid);
-
-    result.fold(
-      onSuccess: (conversations) {
-        if (conversations.isEmpty) {
-          emit(const ConversationLoaded(
-            conversations: [],
-            selectedConversationIds: {},
-            conversationColorMap: {},
-          ),);
-          return;
-        }
-
-        final sortedConversations = _sortConversationsByRecency(conversations);
-
-        final colorMap = <String, int>{};
-        for (var i = 0; i < sortedConversations.length; i++) {
-          colorMap[sortedConversations[i].channelGuid!] = i % 10;
-        }
-
-        final selected = sortedConversations.first;
-
-        emit(ConversationLoaded(
-          conversations: sortedConversations,
-          selectedConversationIds: {selected.channelGuid!},
-          conversationColorMap: colorMap,
-        ),);
-        // State change will trigger dashboard screen to notify MessageBloc
-      },
-      onFailure: (failure) {
-        emit(ConversationError(FailureMapper.mapToMessage(failure.failure)));
-      },
-    );
   }
 
   Future<void> _onToggleConversation(
@@ -154,11 +109,13 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       return;
     }
 
-    emit(currentState.copyWith(
-      isSearchOpen: true,
-      searchQuery: '',
-      searchMode: ConversationSearchMode.name,
-    ));
+    emit(
+      currentState.copyWith(
+        isSearchOpen: true,
+        searchQuery: '',
+        searchMode: ConversationSearchMode.name,
+      ),
+    );
   }
 
   /// Handles closing the conversation search panel
@@ -172,10 +129,12 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       return;
     }
 
-    emit(currentState.copyWith(
-      isSearchOpen: false,
-      searchQuery: '',
-    ));
+    emit(
+      currentState.copyWith(
+        isSearchOpen: false,
+        searchQuery: '',
+      ),
+    );
   }
 
   /// Handles updating the search query
@@ -203,10 +162,12 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
       return;
     }
 
-    emit(currentState.copyWith(
-      searchMode: event.searchMode,
-      searchQuery: '',
-    ));
+    emit(
+      currentState.copyWith(
+        searchMode: event.searchMode,
+        searchQuery: '',
+      ),
+    );
   }
 
   /// Handles selecting a conversation from search results
@@ -223,11 +184,13 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     final newSelectedIds = Set<String>.from(currentState.selectedConversationIds);
     newSelectedIds.add(event.conversationId);
 
-    emit(currentState.copyWith(
-      selectedConversationIds: newSelectedIds,
-      isSearchOpen: false,
-      searchQuery: '',
-    ));
+    emit(
+      currentState.copyWith(
+        selectedConversationIds: newSelectedIds,
+        isSearchOpen: false,
+        searchQuery: '',
+      ),
+    );
     // State change will trigger dashboard screen to notify MessageBloc
   }
 
@@ -247,12 +210,13 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     result.fold(
       onSuccess: (conversations) {
         if (conversations.isEmpty) {
-          emit(const ConversationLoaded(
-            conversations: [],
-            selectedConversationIds: {},
-            conversationColorMap: {},
-            hasMoreConversations: false,
-          ));
+          emit(
+            const ConversationLoaded(
+              conversations: [],
+              selectedConversationIds: {},
+              conversationColorMap: {},
+            ),
+          );
           return;
         }
 
@@ -279,13 +243,15 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           }
         }
 
-        emit(ConversationLoaded(
-          conversations: sortedConversations,
-          selectedConversationIds: {selected.channelGuid!},
-          conversationColorMap: colorMap,
-          hasMoreConversations: hasMore,
-          lastFetchedDate: lastDate,
-        ));
+        emit(
+          ConversationLoaded(
+            conversations: sortedConversations,
+            selectedConversationIds: {selected.channelGuid!},
+            conversationColorMap: colorMap,
+            hasMoreConversations: hasMore,
+            lastFetchedDate: lastDate,
+          ),
+        );
       },
       onFailure: (failure) {
         emit(ConversationError(FailureMapper.mapToMessage(failure.failure)));
@@ -334,10 +300,12 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     result.fold(
       onSuccess: (newConversations) {
         if (newConversations.isEmpty) {
-          emit(currentState.copyWith(
-            hasMoreConversations: false,
-            isLoadingMore: false,
-          ));
+          emit(
+            currentState.copyWith(
+              hasMoreConversations: false,
+              isLoadingMore: false,
+            ),
+          );
           return;
         }
 
@@ -368,17 +336,21 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           }
         }
 
-        emit(currentState.copyWith(
-          conversations: sortedConversations,
-          conversationColorMap: colorMap,
-          hasMoreConversations: hasMore,
-          isLoadingMore: false,
-          lastFetchedDate: lastDate,
-        ));
+        emit(
+          currentState.copyWith(
+            conversations: sortedConversations,
+            conversationColorMap: colorMap,
+            hasMoreConversations: hasMore,
+            isLoadingMore: false,
+            lastFetchedDate: lastDate,
+          ),
+        );
       },
       onFailure: (failure) {
         // On error, just stop loading more but keep current state
-        _logger.e('Failed to load more conversations: ${FailureMapper.mapToMessage(failure.failure)}');
+        _logger.e(
+          'Failed to load more conversations: ${FailureMapper.mapToMessage(failure.failure)}',
+        );
         emit(currentState.copyWith(isLoadingMore: false));
       },
     );

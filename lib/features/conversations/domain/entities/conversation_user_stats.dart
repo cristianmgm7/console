@@ -22,12 +22,12 @@ class ConversationUserStats extends Equatable {
 
   @override
   List<Object?> get props => [
-        userId,
-        totalMessagesPosted,
-        totalSentMilliseconds,
-        totalHeardMilliseconds,
-        totalEngagedPercentage,
-        totalHeardMessages,
-        totalUnheardMessages,
-      ];
+    userId,
+    totalMessagesPosted,
+    totalSentMilliseconds,
+    totalHeardMilliseconds,
+    totalEngagedPercentage,
+    totalHeardMessages,
+    totalUnheardMessages,
+  ];
 }

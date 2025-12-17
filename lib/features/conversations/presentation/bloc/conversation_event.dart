@@ -13,14 +13,6 @@ sealed class ConversationEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadConversations extends ConversationEvent {
-  const LoadConversations(this.workspaceGuid);
-  final String workspaceGuid;
-
-  @override
-  List<Object?> get props => [workspaceGuid];
-}
-
 class ToggleConversation extends ConversationEvent {
   const ToggleConversation(this.conversationId);
   final String conversationId;
