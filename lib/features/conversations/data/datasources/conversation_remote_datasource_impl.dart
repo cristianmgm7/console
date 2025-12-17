@@ -16,35 +16,31 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<List<ConversationDto>> getRecentChannelsBySource({
-    required String sourceType,
-    required String sourceValue,
+  Future<List<ConversationDto>> getRecentChannels({
     required int limit,
     String? date,
     String direction = 'older',
     bool includeDeleted = false,
   }) async {
     try {
-      // Build query parameters
-      final queryParams = <String, String>{
-        'limit': limit.toString(),
+      // Build request body as expected by the POST endpoint
+      final requestBody = {
+        'limit': limit,
         'direction': direction,
-        'includeDeleted': includeDeleted.toString(),
+        'includeDeleted': includeDeleted,
       };
       if (date != null && date.trim().isNotEmpty) {
-        queryParams['date'] = date;
+        requestBody['date'] = date;
       }
 
-      final uri = Uri.parse(
-        '${OAuthConfig.apiBaseUrl}/channels/recent/derived/$sourceType/$sourceValue',
-      ).replace(queryParameters: queryParams);
-
-      final response = await _httpService.get(uri.toString());
+      final response = await _httpService.post(
+        '${OAuthConfig.apiBaseUrl}/channels/recent',
+        body: requestBody,
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
 
-        // API might return {channels: [...]} or just [...]
         final List<dynamic> conversationsJson;
         if (data is List) {
           conversationsJson = data;
@@ -55,25 +51,24 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
           throw const FormatException('Unexpected response format');
         }
 
-        final conversations = conversationsJson
+        return conversationsJson
             .map((json) => ConversationDto.fromJson(json as Map<String, dynamic>))
             .toList();
-
-        return conversations;
-      } else {
-        _logger.e('Failed to fetch recent channels by source: ${response.statusCode}');
-        throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to fetch recent channels by source',
-        );
       }
+
+      _logger.e('Failed to fetch recent channels: ${response.statusCode}');
+      throw ServerException(
+        statusCode: response.statusCode,
+        message: 'Failed to fetch recent channels',
+      );
     } on ServerException {
       rethrow;
     } on Exception catch (e, stack) {
-      _logger.e('Network error fetching recent channels by source', error: e, stackTrace: stack);
-      throw NetworkException(message: 'Failed to fetch recent channels by source: $e');
+      _logger.e('Network error fetching recent channels', error: e, stackTrace: stack);
+      throw NetworkException(message: 'Failed to fetch recent channels: $e');
     }
   }
+
 
   @override
   Future<ConversationDto> getConversation(String conversationId) async {
