@@ -25,6 +25,9 @@ class ConversationLoaded extends ConversationState {
     this.isSearchOpen = false,
     this.searchQuery = '',
     this.searchMode = ConversationSearchMode.name,
+    this.hasMoreConversations = false,  // NEW: Track if more conversations exist
+    this.isLoadingMore = false,         // NEW: Track pagination loading state
+    this.lastFetchedDate,                // NEW: Track last pagination cursor
   });
   final List<Conversation> conversations;
   final Set<String> selectedConversationIds;
@@ -34,6 +37,11 @@ class ConversationLoaded extends ConversationState {
   final bool isSearchOpen;
   final String searchQuery;
   final ConversationSearchMode searchMode;
+
+  // Pagination-related fields
+  final bool hasMoreConversations;     // NEW
+  final bool isLoadingMore;            // NEW
+  final String? lastFetchedDate;       // NEW
 
   /// Filtered conversations based on search query and mode
   List<Conversation> get filteredConversations {
@@ -58,6 +66,9 @@ class ConversationLoaded extends ConversationState {
         isSearchOpen,
         searchQuery,
         searchMode,
+        hasMoreConversations,    // NEW
+        isLoadingMore,           // NEW
+        lastFetchedDate,         // NEW
       ];
 
   ConversationLoaded copyWith({
@@ -67,6 +78,9 @@ class ConversationLoaded extends ConversationState {
     bool? isSearchOpen,
     String? searchQuery,
     ConversationSearchMode? searchMode,
+    bool? hasMoreConversations,     // NEW
+    bool? isLoadingMore,            // NEW
+    String? lastFetchedDate,        // NEW
   }) {
     return ConversationLoaded(
       conversations: conversations ?? this.conversations,
@@ -75,6 +89,9 @@ class ConversationLoaded extends ConversationState {
       isSearchOpen: isSearchOpen ?? this.isSearchOpen,
       searchQuery: searchQuery ?? this.searchQuery,
       searchMode: searchMode ?? this.searchMode,
+      hasMoreConversations: hasMoreConversations ?? this.hasMoreConversations,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      lastFetchedDate: lastFetchedDate ?? this.lastFetchedDate,
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:carbon_voice_console/features/messages/presentation_messages_das
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_content/messages_action_panel_wrapper.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_content/messages_content_container.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_content/pagination_controls_wrapper.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/dashboard_sidebar/dashboard_sidebar.dart';
 import 'package:flutter/material.dart';
 
 class DashboardContent extends StatelessWidget {
@@ -19,19 +20,29 @@ class DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppContainer(
-      backgroundColor: AppColors.surface,
-      child: Stack(
-        children: [
-          MessagesContentContainer(isAnyBlocLoading: isAnyBlocLoading),
-          const DownloadProgressIndicator(),
-          const ConversationSearchPanelWrapper(),
-          const MessagesActionPanelWrapper(),
-          const PaginationControlsWrapper(),
-          const AudioMiniPlayerPositioned(),
-          const MessageCompositionPanelWrapper(),
-        ],
-      ),
+    return Row(
+      children: [
+        // Left sidebar
+        const DashboardSidebar(),
+
+        // Main content area
+        Expanded(
+          child: AppContainer(
+            backgroundColor: AppColors.surface,
+            child: Stack(
+              children: [
+                MessagesContentContainer(isAnyBlocLoading: isAnyBlocLoading),
+                const DownloadProgressIndicator(),
+                const ConversationSearchPanelWrapper(),
+                const MessagesActionPanelWrapper(),
+                const PaginationControlsWrapper(),
+                const AudioMiniPlayerPositioned(),
+                const MessageCompositionPanelWrapper(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

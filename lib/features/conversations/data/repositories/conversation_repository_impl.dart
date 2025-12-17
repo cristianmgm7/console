@@ -18,6 +18,9 @@ class ConversationRepositoryImpl implements ConversationRepository {
   // In-memory cache: workspaceId -> conversations
   final Map<String, List<Conversation>> _cachedConversations = {};
 
+  // Recent conversations cache (not workspace-specific) - used only for paging.
+  final List<Conversation> _recentConversationsCache = [];
+
   @override
   Future<Result<List<Conversation>>> getConversations(String workspaceId) async {
     try {
@@ -49,6 +52,49 @@ class ConversationRepositoryImpl implements ConversationRepository {
   }
 
   @override
+  Future<Result<List<Conversation>>> getRecentConversations({
+    required String workspaceId,
+    required int limit,
+    String? beforeDate,
+  }) async {
+    try {
+      // For the first page, use "now" to fetch the most recent channels.
+      final dateToUse = beforeDate ?? DateTime.now().toIso8601String();
+
+      final conversationDtos = await _remoteDataSource.getRecentChannels(
+        limit: limit,
+        direction: 'older',
+        date: dateToUse,
+        includeDeleted: false,
+      );
+
+      final conversations = conversationDtos.map((dto) => dto.toDomain()).toList();
+
+      // Maintain a simple cache for potential future use/debugging.
+      if (beforeDate == null) {
+        _recentConversationsCache
+          ..clear()
+          ..addAll(conversations);
+      } else {
+        _recentConversationsCache.addAll(conversations);
+      }
+
+      // Filter by workspace on client-side
+      final filtered = conversations.where((c) => c.workspaceGuid == workspaceId).toList();
+      return success(filtered);
+    } on ServerException catch (e) {
+      _logger.e('Server error fetching recent conversations', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error fetching recent conversations', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } on Exception catch (e, stack) {
+      _logger.e('Unknown error fetching recent conversations', error: e, stackTrace: stack);
+      return failure(UnknownFailure(details: e.toString()));
+    }
+  }
+
+  @override
   Future<Result<Conversation>> getConversation(String conversationId) async {
     try {
       // // Check cache across all workspaces
@@ -73,6 +119,11 @@ class ConversationRepositoryImpl implements ConversationRepository {
       _logger.e('Unknown error fetching conversation', error: e, stackTrace: stack);
       return failure(UnknownFailure(details: e.toString()));
     }
+  }
+
+  /// Clears the recent conversations cache
+  void clearRecentConversationsCache() {
+    _recentConversationsCache.clear();
   }
 
   /// Clears the conversation cache for a specific workspace
