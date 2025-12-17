@@ -3,15 +3,11 @@ import 'package:carbon_voice_console/features/conversations/domain/entities/conv
 
 /// Repository interface for conversation operations
 abstract class ConversationRepository {
-  /// Fetches all conversations for a workspace
-  Future<Result<List<Conversation>>> getConversations(String workspaceId);
-
-  /// Fetches recent channels with pagination and workspace filtering.
+  /// Fetches recent channels with pagination filtered by workspace.
   ///
-  /// Note: workspace filtering is performed client-side based on the DTO field
-  /// `workspace_guid`.
+  /// Uses the /channels/recent/derived endpoint with workspace_guid as source.
   ///
-  /// - [workspaceId]: filter conversations by this workspace
+  /// - [workspaceId]: workspace to filter conversations by
   /// - [limit]: number of conversations to fetch
   /// - [beforeDate]: ISO8601 timestamp to fetch conversations before (pagination cursor)
   Future<Result<List<Conversation>>> getRecentConversations({

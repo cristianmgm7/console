@@ -3,13 +3,12 @@ import 'package:carbon_voice_console/features/conversations/data/dtos/conversati
 
 /// Abstract interface for conversation remote data operations
 abstract class ConversationRemoteDataSource {
-  /// Fetches all conversations for a workspace from the API
-  /// Throws [ServerException] on API errors
-  /// Throws [NetworkException] on network errors
-  Future<List<ConversationDto>> getConversations(String workspaceId);
-
-  /// Fetches recent channels using cursor-based pagination.
+  /// Fetches recent channels using cursor-based pagination with source filtering.
   ///
+  /// Uses the /channels/recent/derived/{source_type}/{source_value} endpoint.
+  ///
+  /// - [sourceType]: type of source filter (e.g., "workspace_guid")
+  /// - [sourceValue]: value for the source filter (e.g., workspace ID)
   /// - [limit]: number of channels to fetch
   /// - [direction]: "older" or "newer"
   /// - [date]: ISO8601 timestamp for pagination cursor
@@ -17,7 +16,9 @@ abstract class ConversationRemoteDataSource {
   ///
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
-  Future<List<ConversationDto>> getRecentChannels({
+  Future<List<ConversationDto>> getRecentChannelsBySource({
+    required String sourceType,
+    required String sourceValue,
     required int limit,
     required String date,
     String direction = 'older',

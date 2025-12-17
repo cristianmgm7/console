@@ -10,8 +10,7 @@ class PermissionDto {
     required this.reason,
   });
 
-  factory PermissionDto.fromJson(Map<String, dynamic> json) =>
-      _$PermissionDtoFromJson(json);
+  factory PermissionDto.fromJson(Map<String, dynamic> json) => _$PermissionDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$PermissionDtoToJson(this);
 

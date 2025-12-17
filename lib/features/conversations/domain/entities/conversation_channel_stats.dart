@@ -18,10 +18,10 @@ class ConversationChannelStats extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalDurationMilliseconds,
-        totalHeardMilliseconds,
-        totalEngagedPercentage,
-        totalMessagesPosted,
-        totalUsers,
-      ];
+    totalDurationMilliseconds,
+    totalHeardMilliseconds,
+    totalEngagedPercentage,
+    totalMessagesPosted,
+    totalUsers,
+  ];
 }

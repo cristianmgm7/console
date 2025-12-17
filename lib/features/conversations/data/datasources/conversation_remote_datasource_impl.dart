@@ -16,48 +16,9 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   final Logger _logger;
 
   @override
-  Future<List<ConversationDto>> getConversations(String workspaceId) async {
-    try {
-      final response = await _httpService.get(
-        '${OAuthConfig.apiBaseUrl}/channels/$workspaceId',
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        // API might return {channels: [...]} or just [...]
-        final List<dynamic> conversationsJson;
-        if (data is List) {
-          conversationsJson = data;
-        } else if (data is Map<String, dynamic>) {
-          conversationsJson = data['channels'] as List<dynamic>? ?? data['data'] as List<dynamic>? ?? [];
-        } else {
-          throw const FormatException('Unexpected response format');
-        }
-
-        final conversations = conversationsJson
-            .map((json) => ConversationDto.fromJson(json as Map<String, dynamic>))
-            .toList();
-
-        return conversations;
-      } else {
-        // Log only errors or exceptions
-        _logger.e('Failed to fetch conversations: ${response.statusCode}');
-        throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to fetch conversations',
-        );
-      }
-    } on ServerException {
-      rethrow;
-    } on Exception catch (e, stack) {
-      _logger.e('Network error fetching conversations', error: e, stackTrace: stack);
-      throw NetworkException(message: 'Failed to fetch conversations: $e');
-    }
-  }
-
-  @override
-  Future<List<ConversationDto>> getRecentChannels({
+  Future<List<ConversationDto>> getRecentChannelsBySource({
+    required String sourceType,
+    required String sourceValue,
     required int limit,
     required String date,
     String direction = 'older',
@@ -65,7 +26,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
   }) async {
     try {
       final response = await _httpService.post(
-        '${OAuthConfig.apiBaseUrl}/channels/recent',
+        '${OAuthConfig.apiBaseUrl}/channels/recent/derived/$sourceType/$sourceValue',
         body: {
           'limit': limit,
           'direction': direction,
@@ -74,7 +35,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
 
         // API might return {channels: [...]} or just [...]
@@ -82,7 +43,8 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         if (data is List) {
           conversationsJson = data;
         } else if (data is Map<String, dynamic>) {
-          conversationsJson = data['channels'] as List<dynamic>? ?? data['data'] as List<dynamic>? ?? [];
+          conversationsJson =
+              data['channels'] as List<dynamic>? ?? data['data'] as List<dynamic>? ?? [];
         } else {
           throw const FormatException('Unexpected response format');
         }
@@ -93,17 +55,17 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
 
         return conversations;
       } else {
-        _logger.e('Failed to fetch recent channels: ${response.statusCode}');
+        _logger.e('Failed to fetch recent channels by source: ${response.statusCode}');
         throw ServerException(
           statusCode: response.statusCode,
-          message: 'Failed to fetch recent channels',
+          message: 'Failed to fetch recent channels by source',
         );
       }
     } on ServerException {
       rethrow;
     } on Exception catch (e, stack) {
-      _logger.e('Network error fetching recent channels', error: e, stackTrace: stack);
-      throw NetworkException(message: 'Failed to fetch recent channels: $e');
+      _logger.e('Network error fetching recent channels by source', error: e, stackTrace: stack);
+      throw NetworkException(message: 'Failed to fetch recent channels by source: $e');
     }
   }
 
@@ -114,7 +76,7 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
         '${OAuthConfig.apiBaseUrl}/channel/$conversationId',
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final conversation = ConversationDto.fromJson(data);
         return conversation;

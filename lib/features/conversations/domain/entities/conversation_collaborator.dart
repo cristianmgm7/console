@@ -30,16 +30,16 @@ class ConversationCollaborator extends Equatable {
 
   @override
   List<Object?> get props => [
-        userGuid,
-        imageUrl,
-        firstName,
-        lastName,
-        permission,
-        joined,
-        lastPosted,
-        firstAccessedAt,
-        lastViewedAt,
-        status,
-        primaryLanguage,
-      ];
+    userGuid,
+    imageUrl,
+    firstName,
+    lastName,
+    permission,
+    joined,
+    lastPosted,
+    firstAccessedAt,
+    lastViewedAt,
+    status,
+    primaryLanguage,
+  ];
 }
