@@ -29,7 +29,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   final Logger _logger;
 
   // Configuration
-  static const int _conversationsPerPage = 30;
+  static const int _conversationsPerPage = 60;
 
   /// Helper method to sort conversations by most recent activity
   List<Conversation> _sortConversationsByRecency(List<Conversation> conversations) {
