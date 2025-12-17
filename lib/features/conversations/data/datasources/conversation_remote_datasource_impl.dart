@@ -25,15 +25,19 @@ class ConversationRemoteDataSourceImpl implements ConversationRemoteDataSource {
     bool includeDeleted = false,
   }) async {
     try {
-      final response = await _httpService.post(
+      // Build query parameters
+      final queryParams = {
+        'limit': limit.toString(),
+        'direction': direction,
+        'date': date,
+        'includeDeleted': includeDeleted.toString(),
+      };
+
+      final uri = Uri.parse(
         '${OAuthConfig.apiBaseUrl}/channels/recent/derived/$sourceType/$sourceValue',
-        body: {
-          'limit': limit,
-          'direction': direction,
-          'date': date,
-          'includeDeleted': includeDeleted,
-        },
-      );
+      ).replace(queryParameters: queryParams);
+
+      final response = await _httpService.get(uri.toString());
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
