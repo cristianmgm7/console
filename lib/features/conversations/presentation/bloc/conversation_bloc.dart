@@ -13,7 +13,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     this._conversationRepository,
     this._logger,
   ) : super(const ConversationInitial()) {
-    on<LoadRecentConversations>(_onLoadRecentConversations);
     on<LoadMoreRecentConversations>(_onLoadMoreRecentConversations);
     on<ToggleConversation>(_onToggleConversation);
     on<SelectMultipleConversations>(_onSelectMultipleConversations);
@@ -30,7 +29,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   final Logger _logger;
 
   // Configuration
-  static const int _conversationsPerPage = 20;
+  static const int _conversationsPerPage = 30;
 
   /// Helper method to sort conversations by most recent activity
   List<Conversation> _sortConversationsByRecency(List<Conversation> conversations) {
@@ -53,12 +52,67 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     return DateTime.fromMillisecondsSinceEpoch(timestampMs, isUtc: true).toIso8601String();
   }
 
-  /// Handles workspace selection by loading recent conversations
+  /// Handles workspace selection by loading recent conversations for that workspace
   Future<void> _onWorkspaceSelected(
     WorkspaceSelectedEvent event,
     Emitter<ConversationState> emit,
   ) async {
-    add(LoadRecentConversations(workspaceId: event.workspaceGuid));
+    emit(const ConversationLoading());
+
+    final result = await _conversationRepository.getRecentConversations(
+      workspaceId: event.workspaceGuid,
+      limit: _conversationsPerPage,
+    );
+
+    result.fold(
+      onSuccess: (conversations) {
+        if (conversations.isEmpty) {
+          emit(
+            const ConversationLoaded(
+              conversations: [],
+              selectedConversationIds: {},
+              conversationColorMap: {},
+            ),
+          );
+          return;
+        }
+
+        final sortedConversations = _sortConversationsByRecency(conversations);
+
+        final colorMap = <String, int>{};
+        for (var i = 0; i < sortedConversations.length; i++) {
+          colorMap[sortedConversations[i].channelGuid!] = i % 10;
+        }
+
+        final selected = sortedConversations.first;
+
+        // Determine if there are more conversations
+        final hasMore = conversations.length == _conversationsPerPage;
+
+        // Get the last conversation's timestamp for pagination
+        String? lastDate;
+        if (hasMore && sortedConversations.isNotEmpty) {
+          final lastConv = sortedConversations.last;
+          final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
+          if (timestamp != null) {
+            lastDate = _timestampToUtcIso8601(timestamp);
+          }
+        }
+
+        emit(
+          ConversationLoaded(
+            conversations: sortedConversations,
+            selectedConversationIds: {selected.channelGuid!},
+            conversationColorMap: colorMap,
+            hasMoreConversations: hasMore,
+            lastFetchedDate: lastDate,
+          ),
+        );
+      },
+      onFailure: (failure) {
+        emit(ConversationError(FailureMapper.mapToMessage(failure.failure)));
+      },
+    );
   }
 
   Future<void> _onToggleConversation(
@@ -201,70 +255,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     // State change will trigger dashboard screen to notify MessageBloc
   }
 
-  /// Handler for loading recent conversations (initial load)
-  Future<void> _onLoadRecentConversations(
-    LoadRecentConversations event,
-    Emitter<ConversationState> emit,
-  ) async {
-    emit(const ConversationLoading());
-
-    final result = await _conversationRepository.getRecentConversations(
-      workspaceId: event.workspaceId,
-      limit: _conversationsPerPage,
-      beforeDate: event.beforeDate,
-    );
-
-    result.fold(
-      onSuccess: (conversations) {
-        if (conversations.isEmpty) {
-          emit(
-            const ConversationLoaded(
-              conversations: [],
-              selectedConversationIds: {},
-              conversationColorMap: {},
-            ),
-          );
-          return;
-        }
-
-        final sortedConversations = _sortConversationsByRecency(conversations);
-
-        final colorMap = <String, int>{};
-        for (var i = 0; i < sortedConversations.length; i++) {
-          colorMap[sortedConversations[i].channelGuid!] = i % 10;
-        }
-
-        final selected = sortedConversations.first;
-
-        // Determine if there are more conversations
-        // If we received exactly the limit, assume there might be more
-        final hasMore = conversations.length == _conversationsPerPage;
-
-        // Get the last conversation's timestamp for pagination
-        String? lastDate;
-        if (hasMore && sortedConversations.isNotEmpty) {
-          final lastConv = sortedConversations.last;
-          final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
-          if (timestamp != null) {
-            lastDate = _timestampToUtcIso8601(timestamp);
-          }
-        }
-
-        emit(
-          ConversationLoaded(
-            conversations: sortedConversations,
-            selectedConversationIds: {selected.channelGuid!},
-            conversationColorMap: colorMap,
-            hasMoreConversations: hasMore,
-            lastFetchedDate: lastDate,
-          ),
-        );
-      },
-      onFailure: (failure) {
-        emit(ConversationError(FailureMapper.mapToMessage(failure.failure)));
-      },
-    );
-  }
 
   /// Handler for loading more conversations (pagination)
   Future<void> _onLoadMoreRecentConversations(

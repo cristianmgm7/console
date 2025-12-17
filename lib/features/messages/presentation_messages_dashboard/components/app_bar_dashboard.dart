@@ -1,9 +1,6 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/conversation_search_button.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/dashboard_title.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/preview_button.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/selected_conversations_section.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/widgets/app_bar/send_message_button.dart';
 import 'package:flutter/material.dart';
 
@@ -24,12 +21,13 @@ class DashboardAppBar extends StatelessWidget {
         ),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          DashboardTitle(),
-          SizedBox(width: 16),
+          //DashboardTitle(),
+          //SizedBox(width: 16),
           // Workspace and Conversation selector REMOVED - now in sidebar
-          SelectedConversationsSection(),
-          ConversationSearchButton(),
+          // SelectedConversationsSection(),
+          //ConversationSearchButton(),
           PreviewButton(),
           SendMessageButton(),
         ],

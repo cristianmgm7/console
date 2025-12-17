@@ -18,39 +18,25 @@ class SidebarWorkspaceSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       backgroundColor: AppColors.surface,
       borderRadius: BorderRadius.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Workspace',
-            style: AppTextStyle.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          BlocBuilder<WorkspaceBloc, WorkspaceState>(
-            builder: (context, workspaceState) {
-              return BlocBuilder<UserProfileCubit, UserProfileState>(
-                builder: (context, userProfileState) {
-                  return switch (workspaceState) {
-                    WorkspaceInitial() => const SizedBox.shrink(),
-                    WorkspaceLoading() => const SizedBox(
-                      height: 40,
-                      child: Center(child: AppProgressIndicator()),
-                    ),
-                    WorkspaceLoaded() => _buildWorkspaceSelector(
-                      workspaceState,
-                      userProfileState,
-                    ),
-                    WorkspaceError() => const SizedBox.shrink(),
-                  };
-                },
-              );
+      child: BlocBuilder<WorkspaceBloc, WorkspaceState>(
+        builder: (context, workspaceState) {
+          return BlocBuilder<UserProfileCubit, UserProfileState>(
+            builder: (context, userProfileState) {
+              return switch (workspaceState) {
+                WorkspaceInitial() => const SizedBox.shrink(),
+                WorkspaceLoading() => const SizedBox(
+                  height: 40,
+                  child: Center(child: AppProgressIndicator()),
+                ),
+                WorkspaceLoaded() => _buildWorkspaceSelector(
+                  workspaceState,
+                  userProfileState,
+                ),
+                WorkspaceError() => const SizedBox.shrink(),
+              };
             },
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -69,4 +55,3 @@ class SidebarWorkspaceSection extends StatelessWidget {
     );
   }
 }
-
