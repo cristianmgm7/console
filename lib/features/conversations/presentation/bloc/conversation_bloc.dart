@@ -46,6 +46,13 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     return sorted;
   }
 
+  /// Convert API timestamps that might be in seconds or milliseconds into a UTC ISO8601 string.
+  String _timestampToUtcIso8601(int timestamp) {
+    // Heuristic: seconds are ~10 digits, milliseconds are ~13 digits.
+    final timestampMs = timestamp < 1000000000000 ? timestamp * 1000 : timestamp;
+    return DateTime.fromMillisecondsSinceEpoch(timestampMs, isUtc: true).toIso8601String();
+  }
+
   /// Handles workspace selection by loading recent conversations
   Future<void> _onWorkspaceSelected(
     WorkspaceSelectedEvent event,
@@ -239,7 +246,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           final lastConv = sortedConversations.last;
           final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
           if (timestamp != null) {
-            lastDate = DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
+            lastDate = _timestampToUtcIso8601(timestamp);
           }
         }
 
@@ -332,7 +339,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           final lastConv = sortedConversations.last;
           final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
           if (timestamp != null) {
-            lastDate = DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
+            lastDate = _timestampToUtcIso8601(timestamp);
           }
         }
 
