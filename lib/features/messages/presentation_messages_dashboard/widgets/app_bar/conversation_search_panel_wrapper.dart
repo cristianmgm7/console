@@ -7,8 +7,8 @@ class ConversationSearchPanelWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Positioned(
-      top: 8,
-      left: 320,
+      top: 98,
+      left: 8,
       child: ConversationSearchPanel(),
     );
   }
