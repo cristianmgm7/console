@@ -72,7 +72,7 @@ class AppTextStyle {
 
   // Body styles
   static TextStyle bodyLarge = GoogleFonts.dmSans(
-    color: AppColors.textPrimary,
+    color: AppColors.textSecondary,
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
