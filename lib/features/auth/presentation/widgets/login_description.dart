@@ -8,31 +8,29 @@ class LoginDescription extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(32),
+      ),
       constraints: const BoxConstraints(maxWidth: 600),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-            decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Carbon Voice Downloader',
-                  style: AppTextStyle.headlineMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Carbon Voice users recording async podcasts, radio station liners, or other discussions where they need the audio or transcript across many messages.',
-                  style: AppTextStyle.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Carbon Voice Downloader',
+                style: AppTextStyle.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Carbon Voice users recording async podcasts, radio station liners, or other discussions where they need the audio or transcript across many messages.',
+                style: AppTextStyle.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.d
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_state.dart';
 import 'package:carbon_voice_console/features/auth/presentation/components/login_branding_section.dart';
 import 'package:carbon_voice_console/features/auth/presentation/components/login_section.dart';
+import 'package:carbon_voice_console/features/auth/presentation/widgets/login_title.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -82,6 +83,7 @@ class LoginScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    LoginTitle(),
                     LoginBrandingSection(),
                     SizedBox(height: 48),
                     LoginSection(),

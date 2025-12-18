@@ -1,6 +1,6 @@
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/auth/presentation/widgets/login_description.dart';
 import 'package:carbon_voice_console/features/auth/presentation/widgets/login_features_section.dart';
-import 'package:carbon_voice_console/features/auth/presentation/widgets/login_title.dart';
 import 'package:flutter/material.dart';
 
 class LoginBrandingSection extends StatelessWidget {
@@ -8,14 +8,15 @@ class LoginBrandingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LoginTitle(),
-        SizedBox(height: 32),
-        LoginDescription(),
-        SizedBox(height: 24),
-        LoginFeaturesSection(),
+        const SizedBox(height: 32),
+        const LoginDescription(),
+        const SizedBox(height: 24),
+        Text('How it works', style: AppTextStyle.headlineSmall),
+        const SizedBox(height: 8),
+        const LoginFeaturesSection(),
       ],
     );
   }

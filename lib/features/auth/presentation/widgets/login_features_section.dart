@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
+import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,7 @@ class LoginFeaturesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 600),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(32),
@@ -19,35 +20,41 @@ class LoginFeaturesSection extends StatelessWidget {
   }
 
   Widget _buildFeatureList() {
-    const features = [
+    final features = [
       FeatureData(
-        icon: Icons.search,
+        icon: AppIcons.search,
         text: 'Find messages across conversations',
       ),
       FeatureData(
-        icon: Icons.check_box,
+        icon: AppIcons.listChecks,
         text: 'Select multiple messages',
       ),
       FeatureData(
-        icon: Icons.download,
+        icon: AppIcons.fileDownload,
         text: 'Download audio, transcripts, and more',
       ),
       FeatureData(
-        icon: Icons.send,
+        icon: AppIcons.textMessage,
         text: 'Send text messages into a conversation',
       ),
     ];
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: features.map((feature) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        
-        child: FeatureItem(
-          icon: feature.icon,
-          text: feature.text,
+      children: features.expand((feature) => [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          child: FeatureItem(
+            icon: feature.icon,
+            text: feature.text,
+          ),
         ),
-      )).toList(),
+        if (feature != features.last)
+          Divider(
+            color: AppColors.textPrimary.withValues(alpha: 0.1),
+            thickness: 1,
+          ),
+      ]).toList(),
     );
   }
 }
@@ -70,7 +77,7 @@ class FeatureItem extends StatelessWidget {
           size: 20,
           color: AppColors.textPrimary,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: Text(
             text,
