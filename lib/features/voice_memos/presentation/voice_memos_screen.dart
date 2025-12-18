@@ -96,6 +96,13 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                   right: 0,
                   child: Center(
                     child: MessagesActionPanel(
+                      selectedCount: _selectedVoiceMemos.length,
+                      onCancel: () {
+                        setState(() {
+                          _selectedVoiceMemos.clear();
+                          _selectAll = false;
+                        });
+                      },
                       onDownloadAudio: () {
                         context.read<DownloadBloc>().add(
                           StartDownloadAudio(_selectedVoiceMemos),

@@ -13,48 +13,98 @@ class MessagesActionPanel extends StatelessWidget {
     required this.onDownloadTranscript,
     required this.onSummarize,
     required this.onAIChat,
+    this.selectedCount,
+    this.onCancel,
     super.key,
   });
   final VoidCallback onDownloadAudio;
   final VoidCallback onDownloadTranscript;
   final VoidCallback onSummarize;
   final VoidCallback onAIChat;
+  final int? selectedCount;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
+    // Manual selection mode (used by Voice Memos screen): avoid depending on
+    // MessageSelectionCubit which is only provided in the dashboard route.
+    if (selectedCount != null) {
+      if (selectedCount! <= 0) return const SizedBox.shrink();
+
+      return _PanelContent(
+        selectedCount: selectedCount!,
+        onDownloadAudio: onDownloadAudio,
+        onDownloadTranscript: onDownloadTranscript,
+        onSummarize: onSummarize,
+        onAIChat: onAIChat,
+        onCancel: onCancel,
+      );
+    }
+
     return BlocBuilder<MessageSelectionCubit, MessageSelectionState>(
       builder: (context, selectionState) {
         if (!selectionState.hasSelection) {
           return const SizedBox.shrink();
         }
+        return _PanelContent(
+          selectedCount: selectionState.selectedCount,
+          onDownloadAudio: onDownloadAudio,
+          onDownloadTranscript: onDownloadTranscript,
+          onSummarize: onSummarize,
+          onAIChat: onAIChat,
+          onCancel: () => context.read<MessageSelectionCubit>().clearSelection(),
+        );
+      },
+    );
+  }
+}
 
-        return GlassContainer(
-          opacity: 0.2,
-          width: 150,
-          height: 170,
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
+class _PanelContent extends StatelessWidget {
+  const _PanelContent({
+    required this.selectedCount,
+    required this.onDownloadAudio,
+    required this.onDownloadTranscript,
+    required this.onSummarize,
+    required this.onAIChat,
+    required this.onCancel,
+  });
+
+  final int selectedCount;
+  final VoidCallback onDownloadAudio;
+  final VoidCallback onDownloadTranscript;
+  final VoidCallback onSummarize;
+  final VoidCallback onAIChat;
+  final VoidCallback? onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      opacity: 0.2,
+      width: 150,
+      height: 170,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      AppIcons.checkCircle,
-                      size: 20,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${selectionState.selectedCount}',
-                      style: AppTextStyle.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                Icon(
+                  AppIcons.checkCircle,
+                  size: 20,
+                  color: AppColors.primary,
                 ),
+                const SizedBox(width: 8),
+                Text(
+                  '$selectedCount',
+                  style: AppTextStyle.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
 
             // Download Menu Button
@@ -76,11 +126,17 @@ class MessagesActionPanel extends StatelessWidget {
                   value: 'audio',
                   child: Row(
                     children: [
-                      Icon(AppIcons.audioTrack, size: 18, color: AppColors.textPrimary),
+                      Icon(
+                        AppIcons.audioTrack,
+                        size: 18,
+                        color: AppColors.textPrimary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Audio',
-                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -89,11 +145,17 @@ class MessagesActionPanel extends StatelessWidget {
                   value: 'transcript',
                   child: Row(
                     children: [
-                      Icon(AppIcons.message, size: 18, color: AppColors.textPrimary),
+                      Icon(
+                        AppIcons.message,
+                        size: 18,
+                        color: AppColors.textPrimary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Transcript',
-                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -102,11 +164,17 @@ class MessagesActionPanel extends StatelessWidget {
                   value: 'both',
                   child: Row(
                     children: [
-                      Icon(AppIcons.download, size: 18, color: AppColors.textPrimary),
+                      Icon(
+                        AppIcons.download,
+                        size: 18,
+                        color: AppColors.textPrimary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Both',
-                        style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textPrimary),
+                        style: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -118,34 +186,38 @@ class MessagesActionPanel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.background,
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(AppIcons.download, size: 18, color: AppColors.primary),
+                child: Icon(
+                  AppIcons.download,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
               ),
             ),
 
-                const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-                // Cancel Button
-                AppButton(
-                  onPressed: () => context.read<MessageSelectionCubit>().clearSelection(),
-                  backgroundColor: AppColors.error.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.error,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(AppIcons.close, size: 18),
-                      const SizedBox(width: 8),
-                      const Text('Cancel'),
-                    ],
-                  ),
-                ),
-              ],
+            // Cancel Button
+            AppButton(
+              onPressed: onCancel,
+              backgroundColor: AppColors.error.withValues(alpha: 0.1),
+              foregroundColor: AppColors.error,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(AppIcons.close, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Cancel'),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }
