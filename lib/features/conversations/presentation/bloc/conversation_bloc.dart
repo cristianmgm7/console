@@ -18,11 +18,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     on<ToggleConversation>(_onToggleConversation);
     on<SelectMultipleConversations>(_onSelectMultipleConversations);
     on<ClearConversationSelection>(_onClearConversationSelection);
-    on<OpenConversationSearch>(_onOpenConversationSearch);
-    on<CloseConversationSearch>(_onCloseConversationSearch);
-    on<UpdateSearchQuery>(_onUpdateSearchQuery);
-    on<ToggleSearchMode>(_onToggleSearchMode);
-    on<SelectConversationFromSearch>(_onSelectConversationFromSearch);
   }
 
   final ConversationRepository _conversationRepository;
@@ -180,103 +175,6 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     emit(currentState.copyWith(selectedConversationIds: const <String>{}));
     // State change will trigger dashboard screen to notify MessageBloc
   }
-
-  /// Handles opening the conversation search panel
-  void _onOpenConversationSearch(
-    OpenConversationSearch event,
-    Emitter<ConversationState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is! ConversationLoaded) {
-      _logger.w('Cannot open search: current state is not ConversationLoaded');
-      return;
-    }
-
-    emit(
-      currentState.copyWith(
-        isSearchOpen: true,
-        searchQuery: '',
-        searchMode: ConversationSearchMode.name,
-      ),
-    );
-  }
-
-  /// Handles closing the conversation search panel
-  void _onCloseConversationSearch(
-    CloseConversationSearch event,
-    Emitter<ConversationState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is! ConversationLoaded) {
-      _logger.w('Cannot close search: current state is not ConversationLoaded');
-      return;
-    }
-
-    emit(
-      currentState.copyWith(
-        isSearchOpen: false,
-        searchQuery: '',
-      ),
-    );
-  }
-
-  /// Handles updating the search query
-  void _onUpdateSearchQuery(
-    UpdateSearchQuery event,
-    Emitter<ConversationState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is! ConversationLoaded) {
-      _logger.w('Cannot update search query: current state is not ConversationLoaded');
-      return;
-    }
-
-    emit(currentState.copyWith(searchQuery: event.query));
-  }
-
-  /// Handles toggling between ID and Name search modes
-  void _onToggleSearchMode(
-    ToggleSearchMode event,
-    Emitter<ConversationState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is! ConversationLoaded) {
-      _logger.w('Cannot toggle search mode: current state is not ConversationLoaded');
-      return;
-    }
-
-    emit(
-      currentState.copyWith(
-        searchMode: event.searchMode,
-        searchQuery: '',
-      ),
-    );
-  }
-
-  /// Handles selecting a conversation from search results
-  void _onSelectConversationFromSearch(
-    SelectConversationFromSearch event,
-    Emitter<ConversationState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is! ConversationLoaded) {
-      _logger.w('Cannot select from search: current state is not ConversationLoaded');
-      return;
-    }
-
-    final newSelectedIds = Set<String>.from(currentState.selectedConversationIds);
-    newSelectedIds.add(event.conversationId);
-
-    emit(
-      currentState.copyWith(
-        selectedConversationIds: newSelectedIds,
-        isSearchOpen: false,
-        searchQuery: '',
-      ),
-    );
-    // State change will trigger dashboard screen to notify MessageBloc
-  }
-
 
   /// Handler for loading more conversations (pagination)
   Future<void> _onLoadMoreRecentConversations(
