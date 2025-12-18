@@ -16,7 +16,7 @@ class MessagesActionPanelWrapper extends StatelessWidget {
         if (!selectionState.hasSelection) return const SizedBox.shrink();
 
         return Positioned(
-          bottom: 24,
+          bottom: 200,
           right: 24,
           child: MessagesActionPanel(
             onDownloadAudio: () {

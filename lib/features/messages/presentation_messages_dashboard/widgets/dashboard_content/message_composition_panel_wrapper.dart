@@ -19,7 +19,7 @@ class MessageCompositionPanelWrapper extends StatelessWidget {
         }
 
         return Positioned(
-          bottom: 24, // Above the audio mini player (24 + ~80 for player height + padding)
+          bottom: 54, // Above the audio mini player (24 + ~80 for player height + padding)
           left: 24,
           right: 24,
           child: Center(
