@@ -20,8 +20,8 @@ class LoginScreen extends StatelessWidget {
         if (state is RedirectToOAuth) {
           final uri = Uri.parse(state.url);
           if (await canLaunchUrl(uri)) {
-            // En web, redirigir en la misma ventana para que el callback funcione
-            // En desktop/mobile, abrir en aplicación externa
+            // On web, redirect in the same window so the callback works
+            // On desktop/mobile, open in external application
             if (kIsWeb) {
 
               await launchUrl(uri, webOnlyWindowName: '_self');
