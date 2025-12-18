@@ -34,60 +34,9 @@ class LoginDescription extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            'The Carbon Voice Downloader lets you:',
-            style: AppTextStyle.bodyLarge.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          _buildFeatureList(),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureList() {
-    const features = [
-      'Find messages across conversations',
-      'Select multiple messages',
-      'Download audio, transcripts, and more',
-      'Send text messages into a conversation',
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 160),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: features.map((feature) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '• ',
-                style: AppTextStyle.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  feature,
-                  style: AppTextStyle.bodyMedium.copyWith(
-                    color: AppColors.textPrimary.withValues(alpha: 0.9),
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        )).toList(),
-      ),
-    );
-  }
 }
