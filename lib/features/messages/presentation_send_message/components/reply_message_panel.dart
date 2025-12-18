@@ -64,13 +64,13 @@ class _ReplyMessagePanelState extends State<ReplyMessagePanel> {
     }
 
     context.read<SendMessageBloc>().add(
-          SendMessage(
-            text: text,
-            channelId: widget.channelId,
-            workspaceId: widget.workspaceId,
-            replyToMessageId: widget.replyToMessageId,
-          ),
-        );
+      SendMessage(
+        text: text,
+        channelId: widget.channelId,
+        workspaceId: widget.workspaceId,
+        replyToMessageId: widget.replyToMessageId,
+      ),
+    );
   }
 
   void _handleClose() {
@@ -84,7 +84,8 @@ class _ReplyMessagePanelState extends State<ReplyMessagePanel> {
     return BlocBuilder<ConversationBloc, ConversationState>(
       builder: (context, conversationState) {
         // Only show the panel if there's exactly one conversation selected
-        final shouldShow = conversationState is ConversationLoaded &&
+        final shouldShow =
+            conversationState is ConversationLoaded &&
             conversationState.selectedConversationIds.length == 1;
 
         if (!shouldShow) {

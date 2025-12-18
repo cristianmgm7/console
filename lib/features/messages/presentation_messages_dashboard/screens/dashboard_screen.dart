@@ -1,24 +1,25 @@
 import 'dart:async';
 
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
-import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart' as conv_events;
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart'
+    as conv_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart'
+    as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/app_bar_dashboard.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/screens/content_dashboard.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_panel.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_cubit.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart' as cubit_state;
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/cubit/message_detail_state.dart'
+    as cubit_state;
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_bloc.dart';
 import 'package:carbon_voice_console/features/workspaces/presentation/bloc/workspace_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-
 
 // This dashboard screen is a stateful widget that is used to display the dashboard screen.
 // Responsability to manage the layout and the communication between the blocs and the cubits.
@@ -119,16 +120,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
-
   bool _isAnyBlocLoading(BuildContext context) {
     final workspaceState = context.watch<WorkspaceBloc>().state;
     final conversationState = context.watch<ConversationBloc>().state;
     final messageState = context.watch<MessageBloc>().state;
 
     return workspaceState is WorkspaceLoading ||
-           conversationState is ConversationLoading ||
-           messageState is MessageLoading;
+        conversationState is ConversationLoading ||
+        messageState is MessageLoading;
   }
 
   Widget _buildFullDashboard() {
@@ -161,40 +160,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Main content area below app bar: left = messages, right = detail
           Expanded(
             child: Row(
-          children: [
-            // Left side: Message list area
-            Expanded(
-              child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
-                selector: (state) => state is MessageLoaded ? state : null,
-                builder: (context, messageState) {
-                  return DashboardContent(
-                    isAnyBlocLoading: _isAnyBlocLoading,
-                  );
-                },
-              ),
-            ),
-        
-            // Right side: Detail panel
-            BlocBuilder<MessageDetailCubit, cubit_state.MessageDetailState>(
-              builder: (context, detailState) {
-                if (!detailState.isVisible) return const SizedBox.shrink();
+              children: [
+                // Left side: Message list area
+                Expanded(
+                  child: BlocSelector<MessageBloc, MessageState, MessageLoaded?>(
+                    selector: (state) => state is MessageLoaded ? state : null,
+                    builder: (context, messageState) {
+                      return DashboardContent(
+                        isAnyBlocLoading: _isAnyBlocLoading,
+                      );
+                    },
+                  ),
+                ),
 
-                return MessageDetailPanel(
-                  messageId: detailState.selectedMessageId!,
-                  onClose: () {
-                    context.read<MessageDetailCubit>().closeDetail();
+                // Right side: Detail panel
+                BlocBuilder<MessageDetailCubit, cubit_state.MessageDetailState>(
+                  builder: (context, detailState) {
+                    if (!detailState.isVisible) return const SizedBox.shrink();
+
+                    return MessageDetailPanel(
+                      messageId: detailState.selectedMessageId!,
+                      onClose: () {
+                        context.read<MessageDetailCubit>().closeDetail();
+                      },
+                    );
                   },
-                );
-              },
+                ),
+              ],
             ),
-          ],
-        ),
           ),
         ],
       ),
     );
   }
-
-
-
 }

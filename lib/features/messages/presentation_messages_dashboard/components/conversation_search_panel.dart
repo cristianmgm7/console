@@ -19,7 +19,6 @@ class ConversationSearchPanel extends StatefulWidget {
   State<ConversationSearchPanel> createState() => _ConversationSearchPanelState();
 }
 
-
 class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
   final TextEditingController _searchController = TextEditingController();
 
@@ -88,8 +87,8 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                       isSelected: searchState.searchMode == ConversationSearchMode.name,
                       onTap: () {
                         context.read<ConversationSearchBloc>().add(
-                              const ToggleSearchMode(ConversationSearchMode.name),
-                            );
+                          const ToggleSearchMode(ConversationSearchMode.name),
+                        );
                       },
                     ),
                     const SizedBox(width: 8),
@@ -98,8 +97,8 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                       isSelected: searchState.searchMode == ConversationSearchMode.id,
                       onTap: () {
                         context.read<ConversationSearchBloc>().add(
-                              const ToggleSearchMode(ConversationSearchMode.id),
-                            );
+                          const ToggleSearchMode(ConversationSearchMode.id),
+                        );
                       },
                     ),
                   ],
@@ -271,8 +270,8 @@ class _SearchResultItem extends StatelessWidget {
       onTap: () {
         // Select the conversation in ConversationBloc
         context.read<ConversationBloc>().add(
-              ToggleConversation(conversation.channelGuid!),
-            );
+          ToggleConversation(conversation.channelGuid!),
+        );
         // Close the search panel
         context.read<ConversationSearchBloc>().add(const CloseConversationSearch());
       },

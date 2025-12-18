@@ -127,7 +127,7 @@ class SidebarConversationList extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: SizedBox(
               width: double.infinity,
-              child:               AppButton(
+              child: AppButton(
                 onPressed: state.isLoadingMore
                     ? null
                     : () {

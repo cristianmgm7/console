@@ -1,8 +1,8 @@
+import 'package:carbon_voice_console/features/conversations/domain/entities/conversation_collaborator.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/message.dart';
 import 'package:carbon_voice_console/features/messages/domain/entities/text_model.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/models/message_ui_model.dart';
-import 'package:carbon_voice_console/features/users/domain/entities/user.dart';
 
 /// Extension methods to convert domain entities to UI models
 extension MessageUiMapper on Message {
@@ -42,8 +42,8 @@ extension MessageUiMapper on Message {
     return textModels.first.text.isNotEmpty ? textModels.first.text : null;
   }
 
-  /// Creates a UI model with optional user enrichment
-  MessageUiModel toUiModel([User? creator]) {
+  /// Creates a UI model with optional participant enrichment
+  MessageUiModel toUiModel([ConversationCollaborator? participant]) {
     return MessageUiModel(
       // Original message properties
       id: id,
@@ -63,8 +63,8 @@ extension MessageUiMapper on Message {
       notes: notes,
       lastUpdatedAt: lastUpdatedAt,
       parentMessageId: parentMessageId,
-      // User profile data
-      creator: creator,
+      // Participant data
+      participant: participant,
       // Computed UI properties
       conversationId: channelIds.isNotEmpty ? channelIds.first : '',
       userId: creatorId,

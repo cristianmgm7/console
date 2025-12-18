@@ -13,8 +13,8 @@ class AudioMiniPlayerPositioned extends StatelessWidget {
       builder: (context, compositionState) {
         return Positioned(
           bottom: compositionState.isVisible && compositionState.canCompose
-              ? 210  // Move up when composition panel is open (~150px panel + ~30px spacing)
-              : 24,  // Normal position
+              ? 210 // Move up when composition panel is open (~150px panel + ~30px spacing)
+              : 24, // Normal position
           left: 0,
           right: 0,
           child: const Center(

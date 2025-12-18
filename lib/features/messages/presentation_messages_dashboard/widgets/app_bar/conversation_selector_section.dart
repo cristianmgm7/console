@@ -81,8 +81,9 @@ class ConversationSelectorSection extends StatelessWidget {
       ),
       dropdownKey: const Key('conversation_dropdown'),
       items: conversationState.conversations.map((conversation) {
-        final isSelected =
-            conversationState.selectedConversationIds.contains(conversation.channelGuid);
+        final isSelected = conversationState.selectedConversationIds.contains(
+          conversation.channelGuid,
+        );
         return DropdownMenuItem<String>(
           value: conversation.channelGuid,
           child: Row(

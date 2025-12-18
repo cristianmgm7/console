@@ -5,7 +5,13 @@ class AudioModel extends Equatable {
   const AudioModel({
     required this.id,
     required this.url,
-    required this.isStreaming, required this.language, required this.duration, required this.waveformData, required this.isOriginal, required this.format, this.presignedUrl,
+    required this.isStreaming,
+    required this.language,
+    required this.duration,
+    required this.waveformData,
+    required this.isOriginal,
+    required this.format,
+    this.presignedUrl,
     this.presignedUrlExpiration,
   });
 
@@ -22,15 +28,15 @@ class AudioModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        url,
-        presignedUrl,
-        presignedUrlExpiration,
-        isStreaming,
-        language,
-        duration,
-        waveformData,
-        isOriginal,
-        format,
-      ];
+    id,
+    url,
+    presignedUrl,
+    presignedUrlExpiration,
+    isStreaming,
+    language,
+    duration,
+    waveformData,
+    isOriginal,
+    format,
+  ];
 }

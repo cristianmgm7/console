@@ -72,8 +72,7 @@ class CreateForwardDto {
     this.endAccessAt,
   });
 
-  factory CreateForwardDto.fromJson(Map<String, dynamic> json) =>
-      _$CreateForwardDtoFromJson(json);
+  factory CreateForwardDto.fromJson(Map<String, dynamic> json) => _$CreateForwardDtoFromJson(json);
 
   @JsonKey(name: 'forwarded_message_id')
   final String forwardedMessageId;

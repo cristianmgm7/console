@@ -21,7 +21,8 @@ class UtmDataDtoConverter implements JsonConverter<UtmDataDto, Map<String, dynam
 }
 
 // Custom converter for ReactionSummaryDto that handles null values
-class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, Map<String, dynamic>?> {
+class ReactionSummaryDtoConverter
+    implements JsonConverter<ReactionSummaryDto, Map<String, dynamic>?> {
   const ReactionSummaryDtoConverter();
 
   @override

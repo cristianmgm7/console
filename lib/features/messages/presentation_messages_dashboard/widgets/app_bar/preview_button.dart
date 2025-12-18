@@ -18,7 +18,8 @@ class PreviewButton extends StatelessWidget {
     return BlocBuilder<ConversationBloc, ConversationState>(
       builder: (context, conversationState) {
         // Only show button if exactly one conversation is selected
-        final hasSingleConversation = conversationState is ConversationLoaded &&
+        final hasSingleConversation =
+            conversationState is ConversationLoaded &&
             conversationState.selectedConversationIds.length == 1;
 
         if (!hasSingleConversation) {
@@ -37,9 +38,7 @@ class PreviewButton extends StatelessWidget {
                 backgroundColor: isValidSelection
                     ? AppColors.primary.withValues(alpha: 0.1)
                     : AppColors.disabled.withValues(alpha: 0.1),
-                foregroundColor: isValidSelection
-                    ? AppColors.primary
-                    : AppColors.disabled,
+                foregroundColor: isValidSelection ? AppColors.primary : AppColors.disabled,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -64,7 +63,8 @@ class PreviewButton extends StatelessWidget {
     // Double-check validation
     if (conversationState is! ConversationLoaded ||
         conversationState.selectedConversationIds.length != 1 ||
-        selectedCount < 3 || selectedCount > 5) {
+        selectedCount < 3 ||
+        selectedCount > 5) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select 3-5 messages to create a preview'),

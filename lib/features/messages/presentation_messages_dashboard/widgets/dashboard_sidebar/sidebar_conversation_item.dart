@@ -55,23 +55,23 @@ class SidebarConversationItem extends StatelessWidget {
                 ),
               ),
 
-            // Unread count badge (if any)
-            if (conversation.unreadCount != null && conversation.unreadCount! > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.error,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${conversation.unreadCount}',
-                  style: AppTextStyle.bodySmall.copyWith(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+              // Unread count badge (if any)
+              if (conversation.unreadCount != null && conversation.unreadCount! > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.error,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${conversation.unreadCount}',
+                    style: AppTextStyle.bodySmall.copyWith(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

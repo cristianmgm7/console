@@ -6,7 +6,8 @@ import 'package:json_annotation/json_annotation.dart';
 part 'message_detail_dto.g.dart';
 
 // Custom converter for ReactionSummaryDto that handles null values
-class ReactionSummaryDtoConverter implements JsonConverter<ReactionSummaryDto, Map<String, dynamic>?> {
+class ReactionSummaryDtoConverter
+    implements JsonConverter<ReactionSummaryDto, Map<String, dynamic>?> {
   const ReactionSummaryDtoConverter();
 
   @override
