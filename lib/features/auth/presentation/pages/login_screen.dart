@@ -79,9 +79,8 @@ class LoginScreen extends StatelessWidget {
             ),
             child: const Center(
               child: Padding(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 32),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     LoginTitle(),
                     LoginBrandingSection(),

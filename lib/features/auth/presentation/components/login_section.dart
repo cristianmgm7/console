@@ -10,6 +10,7 @@ class LoginSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppButton(
+      size: AppButtonSize.medium,
       onPressed: () {
         context.read<AuthBloc>().add(const LoginRequested());
       },
