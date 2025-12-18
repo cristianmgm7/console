@@ -22,20 +22,20 @@ class ConversationRepositoryImpl implements ConversationRepository {
     String? beforeDate,
   }) async {
     try {
-      // Use the global /channels/recent endpoint and filter by workspace client-side
-      // (as per backend guidance: derived endpoints are for AI channels, not user conversations)
+      // Use the global /channels/recent endpoint
+      // Note: workspaceId parameter is kept for interface compatibility but filtering
+      // is now done at the bloc level since the API doesn't support workspace filtering
       final conversationDtos = await _remoteDataSource.getRecentChannels(
         limit: limit,
         date: beforeDate,
       );
 
-      // Filter conversations by the requested workspace
-      final filteredConversations = conversationDtos
+      // Return all conversations without filtering - filtering will be done in the bloc
+      final conversations = conversationDtos
           .map((dto) => dto.toDomain())
-          .where((conversation) => conversation.workspaceGuid == workspaceId)
           .toList();
 
-      return success(filteredConversations);
+      return success(conversations);
     } on ServerException catch (e) {
       _logger.e('Server error fetching recent conversations', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
