@@ -1,11 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-/// Search mode for conversation search
-enum ConversationSearchMode {
-  id, // Search by exact conversation ID
-  name, // Search by conversation name (case-insensitive, partial match)
-}
-
 sealed class ConversationEvent extends Equatable {
   const ConversationEvent();
 
@@ -40,43 +34,6 @@ class WorkspaceSelectedEvent extends ConversationEvent {
 
   @override
   List<Object?> get props => [workspaceGuid];
-}
-
-/// Event to open the conversation search panel
-class OpenConversationSearch extends ConversationEvent {
-  const OpenConversationSearch();
-}
-
-/// Event to close the conversation search panel
-class CloseConversationSearch extends ConversationEvent {
-  const CloseConversationSearch();
-}
-
-/// Event to update search query
-class UpdateSearchQuery extends ConversationEvent {
-  const UpdateSearchQuery(this.query);
-  final String query;
-
-  @override
-  List<Object?> get props => [query];
-}
-
-/// Event to toggle search mode between ID and Name
-class ToggleSearchMode extends ConversationEvent {
-  const ToggleSearchMode(this.searchMode);
-  final ConversationSearchMode searchMode;
-
-  @override
-  List<Object?> get props => [searchMode];
-}
-
-/// Event to select a conversation from search results
-class SelectConversationFromSearch extends ConversationEvent {
-  const SelectConversationFromSearch(this.conversationId);
-  final String conversationId;
-
-  @override
-  List<Object?> get props => [conversationId];
 }
 
 /// Event to load more recent conversations (pagination)

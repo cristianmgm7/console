@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.d
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart'
     as auth_events;
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_search_bloc.dart';
 import 'package:carbon_voice_console/features/message_download/presentation/bloc/download_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/cubits/message_selection_cubit.dart';
@@ -49,6 +50,9 @@ class BlocProviders {
         ),
         BlocProvider<ConversationBloc>(
           create: (_) => getIt<ConversationBloc>(),
+        ),
+        BlocProvider<ConversationSearchBloc>(
+          create: (_) => getIt<ConversationSearchBloc>(),
         ),
         BlocProvider<MessageBloc>(
           create: (_) => getIt<MessageBloc>(),
@@ -107,7 +111,6 @@ class BlocProviders {
               ),
             ),
         ),
-        // Note: MessageSelectionCubit removed - no longer needed
       ],
       child: child,
     );

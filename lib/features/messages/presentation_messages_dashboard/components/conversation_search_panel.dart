@@ -5,7 +5,9 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/conversations/domain/entities/conversation.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
-import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_search_bloc.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_search_event.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_search_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -29,22 +31,20 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
-      selector: (state) => state is ConversationLoaded ? state : null,
-      builder: (context, conversationState) {
-        if (conversationState == null || !conversationState.isSearchOpen) {
+    return BlocBuilder<ConversationSearchBloc, ConversationSearchState>(
+      builder: (context, searchState) {
+        // Only show panel if search is open
+        if (searchState is! ConversationSearchOpen) {
           return const SizedBox.shrink();
         }
 
         // Keep controller in sync with BLoC state
-        if (_searchController.text != conversationState.searchQuery) {
+        if (_searchController.text != searchState.searchQuery) {
           _searchController.value = TextEditingValue(
-            text: conversationState.searchQuery,
-            selection: TextSelection.collapsed(offset: conversationState.searchQuery.length),
+            text: searchState.searchQuery,
+            selection: TextSelection.collapsed(offset: searchState.searchQuery.length),
           );
         }
-
-        final filteredConversations = conversationState.filteredConversations;
 
         return ConstrainedBox(
           constraints: const BoxConstraints(
@@ -72,7 +72,7 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                     AppIconButton(
                       icon: AppIcons.close,
                       onPressed: () {
-                        context.read<ConversationBloc>().add(const CloseConversationSearch());
+                        context.read<ConversationSearchBloc>().add(const CloseConversationSearch());
                       },
                       size: AppIconButtonSize.small,
                       backgroundColor: AppColors.transparent,
@@ -85,9 +85,9 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                   children: [
                     _SearchModeButton(
                       label: 'Name',
-                      isSelected: conversationState.searchMode == ConversationSearchMode.name,
+                      isSelected: searchState.searchMode == ConversationSearchMode.name,
                       onTap: () {
-                        context.read<ConversationBloc>().add(
+                        context.read<ConversationSearchBloc>().add(
                               const ToggleSearchMode(ConversationSearchMode.name),
                             );
                       },
@@ -95,9 +95,9 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                     const SizedBox(width: 8),
                     _SearchModeButton(
                       label: 'ID',
-                      isSelected: conversationState.searchMode == ConversationSearchMode.id,
+                      isSelected: searchState.searchMode == ConversationSearchMode.id,
                       onTap: () {
-                        context.read<ConversationBloc>().add(
+                        context.read<ConversationSearchBloc>().add(
                               const ToggleSearchMode(ConversationSearchMode.id),
                             );
                       },
@@ -107,11 +107,11 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                 const SizedBox(height: 12),
                 AppTextField(
                   controller: _searchController,
-                  hint: conversationState.searchMode == ConversationSearchMode.id
+                  hint: searchState.searchMode == ConversationSearchMode.id
                       ? 'Enter conversation ID'
                       : 'Search by name',
                   onChanged: (value) {
-                    context.read<ConversationBloc>().add(UpdateSearchQuery(value));
+                    context.read<ConversationSearchBloc>().add(UpdateSearchQuery(value));
                   },
                   prefixIcon: Icon(
                     AppIcons.search,
@@ -119,23 +119,32 @@ class _ConversationSearchPanelState extends State<ConversationSearchPanel> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                if (conversationState.searchQuery.isNotEmpty) ...[
+                if (searchState.searchQuery.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text(
-                    '${filteredConversations.length} result(s)',
-                    style: AppTextStyle.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+                  if (searchState.isSearching)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else ...[
+                    Text(
+                      '${searchState.filteredConversations.length} result(s)',
+                      style: AppTextStyle.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: SizedBox(
-                      height: 240,
-                      child: filteredConversations.isEmpty
-                          ? _EmptySearchResults(searchMode: conversationState.searchMode)
-                          : _SearchResultsList(conversations: filteredConversations),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: SizedBox(
+                        height: 240,
+                        child: searchState.filteredConversations.isEmpty
+                            ? _EmptySearchResults(searchMode: searchState.searchMode)
+                            : _SearchResultsList(conversations: searchState.filteredConversations),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ],
             ),
@@ -260,9 +269,12 @@ class _SearchResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Select the conversation in ConversationBloc
         context.read<ConversationBloc>().add(
-              SelectConversationFromSearch(conversation.channelGuid!),
+              ToggleConversation(conversation.channelGuid!),
             );
+        // Close the search panel
+        context.read<ConversationSearchBloc>().add(const CloseConversationSearch());
       },
       child: AppContainer(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

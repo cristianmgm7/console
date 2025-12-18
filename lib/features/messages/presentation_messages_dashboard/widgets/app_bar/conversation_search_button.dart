@@ -2,7 +2,8 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_bloc.dart';
-import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_event.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_search_bloc.dart';
+import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_search_event.dart';
 import 'package:carbon_voice_console/features/conversations/presentation/bloc/conversation_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,7 +23,12 @@ class ConversationSearchButton extends StatelessWidget {
         return AppIconButton(
           icon: AppIcons.search,
           onPressed: () {
-            context.read<ConversationBloc>().add(const OpenConversationSearch());
+            // Update search bloc with current conversations for name-based filtering
+            context.read<ConversationSearchBloc>().updateLoadedConversations(
+                  conversationState.conversations,
+                );
+            // Open the search panel
+            context.read<ConversationSearchBloc>().add(const OpenConversationSearch());
           },
           backgroundColor: AppColors.surface,
           foregroundColor: AppColors.primary,
