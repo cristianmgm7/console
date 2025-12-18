@@ -27,8 +27,19 @@ class MessageRepositoryImpl implements MessageRepository {
     DateTime? beforeTimestamp,
   }) async {
     try {
-      final effectiveTimestamp = beforeTimestamp ?? DateTime.now();
-      final beforeTimestampStr = effectiveTimestamp.toIso8601String();
+      // IMPORTANT:
+      // The backend expects `date` to be ISO8601. If we send a local DateTime without a timezone
+      // (Dart's `toIso8601String()` on local times omits the offset), the server may interpret it
+      // as UTC. That creates a "lag" where the newest messages appear only after your local clock
+      // catches up.
+      //
+      // Always send a UTC timestamp (with `Z`). For the initial fetch (no cursor), add a tiny
+      // buffer to avoid missing messages due to small client/server clock skew.
+      final effectiveTimestampUtc = (beforeTimestamp ?? DateTime.now()).toUtc();
+      final requestCursorUtc = beforeTimestamp == null
+          ? effectiveTimestampUtc.add(const Duration(minutes: 2))
+          : effectiveTimestampUtc;
+      final beforeTimestampStr = requestCursorUtc.toIso8601String();
 
       final messageDtos = await _remoteDataSource.getRecentMessages(
         conversationId: conversationId,

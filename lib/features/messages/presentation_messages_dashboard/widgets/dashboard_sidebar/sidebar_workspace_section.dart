@@ -1,5 +1,4 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
-import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_cubit.dart';
 import 'package:carbon_voice_console/features/users/presentation/cubit/user_profile_state.dart';

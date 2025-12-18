@@ -13,7 +13,7 @@ class LoginDescription extends StatelessWidget {
         color: AppColors.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(32),
       ),
-      constraints: const BoxConstraints(maxWidth: 600),
+      constraints: const BoxConstraints(maxWidth: 550),
       child: Column(
         children: [
           Column(
