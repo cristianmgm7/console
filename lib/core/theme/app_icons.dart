@@ -20,6 +20,7 @@ class AppIcons {
   // Actions
   static final IconData refresh = PhosphorIcons.arrowClockwise();
   static final IconData download = PhosphorIcons.downloadSimple();
+  static final IconData fileDownload = PhosphorIcons.fileArrowDown();
   static final IconData edit = PhosphorIcons.pencilSimple();
   static final IconData delete = PhosphorIcons.trash();
   static final IconData archive = PhosphorIcons.archive();
@@ -27,7 +28,7 @@ class AppIcons {
   static final IconData add = PhosphorIcons.plus();
   static final IconData remove = PhosphorIcons.minus();
   static final IconData copy = PhosphorIcons.copy();
-
+ 
   // Media
   static final IconData play = PhosphorIcons.play();
   static final IconData pause = PhosphorIcons.pause();
@@ -45,6 +46,7 @@ class AppIcons {
   // Status
   static final IconData check = PhosphorIcons.check();
   static final IconData checkCircle = PhosphorIcons.checkCircle();
+  static final IconData listChecks = PhosphorIcons.listChecks();
   static final IconData error = PhosphorIcons.xCircle();
   static final IconData warning = PhosphorIcons.warning();
   static final IconData info = PhosphorIcons.info();
@@ -53,6 +55,7 @@ class AppIcons {
   // Content
   static final IconData inbox = PhosphorIcons.tray();
   static final IconData message = PhosphorIcons.chatCircle();
+  static final IconData textMessage = PhosphorIcons.chatCircleText();
   static final IconData reply = PhosphorIcons.arrowBendUpLeft();
   static final IconData user = PhosphorIcons.user();
   static final IconData users = PhosphorIcons.users();

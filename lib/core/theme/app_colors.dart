@@ -13,13 +13,13 @@ class AppColors {
   static const Color onPrimary = Colors.white;
   
   // Text Colors
-  static const Color textPrimary = Color(0xFF1A1A2E); // Dark Charcoal
+  static const Color textPrimary = Color.fromRGBO(10, 3, 47, 1); // Dark Charcoal
   static const Color textSecondary = Color(0xFF8E8E93); // Cool Grey
   static const Color border = Color(0xFFE0E0E0); // Subtle border for light theme
 
   // Gradients (Aura)
   static const Color gradientPurple = Color(0xFFE6E6FA); // Lavender
-  static const Color gradientPink = Color(0xFFF3E5F5);   // Soft Pink
+  static const Color gradientPink = Color.fromARGB(255, 231, 224, 244);   // Soft Pink
 
   // Semantic colors (Standardized for light theme)
   static const Color success = Color(0xFF4CAF50);
