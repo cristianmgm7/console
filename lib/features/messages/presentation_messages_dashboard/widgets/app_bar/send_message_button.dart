@@ -65,18 +65,15 @@ class SendMessageButton extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Padding(
-          padding: const EdgeInsets.only(left: 16, top: 24),
-          child: AppButton(
-            onPressed: () => _handleSendMessage(context),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(AppIcons.add, size: 16),
-                const SizedBox(width: 6),
-                const Text('Send Message'),
-              ],
-            ),
+        return AppButton(
+          onPressed: () => _handleSendMessage(context),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(AppIcons.add, size: 16),
+              const SizedBox(width: 6),
+              const Text('Send Message'),
+            ],
           ),
         );
       },

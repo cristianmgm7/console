@@ -12,6 +12,7 @@ class DashboardAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const AppContainer(
+      height: 60,
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       backgroundColor: AppColors.surface,
       borderRadius: BorderRadius.zero,
@@ -22,6 +23,7 @@ class DashboardAppBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
+        spacing: 16,
         children: [
           //DashboardTitle(),
           //SizedBox(width: 16),

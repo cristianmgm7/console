@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 class AppContainer extends StatelessWidget {
   const AppContainer({
     required this.child,
+    this.height,
     super.key,
     this.padding,
     this.backgroundColor,
@@ -18,10 +19,11 @@ class AppContainer extends StatelessWidget {
   final Color? backgroundColor;
   final BorderRadius? borderRadius;
   final BoxBorder? border;
-
+  final double? height;
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: height,
       padding: padding ?? const EdgeInsets.all(AppDimensions.paddingSmall),
       decoration: BoxDecoration(
         color: backgroundColor ?? AppColors.surface,
