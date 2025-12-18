@@ -24,12 +24,13 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
     String? beforeTimestamp,
   }) async {
     try {
-      final requestBody = {
-        'date': beforeTimestamp,
+      final requestBody = <String, dynamic>{
         'channel_id': conversationId,
         'limit': count,
         'direction': direction,
         'use_last_updated': true,
+        // Only send the cursor when present; some backends treat null as a literal value.
+        'date': ?beforeTimestamp,
       };
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/recent',

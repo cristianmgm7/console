@@ -14,7 +14,10 @@ class LoginBrandingSection extends StatelessWidget {
         const SizedBox(height: 32),
         const LoginDescription(),
         const SizedBox(height: 24),
-        Text('How it works', style: AppTextStyle.headlineSmall),
+        Padding(
+          padding: const EdgeInsets.only(left: 24),
+          child: Text('How it works', style: AppTextStyle.headlineSmall),
+        ),
         const SizedBox(height: 8),
         const LoginFeaturesSection(),
       ],
