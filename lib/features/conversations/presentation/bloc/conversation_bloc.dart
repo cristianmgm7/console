@@ -13,11 +13,11 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     this._conversationRepository,
     this._logger,
   ) : super(const ConversationInitial()) {
+    on<WorkspaceSelectedEvent>(_onWorkspaceSelected);
     on<LoadMoreRecentConversations>(_onLoadMoreRecentConversations);
     on<ToggleConversation>(_onToggleConversation);
     on<SelectMultipleConversations>(_onSelectMultipleConversations);
     on<ClearConversationSelection>(_onClearConversationSelection);
-    on<WorkspaceSelectedEvent>(_onWorkspaceSelected);
     on<OpenConversationSearch>(_onOpenConversationSearch);
     on<CloseConversationSearch>(_onCloseConversationSearch);
     on<UpdateSearchQuery>(_onUpdateSearchQuery);
@@ -29,7 +29,7 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
   final Logger _logger;
 
   // Configuration
-  static const int _conversationsPerPage = 60;
+  static const int _conversationsPerPage = 50;
 
   /// Helper method to sort conversations by most recent activity
   List<Conversation> _sortConversationsByRecency(List<Conversation> conversations) {
@@ -52,6 +52,17 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     return DateTime.fromMillisecondsSinceEpoch(timestampMs, isUtc: true).toIso8601String();
   }
 
+  /// Helper method to get the last date from a list of conversations for pagination
+  String? _getLastDateFromConversations(List<Conversation> conversations) {
+    if (conversations.isEmpty) return null;
+
+    final sortedConversations = _sortConversationsByRecency(conversations);
+    final lastConv = sortedConversations.last;
+    final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
+
+    return timestamp != null ? _timestampToUtcIso8601(timestamp) : null;
+  }
+
   /// Handles workspace selection by loading recent conversations for that workspace
   Future<void> _onWorkspaceSelected(
     WorkspaceSelectedEvent event,
@@ -65,19 +76,32 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     );
 
     result.fold(
-      onSuccess: (conversations) {
-        if (conversations.isEmpty) {
+      onSuccess: (allConversations) {
+        // Filter conversations by workspace (done client-side since API doesn't support it)
+        final filteredConversations = allConversations
+            .where((conversation) => conversation.workspaceGuid == event.workspaceGuid)
+            .toList();
+
+        if (filteredConversations.isEmpty) {
+          // Determine if we should keep loading more
+          // If we got a full page from API but nothing matches workspace, there might be more
+          final hasMore = allConversations.length == _conversationsPerPage;
+
           emit(
-            const ConversationLoaded(
-              conversations: [],
-              selectedConversationIds: {},
-              conversationColorMap: {},
+            ConversationLoaded(
+              conversations: const [],
+              selectedConversationIds: const {},
+              conversationColorMap: const {},
+              hasMoreConversations: hasMore,
+              lastFetchedDate: hasMore && allConversations.isNotEmpty
+                  ? _getLastDateFromConversations(allConversations)
+                  : null,
             ),
           );
           return;
         }
 
-        final sortedConversations = _sortConversationsByRecency(conversations);
+        final sortedConversations = _sortConversationsByRecency(filteredConversations);
 
         final colorMap = <String, int>{};
         for (var i = 0; i < sortedConversations.length; i++) {
@@ -86,17 +110,15 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
 
         final selected = sortedConversations.first;
 
-        // Determine if there are more conversations
-        final hasMore = conversations.length == _conversationsPerPage;
+        // Determine if there are more conversations to load
+        // Show "Load More" if we got a full page from API (might be more)
+        // Hide "Load More" if we got less than a full page (no more to fetch)
+        final hasMore = allConversations.length == _conversationsPerPage;
 
-        // Get the last conversation's timestamp for pagination
+        // Get the last conversation's timestamp for pagination (from ALL conversations, not filtered)
         String? lastDate;
-        if (hasMore && sortedConversations.isNotEmpty) {
-          final lastConv = sortedConversations.last;
-          final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
-          if (timestamp != null) {
-            lastDate = _timestampToUtcIso8601(timestamp);
-          }
+        if (hasMore && allConversations.isNotEmpty) {
+          lastDate = _getLastDateFromConversations(allConversations);
         }
 
         emit(
@@ -280,8 +302,13 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     // Mark as loading more
     emit(currentState.copyWith(isLoadingMore: true));
 
-    // Extract workspace ID from existing conversations
-    final workspaceId = currentState.conversations.first.workspaceGuid;
+    // Extract workspace ID from existing conversations or use a default
+    // If no conversations exist yet, we need to get it from somewhere else
+    String? workspaceId;
+    if (currentState.conversations.isNotEmpty) {
+      workspaceId = currentState.conversations.first.workspaceGuid;
+    }
+
     if (workspaceId == null) {
       _logger.e('Cannot load more: workspace ID not found in current conversations');
       emit(currentState.copyWith(isLoadingMore: false));
@@ -295,8 +322,8 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
     );
 
     result.fold(
-      onSuccess: (newConversations) {
-        if (newConversations.isEmpty) {
+      onSuccess: (allNewConversations) {
+        if (allNewConversations.isEmpty) {
           emit(
             currentState.copyWith(
               hasMoreConversations: false,
@@ -306,10 +333,15 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           return;
         }
 
+        // Filter new conversations by workspace (done client-side since API doesn't support it)
+        final filteredNewConversations = allNewConversations
+            .where((conversation) => conversation.workspaceGuid == workspaceId)
+            .toList();
+
         // Merge with existing conversations
         final allConversations = [
           ...currentState.conversations,
-          ...newConversations,
+          ...filteredNewConversations,
         ];
 
         final sortedConversations = _sortConversationsByRecency(allConversations);
@@ -320,17 +352,15 @@ class ConversationBloc extends Bloc<ConversationEvent, ConversationState> {
           colorMap[sortedConversations[i].channelGuid!] = i % 10;
         }
 
-        // Determine if there are more
-        final hasMore = newConversations.length == _conversationsPerPage;
+        // Determine if there are more conversations to load
+        // Show "Load More" if we got a full page from API (might be more)
+        // Hide "Load More" if we got less than a full page (no more to fetch)
+        final hasMore = allNewConversations.length == _conversationsPerPage;
 
-        // Get the last conversation's timestamp
+        // Get the last conversation's timestamp for pagination (from ALL conversations, not filtered)
         String? lastDate;
-        if (hasMore && sortedConversations.isNotEmpty) {
-          final lastConv = sortedConversations.last;
-          final timestamp = lastConv.lastUpdatedTs ?? lastConv.createdTs;
-          if (timestamp != null) {
-            lastDate = _timestampToUtcIso8601(timestamp);
-          }
+        if (hasMore && allNewConversations.isNotEmpty) {
+          lastDate = _getLastDateFromConversations(allNewConversations);
         }
 
         emit(
