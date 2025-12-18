@@ -10,7 +10,8 @@ class ReactionSummaryDto {
     this.topUserReactions = const [],
   });
 
-  factory ReactionSummaryDto.fromJson(Map<String, dynamic> json) => _$ReactionSummaryDtoFromJson(json);
+  factory ReactionSummaryDto.fromJson(Map<String, dynamic> json) =>
+      _$ReactionSummaryDtoFromJson(json);
 
   @JsonKey(name: 'reaction_counts', defaultValue: {})
   final Map<String, dynamic> reactionCounts;

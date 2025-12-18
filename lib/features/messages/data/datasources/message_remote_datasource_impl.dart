@@ -142,5 +142,4 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
       throw NetworkException(message: 'Failed to send message: $e');
     }
   }
-
 }

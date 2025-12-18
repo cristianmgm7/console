@@ -1,4 +1,3 @@
-
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
@@ -46,8 +45,7 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
     return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
         // Debug: Print current statetate: ${state.runtimeType}');
-        if (state is MessageDetailLoaded) {
-        }
+        if (state is MessageDetailLoaded) {}
 
         return SizedBox(
           width: 400,
@@ -108,6 +106,7 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
     }
     return _buildDefaultState();
   }
+
   Widget _buildErrorState(MessageDetailError state) {
     return Center(
       child: Text(
@@ -122,5 +121,4 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
   Widget _buildLoadingState() => const Center(child: AppProgressIndicator());
 
   Widget _buildLoadedState(MessageDetailLoaded state) => MessageDetailContent(state: state);
-
 }

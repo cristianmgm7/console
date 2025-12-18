@@ -130,18 +130,22 @@ class MessageDetailContent extends StatelessWidget {
             if (message.lastHeardAt != null)
               _buildInfoRow('Last Heard', _formatDate(message.lastHeardAt!)),
             if (message.heardDuration != null)
-              _buildInfoRow('Heard Duration',
-                  _formatDuration(message.heardDuration!),),
+              _buildInfoRow(
+                'Heard Duration',
+                _formatDuration(message.heardDuration!),
+              ),
             if (message.totalHeardDuration != null)
-              _buildInfoRow('Total Heard Duration',
-                  _formatDuration(message.totalHeardDuration!),),
+              _buildInfoRow(
+                'Total Heard Duration',
+                _formatDuration(message.totalHeardDuration!),
+              ),
             if (message.lastUpdatedAt != null)
-              _buildInfoRow('Last Updated',
-                  _formatDate(message.lastUpdatedAt!),),
-            _buildInfoRow('Workspace IDs',
-                message.workspaceIds.join(', ')),
-            _buildInfoRow('Channel IDs',
-                message.channelIds.join(', ')),
+              _buildInfoRow(
+                'Last Updated',
+                _formatDate(message.lastUpdatedAt!),
+              ),
+            _buildInfoRow('Workspace IDs', message.workspaceIds.join(', ')),
+            _buildInfoRow('Channel IDs', message.channelIds.join(', ')),
             _buildInfoRow('Conversation ID', message.conversationId),
             _buildInfoRow('User ID', message.userId),
           ],
@@ -154,8 +158,8 @@ class MessageDetailContent extends StatelessWidget {
     return BlocBuilder<AudioPlayerBloc, AudioPlayerState>(
       builder: (context, audioState) {
         final message = state.message;
-        final isCurrentMessage = audioState is AudioPlayerReady &&
-            audioState.messageId == message.id;
+        final isCurrentMessage =
+            audioState is AudioPlayerReady && audioState.messageId == message.id;
 
         return InkWell(
           onTap: () {
@@ -171,11 +175,11 @@ class MessageDetailContent extends StatelessWidget {
               final audioModel = message.playableAudioModel;
               if (audioModel != null) {
                 context.read<AudioPlayerBloc>().add(
-                      LoadAudio(
-                        messageId: message.id,
-                        waveformData: audioModel.waveformData,
-                      ),
-                    );
+                  LoadAudio(
+                    messageId: message.id,
+                    waveformData: audioModel.waveformData,
+                  ),
+                );
                 // After loading, play the audio
                 Future.delayed(const Duration(milliseconds: 100), () {
                   if (context.mounted) {
@@ -199,9 +203,7 @@ class MessageDetailContent extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isCurrentMessage && audioState.isPlaying
-                      ? Icons.pause
-                      : Icons.play_arrow,
+                  isCurrentMessage && audioState.isPlaying ? Icons.pause : Icons.play_arrow,
                   color: AppColors.primary,
                   size: 20,
                 ),

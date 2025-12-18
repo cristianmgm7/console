@@ -50,7 +50,8 @@ class Message extends Equatable {
 
   // Audio-related computed properties
   /// Whether this message has audio that can be downloaded
-  bool get hasDownloadableAudio => audioModels.any((audio) => audio.presignedUrl != null && audio.presignedUrl!.isNotEmpty);
+  bool get hasDownloadableAudio =>
+      audioModels.any((audio) => audio.presignedUrl != null && audio.presignedUrl!.isNotEmpty);
 
   /// Gets the first downloadable audio model, null if none available
   AudioModel? get downloadableAudioModel {
@@ -62,22 +63,22 @@ class Message extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        creatorId,
-        createdAt,
-        workspaceIds,
-        channelIds,
-        duration,
-        audioModels,
-        textModels,
-        status,
-        type,
-        lastHeardAt,
-        heardDuration,
-        totalHeardDuration,
-        isTextMessage,
-        notes,
-        lastUpdatedAt,
-        parentMessageId,
-      ];
+    id,
+    creatorId,
+    createdAt,
+    workspaceIds,
+    channelIds,
+    duration,
+    audioModels,
+    textModels,
+    status,
+    type,
+    lastHeardAt,
+    heardDuration,
+    totalHeardDuration,
+    isTextMessage,
+    notes,
+    lastUpdatedAt,
+    parentMessageId,
+  ];
 }

@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart' as msg_events;
+import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_event.dart'
+    as msg_events;
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/bloc/message_state.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_dashboard/components/pagination_controls.dart';
 import 'package:flutter/material.dart';

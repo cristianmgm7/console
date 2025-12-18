@@ -37,10 +37,12 @@ class SendMessageBloc extends Bloc<SendMessageEvent, SendMessageState> {
     result.fold(
       onSuccess: (sendResult) {
         _logger.i('Message sent successfully: ${sendResult.id}');
-        emit(SendMessageSuccess(
-          messageId: sendResult.id,
-          createdAt: sendResult.createdAt,
-        ));
+        emit(
+          SendMessageSuccess(
+            messageId: sendResult.id,
+            createdAt: sendResult.createdAt,
+          ),
+        );
       },
       onFailure: (failure) {
         _logger.e('Failed to send message: ${failure.failure.code}');

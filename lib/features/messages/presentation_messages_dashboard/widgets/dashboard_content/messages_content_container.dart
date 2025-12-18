@@ -62,7 +62,7 @@ class MessagesContentContainer extends StatelessWidget {
     return const Center(child: AppProgressIndicator());
   }
 
-   Widget _buildInitialLoadingState() {
+  Widget _buildInitialLoadingState() {
     return AppEmptyState.loading();
   }
 
@@ -146,7 +146,11 @@ class MessagesContentContainer extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildTableCells(BuildContext context, MessageUiModel message, AudioPlayerState audioState) {
+  List<Widget> _buildTableCells(
+    BuildContext context,
+    MessageUiModel message,
+    AudioPlayerState audioState,
+  ) {
     return [
       // Date
       Text(
@@ -160,8 +164,10 @@ class MessagesContentContainer extends StatelessWidget {
       ConversationCoverArt(conversationId: message.conversationId),
 
       // Play
-      if (message.hasPlayableAudio) MessagePlayButton(message: message, audioState: audioState)
-      else const SizedBox.shrink(),
+      if (message.hasPlayableAudio)
+        MessagePlayButton(message: message, audioState: audioState)
+      else
+        const SizedBox.shrink(),
 
       // Duration
       Text(
@@ -173,7 +179,7 @@ class MessagesContentContainer extends StatelessWidget {
 
       // Owner
       Text(
-        message.creator?.fullName ?? message.creatorId,
+        message.creatorFullName ?? message.creatorId,
         style: AppTextStyle.bodyMedium.copyWith(
           fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
@@ -213,8 +219,7 @@ class MessagesContentContainer extends StatelessWidget {
           tooltip: 'Reply',
           onPressed: () {
             final workspaceState = context.read<WorkspaceBloc>().state;
-            if (workspaceState is WorkspaceLoaded &&
-                workspaceState.selectedWorkspace != null) {
+            if (workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null) {
               context.read<MessageCompositionCubit>().openReply(
                 workspaceId: workspaceState.selectedWorkspace!.id,
                 channelId: message.conversationId,
@@ -236,6 +241,4 @@ class MessagesContentContainer extends StatelessWidget {
       ],
     );
   }
-
- 
 }

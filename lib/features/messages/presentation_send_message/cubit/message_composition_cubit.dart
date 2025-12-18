@@ -15,11 +15,13 @@ class MessageCompositionCubit extends Cubit<MessageCompositionState> {
     required String channelId,
   }) {
     _logger.i('Opening composition panel for new message in channel: $channelId');
-    emit(MessageCompositionState(
-      isVisible: true,
-      workspaceId: workspaceId,
-      channelId: channelId,
-    ));
+    emit(
+      MessageCompositionState(
+        isVisible: true,
+        workspaceId: workspaceId,
+        channelId: channelId,
+      ),
+    );
   }
 
   /// Open composition panel for a reply
@@ -29,12 +31,14 @@ class MessageCompositionCubit extends Cubit<MessageCompositionState> {
     required String replyToMessageId,
   }) {
     _logger.i('Opening composition panel for reply to message: $replyToMessageId');
-    emit(MessageCompositionState(
-      isVisible: true,
-      workspaceId: workspaceId,
-      channelId: channelId,
-      replyToMessageId: replyToMessageId,
-    ));
+    emit(
+      MessageCompositionState(
+        isVisible: true,
+        workspaceId: workspaceId,
+        channelId: channelId,
+        replyToMessageId: replyToMessageId,
+      ),
+    );
   }
 
   /// Cancel reply (keep panel open but clear reply state)

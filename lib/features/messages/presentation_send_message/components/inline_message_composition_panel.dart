@@ -69,7 +69,6 @@ class _InlineMessageCompositionPanelState extends State<InlineMessageComposition
     setState(() {});
   }
 
-
   void _handleSend() {
     final text = _messageController.text.trim();
     if (text.isEmpty) {
@@ -80,13 +79,13 @@ class _InlineMessageCompositionPanelState extends State<InlineMessageComposition
     }
 
     context.read<SendMessageBloc>().add(
-          SendMessage(
-            text: text,
-            channelId: widget.channelId,
-            workspaceId: widget.workspaceId,
-            replyToMessageId: widget.replyToMessageId,
-          ),
-        );
+      SendMessage(
+        text: text,
+        channelId: widget.channelId,
+        workspaceId: widget.workspaceId,
+        replyToMessageId: widget.replyToMessageId,
+      ),
+    );
   }
 
   void _handleClose() {
@@ -125,7 +124,6 @@ class _InlineMessageCompositionPanelState extends State<InlineMessageComposition
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
             // Conversation Name Header
             ConversationNameHeader(
               channelId: widget.channelId,
@@ -162,8 +160,8 @@ class _InlineMessageCompositionPanelState extends State<InlineMessageComposition
                       onPressed: isLoading
                           ? null
                           : hasText
-                              ? _handleSend
-                              : _handleClose,
+                          ? _handleSend
+                          : _handleClose,
                       tooltip: hasText ? 'Send message' : 'Cancel',
                     );
                   },

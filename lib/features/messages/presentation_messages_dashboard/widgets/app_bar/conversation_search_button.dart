@@ -25,8 +25,8 @@ class ConversationSearchButton extends StatelessWidget {
           onPressed: () {
             // Update search bloc with current conversations for name-based filtering
             context.read<ConversationSearchBloc>().updateLoadedConversations(
-                  conversationState.conversations,
-                );
+              conversationState.conversations,
+            );
             // Open the search panel
             context.read<ConversationSearchBloc>().add(const OpenConversationSearch());
           },

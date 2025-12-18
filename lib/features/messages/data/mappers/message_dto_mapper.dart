@@ -12,7 +12,9 @@ import 'package:carbon_voice_console/features/messages/domain/entities/timecode.
 extension MessageDtoMapper on MessageDto {
   Message toDomain() {
     if (messageId == null || creatorId == null || createdAt == null) {
-      throw FormatException('Required message fields are missing: id=${messageId == null}, creator=${creatorId == null}, created=${createdAt == null}');
+      throw FormatException(
+        'Required message fields are missing: id=${messageId == null}, creator=${creatorId == null}, created=${createdAt == null}',
+      );
     }
     return Message(
       id: messageId!,
@@ -21,21 +23,32 @@ extension MessageDtoMapper on MessageDto {
       workspaceIds: workspaceIds ?? [],
       channelIds: channelIds ?? [],
       duration: Duration(milliseconds: durationMs ?? 0),
-      audioModels: audioModels?.map((dto) {
-        try {
-          return dto.toDomain();
-        } on Exception {
-
-          return null; // Skip invalid audio models
-        }
-      }).where((model) => model != null).cast<AudioModel>().toList() ?? [],
-      textModels: textModels?.map((dto) {
-        try {
-          return dto.toDomain();
-        } on Exception {
-          return null; // Skip invalid text models
-        }
-      }).where((model) => model != null).cast<TextModel>().toList() ?? [],
+      audioModels:
+          audioModels
+              ?.map((dto) {
+                try {
+                  return dto.toDomain();
+                } on Exception {
+                  return null; // Skip invalid audio models
+                }
+              })
+              .where((model) => model != null)
+              .cast<AudioModel>()
+              .toList() ??
+          [],
+      textModels:
+          textModels
+              ?.map((dto) {
+                try {
+                  return dto.toDomain();
+                } on Exception {
+                  return null; // Skip invalid text models
+                }
+              })
+              .where((model) => model != null)
+              .cast<TextModel>()
+              .toList() ??
+          [],
       status: status ?? 'unknown',
       type: type ?? 'unknown',
       lastHeardAt: lastHeardAt,
@@ -70,7 +83,11 @@ extension AudioModelDtoMapper on AudioModelDto {
 extension TextModelDtoMapper on TextModelDto {
   TextModel? toDomain() {
     // Only create domain entity if required fields are not null
-    if (type == null || audioId == null || languageId == null || value == null || timecodes == null) {
+    if (type == null ||
+        audioId == null ||
+        languageId == null ||
+        value == null ||
+        timecodes == null) {
       return null;
     }
 
@@ -98,7 +115,9 @@ extension MessageDetailDtoMapper on MessageDetailDto {
   Message toDomain() {
     // Validate required fields
     if (id == null || creatorId == null || createdAt == null) {
-      throw FormatException('Required message fields are missing: id=${id == null}, creator=${creatorId == null}, created=${createdAt == null}');
+      throw FormatException(
+        'Required message fields are missing: id=${id == null}, creator=${creatorId == null}, created=${createdAt == null}',
+      );
     }
 
     // Convert audio model to domain entity (single object, not list)
@@ -112,13 +131,15 @@ extension MessageDetailDtoMapper on MessageDetailDto {
     final audioId = audioModels.isNotEmpty ? audioModels.first.id : '';
     final textModels = <TextModel>[];
     if (transcript != null) {
-      textModels.add(TextModel(
-        type: 'transcript', // Default type for message detail
-        audioId: audioId,
-        language: language ?? 'unknown',
-        text: transcript!,
-        timecodes: timeCodes?.map((dto) => dto.toDomain()).toList() ?? [],
-      ));
+      textModels.add(
+        TextModel(
+          type: 'transcript', // Default type for message detail
+          audioId: audioId,
+          language: language ?? 'unknown',
+          text: transcript!,
+          timecodes: timeCodes?.map((dto) => dto.toDomain()).toList() ?? [],
+        ),
+      );
     }
 
     return Message(

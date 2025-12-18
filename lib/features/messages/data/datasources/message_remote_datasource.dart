@@ -29,5 +29,4 @@ abstract class MessageRemoteDataSource {
   /// Throws [ServerException] on API errors
   /// Throws [NetworkException] on network errors
   Future<MessageDto> sendMessage(SendMessageRequestDto request);
-
 }

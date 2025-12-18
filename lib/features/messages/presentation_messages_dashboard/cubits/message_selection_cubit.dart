@@ -21,10 +21,12 @@ class MessageSelectionCubit extends Cubit<MessageSelectionState> {
       _logger.d('Deselected message: $messageId');
     }
 
-    emit(state.copyWith(
-      selectedMessageIds: newSelection,
-      selectAll: false, // Clear select all when manually toggling
-    ));
+    emit(
+      state.copyWith(
+        selectedMessageIds: newSelection,
+        selectAll: false, // Clear select all when manually toggling
+      ),
+    );
   }
 
   /// Toggle select all
@@ -33,10 +35,12 @@ class MessageSelectionCubit extends Cubit<MessageSelectionState> {
 
     if (shouldSelectAll) {
       _logger.d('Selecting all ${allMessageIds.length} messages');
-      emit(state.copyWith(
-        selectedMessageIds: Set<String>.from(allMessageIds),
-        selectAll: true,
-      ));
+      emit(
+        state.copyWith(
+          selectedMessageIds: Set<String>.from(allMessageIds),
+          selectAll: true,
+        ),
+      );
     } else {
       _logger.d('Clearing all selections');
       emit(const MessageSelectionState());

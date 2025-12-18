@@ -15,7 +15,8 @@ class SendMessageButton extends StatelessWidget {
     final workspaceState = context.read<WorkspaceBloc>().state;
     final conversationState = context.read<ConversationBloc>().state;
 
-    final workspaceId = workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null
+    final workspaceId =
+        workspaceState is WorkspaceLoaded && workspaceState.selectedWorkspace != null
         ? workspaceState.selectedWorkspace!.id
         : '';
 
@@ -26,7 +27,8 @@ class SendMessageButton extends StatelessWidget {
       return;
     }
 
-    if (conversationState is! ConversationLoaded || conversationState.selectedConversationIds.length != 1) {
+    if (conversationState is! ConversationLoaded ||
+        conversationState.selectedConversationIds.length != 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select exactly one conversation')),
       );
@@ -60,8 +62,7 @@ class SendMessageButton extends StatelessWidget {
     return BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
       selector: (state) => state is ConversationLoaded ? state : null,
       builder: (context, conversationState) {
-        if (conversationState == null ||
-            conversationState.selectedConversationIds.length != 1) {
+        if (conversationState == null || conversationState.selectedConversationIds.length != 1) {
           return const SizedBox.shrink();
         }
 

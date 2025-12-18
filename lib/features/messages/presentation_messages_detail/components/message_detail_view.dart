@@ -153,22 +153,27 @@ class MessageDetailView extends StatelessWidget {
             if (message.lastHeardAt != null)
               _buildInfoRow('Last Heard', _formatDate(message.lastHeardAt!)),
             if (message.heardDuration != null)
-              _buildInfoRow('Heard Duration',
-                  _formatDuration(message.heardDuration!),
+              _buildInfoRow(
+                'Heard Duration',
+                _formatDuration(message.heardDuration!),
               ),
             if (message.totalHeardDuration != null)
-              _buildInfoRow('Total Heard Duration',
-                  _formatDuration(message.totalHeardDuration!),
+              _buildInfoRow(
+                'Total Heard Duration',
+                _formatDuration(message.totalHeardDuration!),
               ),
             if (message.lastUpdatedAt != null)
-              _buildInfoRow('Last Updated',
-                  _formatDate(message.lastUpdatedAt!),
+              _buildInfoRow(
+                'Last Updated',
+                _formatDate(message.lastUpdatedAt!),
               ),
-            _buildInfoRow('Workspace IDs',
-                message.workspaceIds.join(', '),
+            _buildInfoRow(
+              'Workspace IDs',
+              message.workspaceIds.join(', '),
             ),
-            _buildInfoRow('Channel IDs',
-                message.channelIds.join(', '),
+            _buildInfoRow(
+              'Channel IDs',
+              message.channelIds.join(', '),
             ),
             _buildInfoRow('Conversation ID', message.conversationId),
             _buildInfoRow('User', state.user?.fullName ?? message.userId),

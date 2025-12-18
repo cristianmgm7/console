@@ -19,8 +19,7 @@ class SelectedConversationsSection extends StatelessWidget {
         child: BlocSelector<ConversationBloc, ConversationState, ConversationLoaded?>(
           selector: (state) => state is ConversationLoaded ? state : null,
           builder: (context, conversationState) {
-            if (conversationState == null ||
-                conversationState.selectedConversationIds.isEmpty) {
+            if (conversationState == null || conversationState.selectedConversationIds.isEmpty) {
               return _buildEmptyState();
             }
 
