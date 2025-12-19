@@ -30,7 +30,7 @@ class MessageRemoteDataSourceImpl implements MessageRemoteDataSource {
         'direction': direction,
         'use_last_updated': true,
         // Only send the cursor when present; some backends treat null as a literal value.
-        'date': ?beforeTimestamp,
+        if (beforeTimestamp != null) 'date': beforeTimestamp,
       };
       final response = await _httpService.post(
         '${OAuthConfig.apiBaseUrl}/v3/messages/recent',
