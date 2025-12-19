@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppBorders {
+  static const double radiustiny = 8;
   static const double radiusSmall = 12;
   static const double radiusCard = 24;
   static const double radiusButton = 50;

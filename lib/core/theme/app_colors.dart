@@ -19,7 +19,8 @@ class AppColors {
 
   // Gradients (Aura)
   static const Color gradientPurple = Color(0xFFE6E6FA); // Lavender
-  static const Color gradientPink = Color.fromARGB(255, 231, 224, 244);   // Soft Pink
+  static const Color gradientPink = Color.fromARGB(255, 231, 224, 244); 
+  static const Color gradientHeader = Color.fromARGB(255, 236, 236, 236); // Soft Pink
 
   // Semantic colors (Standardized for light theme)
   static const Color success = Color(0xFF4CAF50);
