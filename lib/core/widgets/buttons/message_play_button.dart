@@ -73,15 +73,12 @@ class MessagePlayButton extends StatelessWidget {
     // Get the audio player BLoC
     final audioBloc = context.read<AudioPlayerBloc>();
 
-    // Load audio - let the BLoC fetch the pre-signed URL
+    // Load audio - the BLoC will automatically start playback
     audioBloc.add(
       LoadAudio(
         messageId: message.id,
         audioModel: audioModel,
       ),
     );
-
-    // Auto-play after loading (no modal shown)
-    audioBloc.add(const PlayAudio());
   }
 }

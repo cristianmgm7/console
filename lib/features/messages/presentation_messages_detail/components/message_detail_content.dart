@@ -174,18 +174,13 @@ class MessageDetailContent extends StatelessWidget {
               // Load and play this message's audio
               final audioModel = message.playableAudioModel;
               if (audioModel != null) {
+                // Load audio - the BLoC will automatically start playback
                 context.read<AudioPlayerBloc>().add(
                   LoadAudio(
                     messageId: message.id,
                     audioModel: audioModel,
                   ),
                 );
-                // After loading, play the audio
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  if (context.mounted) {
-                    context.read<AudioPlayerBloc>().add(const PlayAudio());
-                  }
-                });
               }
             }
           },

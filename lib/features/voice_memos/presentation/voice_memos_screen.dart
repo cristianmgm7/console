@@ -262,11 +262,11 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                     final audioBloc = context.read<AudioPlayerBloc>();
                     final audioModel = voiceMemo.playableAudioModel;
                     if (audioModel != null) {
+                      // Load audio - the BLoC will automatically start playback
                       audioBloc.add(LoadAudio(
                         messageId: voiceMemo.id,
                         audioModel: audioModel,
                       ));
-                      audioBloc.add(const PlayAudio());
                     }
                   },
                   size: AppIconButtonSize.small,
