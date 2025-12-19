@@ -1,5 +1,4 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
-import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
@@ -78,31 +77,8 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
         onClose: widget.onClose,
       );
     }
-    // Default header for loading/error states
-    return AppContainer(
-      padding: const EdgeInsets.all(16),
-      border: const Border(
-        bottom: BorderSide(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Text(
-            'Message Details',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          AppIconButton(
-            icon: AppIcons.close,
-            onPressed: widget.onClose,
-            tooltip: 'Close',
-          ),
-        ],
-      ),
-    );
+    // Show loading spinner for loading/error states
+    return const Center(child: AppProgressIndicator());
   }
 
   Widget _buildContentFromState(MessageDetailState state) {
