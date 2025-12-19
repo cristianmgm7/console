@@ -120,7 +120,6 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
       // Load audio with empty headers (pre-signed URL has auth in the URL itself)
       await _playerService.loadAudio(audioUrl, {});
 
-
       // Emit ready state
       emit(
         AudioPlayerReady(
@@ -133,6 +132,10 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
           waveformData: _currentWaveformData,
         ),
       );
+
+      // Automatically start playback after loading by dispatching PlayAudio event
+      _logger.d('Auto-playing audio after load');
+      add(const PlayAudio());
     } on Exception catch (e) {
       _logger.e('Failed to load audio', error: e);
       emit(AudioPlayerError('Failed to load audio: $e'));

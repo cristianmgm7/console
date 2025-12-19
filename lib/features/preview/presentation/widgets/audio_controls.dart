@@ -102,11 +102,11 @@ class AudioControls extends StatelessWidget {
     } else {
       final audioModel = message.playableAudioModel;
       if (audioModel != null) {
+        // Load audio - the BLoC will automatically start playback
         bloc.add(LoadAudio(
           messageId: message.id,
           audioModel: audioModel,
         ));
-        bloc.add(const PlayAudio());
       }
     }
   }
