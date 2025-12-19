@@ -3,7 +3,9 @@ import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/messages/presentation_messages_detail/bloc/message_detail_bloc.dart';
-import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_content.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/message_detail_header.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/transcription_section.dart';
+import 'package:carbon_voice_console/features/messages/presentation_messages_detail/components/transcription_summary_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -44,13 +46,11 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
   Widget build(BuildContext context) {
     return BlocBuilder<MessageDetailBloc, MessageDetailState>(
       builder: (context, state) {
-        // Debug: Print current statetate: ${state.runtimeType}');
-        if (state is MessageDetailLoaded) {}
-
         return SizedBox(
           width: 400,
           height: double.infinity,
           child: AppContainer(
+            padding: EdgeInsets.zero,
             border: const Border(
               left: BorderSide(
                 color: AppColors.border,
@@ -58,26 +58,7 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
             ),
             child: Column(
               children: [
-                AppContainer(
-                  padding: const EdgeInsets.all(16),
-                  border: const Border(
-                    bottom: BorderSide(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Message Details',
-                        style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
-                      ),
-                      const Spacer(),
-                      AppIconButton(
-                        icon: AppIcons.close,
-                        onPressed: widget.onClose,
-                        tooltip: 'Close',
-                      ),
-                    ],
-                  ),
-                ),
+                _buildHeaderFromState(state),
                 Expanded(
                   child: _buildContentFromState(state),
                 ),
@@ -86,6 +67,41 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildHeaderFromState(MessageDetailState state) {
+    if (state is MessageDetailLoaded && state.user != null) {
+      return MessageDetailHeader(
+        message: state.message,
+        user: state.user!,
+        onClose: widget.onClose,
+      );
+    }
+    // Default header for loading/error states
+    return AppContainer(
+      padding: const EdgeInsets.all(16),
+      border: const Border(
+        bottom: BorderSide(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          const Text(
+            'Message Details',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          AppIconButton(
+            icon: AppIcons.close,
+            onPressed: widget.onClose,
+            tooltip: 'Close',
+          ),
+        ],
+      ),
     );
   }
 
@@ -120,5 +136,22 @@ class _MessageDetailPanelState extends State<MessageDetailPanel> {
 
   Widget _buildLoadingState() => const Center(child: AppProgressIndicator());
 
-  Widget _buildLoadedState(MessageDetailLoaded state) => MessageDetailContent(state: state);
+  Widget _buildLoadedState(MessageDetailLoaded state) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Transcription',
+            style: AppTextStyle.titleLarge.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 24),
+          TranscriptionSummarySection(message: state.message),
+          const SizedBox(height: 24),
+          TranscriptionSection(message: state.message),
+        ],
+      ),
+    );
+  }
 }
