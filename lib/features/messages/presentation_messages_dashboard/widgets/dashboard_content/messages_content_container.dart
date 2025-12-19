@@ -86,7 +86,7 @@ class MessagesContentContainer extends StatelessWidget {
   Widget _buildMessageTable(MessageLoaded loadedState, AudioPlayerState audioState) {
     return SizedBox.expand(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 60),
+        padding: const EdgeInsets.only(bottom: 60 ),
         child: BlocBuilder<MessageSelectionCubit, MessageSelectionState>(
           builder: (context, selectionState) {
             return AppTable(
@@ -124,7 +124,7 @@ class MessagesContentContainer extends StatelessWidget {
                 ),
                 AppTableColumn(
                   title: 'Actions',
-                  width: FixedColumnWidth(180),
+                  width: FixedColumnWidth(130),
                 ),
               ],
               rows: loadedState.messages.map((message) {
@@ -186,7 +186,7 @@ class MessagesContentContainer extends StatelessWidget {
         ),
       ),
 
-      // Message
+      // Summary
       Text(
         message.text ?? 'No content',
         style: AppTextStyle.bodyMedium.copyWith(
@@ -203,7 +203,6 @@ class MessagesContentContainer extends StatelessWidget {
 
   Widget _buildActionButtons(BuildContext context, MessageUiModel message) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         AppIconButton(
           icon: AppIcons.eye,
