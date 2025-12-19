@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/features/audio_player/domain/services/audio
 import 'package:carbon_voice_console/features/audio_player/domain/usecases/get_audio_presigned_url_usecase.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_event.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_state.dart';
+import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -90,7 +91,10 @@ class AudioPlayerBloc extends Bloc<AudioPlayerEvent, AudioPlayerState> {
       }
 
       _currentMessageId = event.messageId;
-      _currentWaveformData = event.waveformData;
+      _currentWaveformData = event.audioModel.waveformData;
+
+      // Log AudioModel details for debugging/testing
+      _logger.d('Loading AudioModel - ID: ${event.audioModel.id}, Format: ${event.audioModel.format}, URL: ${event.audioModel.url}');
 
       // Fetch pre-signed URL using use case
       _logger.d('Fetching pre-signed URL for message ${event.messageId}');

@@ -104,7 +104,7 @@ class AudioControls extends StatelessWidget {
       if (audioModel != null) {
         bloc.add(LoadAudio(
           messageId: message.id,
-          waveformData: audioModel.waveformData,
+          audioModel: audioModel,
         ));
         bloc.add(const PlayAudio());
       }

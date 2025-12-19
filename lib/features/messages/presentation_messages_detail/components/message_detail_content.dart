@@ -177,7 +177,7 @@ class MessageDetailContent extends StatelessWidget {
                 context.read<AudioPlayerBloc>().add(
                   LoadAudio(
                     messageId: message.id,
-                    waveformData: audioModel.waveformData,
+                    audioModel: audioModel,
                   ),
                 );
                 // After loading, play the audio

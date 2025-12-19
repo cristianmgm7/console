@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/features/messages/domain/entities/audio_model.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class AudioPlayerEvent extends Equatable {
@@ -11,14 +12,14 @@ sealed class AudioPlayerEvent extends Equatable {
 class LoadAudio extends AudioPlayerEvent {
   const LoadAudio({
     required this.messageId,
-    required this.waveformData,
+    required this.audioModel,
   });
 
   final String messageId;
-  final List<double> waveformData;
+  final AudioModel audioModel;
 
   @override
-  List<Object?> get props => [messageId, waveformData];
+  List<Object?> get props => [messageId, audioModel];
 }
 
 /// Start or resume playback

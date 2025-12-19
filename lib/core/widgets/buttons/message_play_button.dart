@@ -67,6 +67,9 @@ class MessagePlayButton extends StatelessWidget {
   Future<void> _handlePlayAudio(BuildContext context) async {
     if (!message.hasPlayableAudio || message.audioUrl == null) return;
 
+    final audioModel = message.playableAudioModel;
+    if (audioModel == null) return;
+
     // Get the audio player BLoC
     final audioBloc = context.read<AudioPlayerBloc>();
 
@@ -74,7 +77,7 @@ class MessagePlayButton extends StatelessWidget {
     audioBloc.add(
       LoadAudio(
         messageId: message.id,
-        waveformData: message.playableAudioModel?.waveformData ?? [],
+        audioModel: audioModel,
       ),
     );
 
