@@ -260,11 +260,14 @@ class _VoiceMemosScreenState extends State<VoiceMemosScreen> {
                   tooltip: 'Play audio',
                   onPressed: () {
                     final audioBloc = context.read<AudioPlayerBloc>();
-                    audioBloc.add(LoadAudio(
-                      messageId: voiceMemo.id,
-                      waveformData: voiceMemo.playableAudioModel?.waveformData ?? [],
-                    ));
-                    audioBloc.add(const PlayAudio());
+                    final audioModel = voiceMemo.playableAudioModel;
+                    if (audioModel != null) {
+                      audioBloc.add(LoadAudio(
+                        messageId: voiceMemo.id,
+                        audioModel: audioModel,
+                      ));
+                      audioBloc.add(const PlayAudio());
+                    }
                   },
                   size: AppIconButtonSize.small,
                 )
