@@ -29,10 +29,10 @@ class PreviewButton extends StatelessWidget {
         return BlocBuilder<MessageSelectionCubit, MessageSelectionState>(
           builder: (context, selectionState) {
             final selectedCount = selectionState.selectedCount;
-            final isValidSelection = selectedCount >= 3 && selectedCount <= 5;
+            final isValidSelection = selectedCount >= 3 && selectedCount <= 10;
 
             return Tooltip(
-              message: 'Select 3-5 messages to create a conversation preview',
+              message: 'Select 3-10 messages to create a conversation preview',
               child: AppButton(
                 onPressed: isValidSelection ? () => _handlePreview(context) : null,
                 backgroundColor: isValidSelection
@@ -64,10 +64,10 @@ class PreviewButton extends StatelessWidget {
     if (conversationState is! ConversationLoaded ||
         conversationState.selectedConversationIds.length != 1 ||
         selectedCount < 3 ||
-        selectedCount > 5) {
+        selectedCount > 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select 3-5 messages to create a preview'),
+          content: Text('Please select 3-10 messages to create a preview'),
           backgroundColor: AppColors.warning,
         ),
       );

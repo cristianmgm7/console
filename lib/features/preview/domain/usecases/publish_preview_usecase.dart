@@ -31,10 +31,10 @@ class PublishPreviewUsecase {
     _logger.d('Message IDs: ${messageIds.join(", ")}');
 
     // Validate
-    if (messageIds.length < 3 || messageIds.length > 5) {
+    if (messageIds.length < 3 || messageIds.length > 10) {
       return failure(
         const UnknownFailure(
-          details: 'Please select between 3 and 5 messages',
+          details: 'Please select between 3 and 10 messages',
         ),
       );
     }

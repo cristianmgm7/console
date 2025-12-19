@@ -33,7 +33,7 @@ class PreviewComposerLoaded extends PreviewComposerState {
   final List<MessageUiModel> parentMessages;
   final int selectedMessageCount;
 
-  bool get isValidSelection => selectedMessageCount >= 3 && selectedMessageCount <= 5;
+  bool get isValidSelection => selectedMessageCount >= 3 && selectedMessageCount <= 10;
 
   @override
   List<Object?> get props => [

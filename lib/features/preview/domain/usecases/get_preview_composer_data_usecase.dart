@@ -37,7 +37,7 @@ class GetPreviewComposerDataUsecase {
   /// Fetches all data needed for the preview composer screen
   ///
   /// [conversationId] - The conversation to preview
-  /// [messageIds] - List of 3-5 message IDs selected by user
+  /// [messageIds] - List of 3-10 message IDs selected by user
   ///
   /// Returns EnrichedPreviewComposerData with conversation, selected messages, and parent messages
   Future<Result<EnrichedPreviewComposerData>> call({
@@ -50,11 +50,11 @@ class GetPreviewComposerDataUsecase {
       _logger.d('Message IDs: ${messageIds.join(", ")}');
 
       // Validate message count
-      if (messageIds.length < 3 || messageIds.length > 5) {
+      if (messageIds.length < 3 || messageIds.length > 10) {
         _logger.w('Invalid message count: ${messageIds.length}');
         return failure(
           const UnknownFailure(
-            details: 'Please select between 3 and 5 messages',
+            details: 'Please select between 3 and 10 messages',
           ),
         );
       }
