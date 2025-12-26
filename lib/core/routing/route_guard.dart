@@ -27,6 +27,7 @@ class RouteGuard {
     AppRoutes.dashboard,
     AppRoutes.users,
     AppRoutes.voiceMemos,
+    AppRoutes.agentChat,
     AppRoutes.settings,
     AppRoutes.previewComposer,
     AppRoutes.previewConfirmation,

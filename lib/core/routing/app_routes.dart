@@ -8,6 +8,7 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String users = '/dashboard/users';
   static const String voiceMemos = '/dashboard/voice-memos';
+  static const String agentChat = '/dashboard/agent-chat';
   static const String settings = '/dashboard/settings';
 
   // Preview routes
