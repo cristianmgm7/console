@@ -35,15 +35,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
   @override
   Future<Result<String>> getAuthorizationUrl() async {
     try {
-      // Validate client_id is not the default value
-      if (OAuthConfig.clientId == 'YOUR_CLIENT_ID' || OAuthConfig.clientId.isEmpty) {
-        _logger.e('Invalid client_id: ${OAuthConfig.clientId}');
-        return failure(const ConfigurationFailure(
-          details:
-              'OAuth client_id is not configured. Please set OAUTH_CLIENT_ID environment variable.',
-        ),);
-      }
-
       // Generate PKCE codes manually to be able to save them
       final codeVerifier = PKCEGenerator.generateCodeVerifier();
       final codeChallenge = PKCEGenerator.generateCodeChallenge(codeVerifier);
@@ -84,12 +75,6 @@ class OAuthRepositoryImpl implements OAuthRepository {
   /// Desktop OAuth flow - opens browser and waits for deep link callback
   @override
   Future<Result<oauth2.Client>> loginWithDesktop() async {
-    if (kIsWeb) {
-      _logger.e('Desktop OAuth not available on web');
-      return failure(const ConfigurationFailure(
-        details: 'Desktop OAuth is only available on desktop platforms',
-      ),);
-    }
     try {
       final urlResult = await getAuthorizationUrl();
 
@@ -137,7 +122,8 @@ class OAuthRepositoryImpl implements OAuthRepository {
       final code = responseUri.queryParameters['code'];
       final state = responseUri.queryParameters['state'];
       final error = responseUri.queryParameters['error'];
-
+      
+      
       // If there is an error in the response
       if (error != null) {
         return failure(AuthFailure(

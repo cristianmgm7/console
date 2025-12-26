@@ -42,9 +42,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
           emit(const Authenticated());
         } else {
-
-          // NO redirigir a login si estamos en el callback route
-          // El router manejará la navegación
+          // Do NOT redirect to login if we are on the callback route
+          // The router will handle navigation
           emit(const Unauthenticated());
         }
       },
