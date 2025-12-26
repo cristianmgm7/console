@@ -24,6 +24,7 @@ class OAuthCallbackScreen extends StatefulWidget {
 }
 
 class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +53,7 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         // Navigate to dashboard when authenticated
         if (state is Authenticated) {
           // Use a small delay to ensure the state is fully processed
-          await Future.microtask(() {
+          await Future.microtask(( ) {
             if (context.mounted) {
               context.go(AppRoutes.dashboard);
             }
@@ -70,7 +71,7 @@ class _OAuthCallbackScreenState extends State<OAuthCallbackScreen> {
         }
       },
       builder: (context, state) {
-        // Log del estado actual para debugging
+        // Log from the state
 
         if (state is AuthError) {
         } else if (state is Authenticated) {
