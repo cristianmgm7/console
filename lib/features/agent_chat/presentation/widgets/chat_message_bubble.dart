@@ -3,22 +3,21 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
-
-enum MessageRole { user, agent }
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final String content;
   final MessageRole role;
   final DateTime timestamp;
   final String? subAgentName; // For agent messages
-  final IconData? subAgentIcon; // For agent messages
+  final String? subAgentIconName; // For agent messages (icon name)
 
   const ChatMessageBubble({
     required this.content,
     required this.role,
     required this.timestamp,
     this.subAgentName,
-    this.subAgentIcon,
+    this.subAgentIconName,
     super.key,
   });
 
@@ -42,7 +41,7 @@ class ChatMessageBubble extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
-                subAgentIcon ?? AppIcons.sparkles,
+                _getIconData(subAgentIconName) ?? AppIcons.sparkles,
                 size: 20,
                 color: AppColors.primary,
               ),
@@ -119,5 +118,20 @@ class ChatMessageBubble extends StatelessWidget {
     final hour = timestamp.hour > 12 ? timestamp.hour - 12 : timestamp.hour;
     final period = timestamp.hour >= 12 ? 'PM' : 'AM';
     return '${hour}:${timestamp.minute.toString().padLeft(2, '0')} $period';
+  }
+
+  IconData? _getIconData(String? iconName) {
+    if (iconName == null) return null;
+
+    switch (iconName) {
+      case 'github_logo':
+        return AppIcons.sparkles; // Use sparkles for GitHub
+      case 'chart_line':
+        return AppIcons.sparkles; // Use sparkles for charts
+      case 'chat':
+        return AppIcons.message;
+      default:
+        return AppIcons.sparkles;
+    }
   }
 }

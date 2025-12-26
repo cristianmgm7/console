@@ -647,9 +647,9 @@ static Widget agentChatScreen() {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] App compiles without errors: `flutter run`
-- [ ] No linting errors: `flutter analyze`
-- [ ] All new widgets render without errors
+- [x] App compiles without errors: `flutter run`
+- [x] No linting errors: `flutter analyze`
+- [x] All new widgets render without errors
 
 #### Manual Verification:
 - [ ] Agent Chat screen displays with correct layout
@@ -1356,9 +1356,9 @@ static Widget agentChatScreen() {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] App compiles without errors: `flutter run`
-- [ ] No linting errors: `flutter analyze`
-- [ ] BLoC transitions work correctly (can verify with BLoC observer)
+- [x] App compiles without errors: `flutter run`
+- [x] No linting errors: `flutter analyze`
+- [x] BLoC transitions work correctly (can verify with BLoC observer)
 
 #### Manual Verification:
 - [ ] Sessions load on screen open

@@ -1,0 +1,135 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
+import 'package:uuid/uuid.dart';
+import 'chat_event.dart';
+import 'chat_state.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
+
+@injectable
+class ChatBloc extends Bloc<ChatEvent, ChatState> {
+  final AgentChatRepository _repository;
+  final Logger _logger;
+  final Uuid _uuid = const Uuid();
+
+  ChatBloc(this._repository, this._logger) : super(const ChatInitial()) {
+    on<LoadMessages>(_onLoadMessages);
+    on<SendMessage>(_onSendMessage);
+    on<MessageReceived>(_onMessageReceived);
+    on<ClearMessages>(_onClearMessages);
+  }
+
+  Future<void> _onLoadMessages(
+    LoadMessages event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(const ChatLoading());
+
+    final result = await _repository.loadMessages(event.sessionId);
+
+    result.fold(
+      onSuccess: (messages) {
+        emit(ChatLoaded(
+          messages: messages,
+          currentSessionId: event.sessionId,
+        ));
+      },
+      onFailure: (failure) {
+        _logger.e('Failed to load messages', error: failure);
+        emit(ChatError(failure.failure.details ?? 'Failed to load messages'));
+      },
+    );
+  }
+
+  Future<void> _onSendMessage(
+    SendMessage event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    // Create user message
+    final userMessage = AgentChatMessage(
+      id: _uuid.v4(),
+      sessionId: event.sessionId,
+      role: MessageRole.user,
+      content: event.content,
+      timestamp: DateTime.now(),
+      status: MessageStatus.sending,
+    );
+
+    // Add to UI immediately
+    emit(currentState.copyWith(
+      messages: [...currentState.messages, userMessage],
+      isSending: true,
+    ));
+
+    // Send to agent
+    final result = await _repository.sendMessage(
+      sessionId: event.sessionId,
+      content: event.content,
+      context: event.context,
+    );
+
+    result.fold(
+      onSuccess: (agentMessages) {
+        // Update user message to sent
+        final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+        final allMessages = [
+          ...currentState.messages.where((m) => m.id != userMessage.id),
+          updatedUserMessage,
+          ...agentMessages,
+        ];
+
+        emit(currentState.copyWith(
+          messages: allMessages,
+          isSending: false,
+        ));
+      },
+      onFailure: (failure) {
+        _logger.e('Failed to send message', error: failure);
+
+        // Update user message to error
+        final errorMessage = userMessage.copyWith(status: MessageStatus.error);
+        final updatedMessages = currentState.messages
+            .map((m) => m.id == userMessage.id ? errorMessage : m)
+            .toList();
+
+        emit(currentState.copyWith(
+          messages: updatedMessages,
+          isSending: false,
+        ));
+      },
+    );
+  }
+
+  Future<void> _onMessageReceived(
+    MessageReceived event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    final agentMessage = AgentChatMessage(
+      id: event.messageId,
+      sessionId: currentState.currentSessionId,
+      role: MessageRole.agent,
+      content: event.content,
+      timestamp: DateTime.now(),
+      subAgentName: event.subAgentName,
+      subAgentIcon: event.subAgentIcon,
+    );
+
+    emit(currentState.copyWith(
+      messages: [...currentState.messages, agentMessage],
+    ));
+  }
+
+  Future<void> _onClearMessages(
+    ClearMessages event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(const ChatInitial());
+  }
+}
