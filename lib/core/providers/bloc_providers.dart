@@ -1,4 +1,5 @@
 import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/screens/agent_chat_screen.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart'
@@ -113,6 +114,21 @@ class BlocProviders {
         ),
       ],
       child: child,
+    );
+  }
+
+  static Widget agentChatScreen() {
+    return MultiBlocProvider(
+      providers: [
+        // TODO: Add BLoCs in Phase 3
+        // BlocProvider<SessionBloc>(
+        //   create: (_) => getIt<SessionBloc>(),
+        // ),
+        // BlocProvider<ChatBloc>(
+        //   create: (_) => getIt<ChatBloc>(),
+        // ),
+      ],
+      child: const AgentChatScreen(),
     );
   }
 }

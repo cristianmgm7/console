@@ -84,6 +84,13 @@ class AppRouter {
               ),
             ),
             GoRoute(
+              path: AppRoutes.agentChat,
+              name: 'agentChat',
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: BlocProviders.agentChatScreen(),
+              ),
+            ),
+            GoRoute(
               path: AppRoutes.settings,
               name: 'settings',
               pageBuilder: (context, state) => const NoTransitionPage(

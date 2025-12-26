@@ -15,6 +15,7 @@ class AppColors {
   // Text Colors
   static const Color textPrimary = Color.fromRGBO(10, 3, 47, 1); // Dark Charcoal
   static const Color textSecondary = Color(0xFF8E8E93); // Cool Grey
+  static const Color textTertiary = Color(0xFFC7C7CC); // Light Grey
   static const Color border = Color(0xFFE0E0E0); // Subtle border for light theme
 
   // Gradients (Aura)

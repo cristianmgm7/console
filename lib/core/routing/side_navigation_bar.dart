@@ -39,6 +39,13 @@ class SideNavigationBar extends StatelessWidget {
                   isSelected: currentPath == AppRoutes.voiceMemos,
                   onTap: () => context.go(AppRoutes.voiceMemos),
                 ),
+                NavigationItem(
+                  icon: AppIcons.sparkles, // or AppIcons.robot if available
+                  label: 'Agent Chat',
+                  route: AppRoutes.agentChat,
+                  isSelected: currentPath == AppRoutes.agentChat,
+                  onTap: () => context.go(AppRoutes.agentChat),
+                ),
               ],
             ),
           ),
