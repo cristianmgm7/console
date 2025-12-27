@@ -1,0 +1,20 @@
+# Google Agent Development Kit (ADK)
+google-genai==1.56.0
+google-adk==1.21.0
+
+# FastAPI for API server with SSE streaming
+fastapi==0.123.10
+uvicorn[standard]==0.40.0
+sse-starlette==3.0.4
+python-multipart==0.0.21
+
+# Authentication and OAuth2 (versions compatible with google-genai)
+google-auth>=2.45.0
+google-auth-oauthlib>=1.2.1
+google-auth-httplib2>=0.2.0
+
+# Environment and utilities
+python-dotenv==1.0.1
+
+# Optional: Token encryption for production
+cryptography==44.0.0
