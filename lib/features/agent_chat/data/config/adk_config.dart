@@ -4,6 +4,6 @@ class AdkConfig {
     defaultValue: 'http://localhost:8000',
   );
 
-  static const String appName = 'src'; // Based on the ADK project structure
+  static const String appName = 'src'; // Based on ADK module structure
   static const int timeoutSeconds = 30;
 }
