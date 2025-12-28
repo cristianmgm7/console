@@ -1,16 +1,13 @@
+import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_session_repository.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
-import 'session_event.dart';
-import 'session_state.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_session_repository.dart';
 
 @injectable
 class SessionBloc extends Bloc<SessionEvent, SessionState> {
-  final AgentSessionRepository _repository;
-  final Logger _logger;
-  final Uuid _uuid = const Uuid();
 
   SessionBloc(this._repository, this._logger) : super(const SessionInitial()) {
     on<LoadSessions>(_onLoadSessions);
@@ -19,6 +16,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     on<DeleteSession>(_onDeleteSession);
     on<UpdateSessionPreview>(_onUpdateSessionPreview);
   }
+  final AgentSessionRepository _repository;
+  final Logger _logger;
+  final Uuid _uuid = const Uuid();
 
   Future<void> _onLoadSessions(
     LoadSessions event,

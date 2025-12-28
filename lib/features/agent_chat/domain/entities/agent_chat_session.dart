@@ -1,13 +1,6 @@
 import 'package:equatable/equatable.dart';
 
 class AgentChatSession extends Equatable {
-  final String id;
-  final String userId;
-  final String appName;
-  final DateTime createdAt;
-  final DateTime lastUpdateTime;
-  final Map<String, dynamic> state;
-  final String? lastMessagePreview;
 
   const AgentChatSession({
     required this.id,
@@ -18,6 +11,13 @@ class AgentChatSession extends Equatable {
     this.state = const {},
     this.lastMessagePreview,
   });
+  final String id;
+  final String userId;
+  final String appName;
+  final DateTime createdAt;
+  final DateTime lastUpdateTime;
+  final Map<String, dynamic> state;
+  final String? lastMessagePreview;
 
   @override
   List<Object?> get props => [

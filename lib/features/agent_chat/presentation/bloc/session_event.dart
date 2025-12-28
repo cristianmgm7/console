@@ -16,28 +16,28 @@ class CreateNewSession extends SessionEvent {
 }
 
 class SelectSession extends SessionEvent {
-  final String sessionId;
 
   const SelectSession(this.sessionId);
+  final String sessionId;
 
   @override
   List<Object?> get props => [sessionId];
 }
 
 class DeleteSession extends SessionEvent {
-  final String sessionId;
 
   const DeleteSession(this.sessionId);
+  final String sessionId;
 
   @override
   List<Object?> get props => [sessionId];
 }
 
 class UpdateSessionPreview extends SessionEvent {
-  final String sessionId;
-  final String preview;
 
   const UpdateSessionPreview(this.sessionId, this.preview);
+  final String sessionId;
+  final String preview;
 
   @override
   List<Object?> get props => [sessionId, preview];

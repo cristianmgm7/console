@@ -13,12 +13,12 @@ class AgentChatScreen extends StatefulWidget {
 class _AgentChatScreenState extends State<AgentChatScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AppColors.background,
       body: Row(
         children: [
           // Session list sidebar (250px)
-          const SessionListSidebar(),
+          SessionListSidebar(),
 
           // Divider
           VerticalDivider(
@@ -27,7 +27,7 @@ class _AgentChatScreenState extends State<AgentChatScreen> {
           ),
 
           // Main chat area
-          const Expanded(
+          Expanded(
             child: ChatConversationArea(),
           ),
         ],
