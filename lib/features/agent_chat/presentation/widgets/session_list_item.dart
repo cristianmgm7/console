@@ -4,13 +4,6 @@ import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 
 class SessionListItem extends StatelessWidget {
-  final String sessionId;
-  final String title;
-  final String preview;
-  final DateTime lastMessageTime;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
 
   const SessionListItem({
     required this.sessionId,
@@ -22,6 +15,13 @@ class SessionListItem extends StatelessWidget {
     required this.onDelete,
     super.key,
   });
+  final String sessionId;
+  final String title;
+  final String preview;
+  final DateTime lastMessageTime;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {

@@ -5,15 +5,6 @@ enum MessageRole { user, agent }
 enum MessageStatus { sending, sent, error }
 
 class AgentChatMessage extends Equatable {
-  final String id;
-  final String sessionId;
-  final MessageRole role;
-  final String content;
-  final DateTime timestamp;
-  final MessageStatus status;
-  final String? subAgentName;
-  final String? subAgentIcon;
-  final Map<String, dynamic>? metadata;
 
   const AgentChatMessage({
     required this.id,
@@ -26,6 +17,15 @@ class AgentChatMessage extends Equatable {
     this.subAgentIcon,
     this.metadata,
   });
+  final String id;
+  final String sessionId;
+  final MessageRole role;
+  final String content;
+  final DateTime timestamp;
+  final MessageStatus status;
+  final String? subAgentName;
+  final String? subAgentIcon;
+  final Map<String, dynamic>? metadata;
 
   @override
   List<Object?> get props => [
