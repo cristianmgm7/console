@@ -36,9 +36,10 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
       return;
     }
 
-    context.read<ChatBloc>().add(SendMessage(
+    context.read<ChatBloc>().add(SendMessageStreaming(
       sessionId: sessionState.selectedSessionId!,
       content: text,
+      context: null, // TODO: Add context support later
     ));
 
     _controller.clear();

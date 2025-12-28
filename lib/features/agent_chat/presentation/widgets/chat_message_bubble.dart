@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
-import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:flutter/material.dart';
 
 class ChatMessageBubble extends StatelessWidget { // For agent messages (icon name)
 
@@ -12,14 +12,14 @@ class ChatMessageBubble extends StatelessWidget { // For agent messages (icon na
     required this.role,
     required this.timestamp,
     this.subAgentName,
-    this.subAgentIconName,
+    this.subAgentIcon,
     super.key,
   });
   final String content;
   final MessageRole role;
   final DateTime timestamp;
   final String? subAgentName; // For agent messages
-  final String? subAgentIconName;
+  final String? subAgentIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class ChatMessageBubble extends StatelessWidget { // For agent messages (icon na
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
-                _getIconData(subAgentIconName) ?? AppIcons.sparkles,
+                _getIconData(subAgentIcon) ?? AppIcons.sparkles,
                 size: 20,
                 color: AppColors.primary,
               ),
