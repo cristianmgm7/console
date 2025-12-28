@@ -1,67 +1,55 @@
+import 'dart:convert';
+
+import 'package:carbon_voice_console/core/errors/exceptions.dart';
+import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/datasources/adk_api_service.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/mappers/event_mapper.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/models/event_dto.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
-import 'package:uuid/uuid.dart';
+import 'package:logger/logger.dart';
 
 @LazySingleton(as: AgentChatRepository)
 class AgentChatRepositoryImpl implements AgentChatRepository {
 
-  AgentChatRepositoryImpl() {
-    // Initialize with some mock data for Phase 3
-    _initializeMockData();
+  AgentChatRepositoryImpl(
+    this._apiService,
+    this._storage,
+    this._logger,
+  );
+  final AdkApiService _apiService;
+  final FlutterSecureStorage _storage;
+  final Logger _logger;
+
+  String get _userId {
+    // TODO: Get from UserProfileCubit or auth service
+    return 'test_user'; // Placeholder - matches ADK test user
   }
-  final Map<String, List<AgentChatMessage>> _messages = {};
-  final Uuid _uuid = const Uuid();
 
-  void _initializeMockData() {
-    // Messages for session_1
-    _messages['session_1'] = [
-      AgentChatMessage(
-        id: 'msg_1_1',
-        sessionId: 'session_1',
-        role: MessageRole.user,
-        content: 'Hello, can you help me analyze some data?',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
-      ),
-      AgentChatMessage(
-        id: 'msg_1_2',
-        sessionId: 'session_1',
-        role: MessageRole.agent,
-        content: "I'd be happy to help you analyze your data. What specific information are you looking for?",
-        timestamp: DateTime.now().subtract(const Duration(minutes: 9)),
-        subAgentName: 'Carbon Voice Agent',
-      ),
-    ];
-
-    // Messages for session_2
-    _messages['session_2'] = [
-      AgentChatMessage(
-        id: 'msg_2_1',
-        sessionId: 'session_2',
-        role: MessageRole.user,
-        content: 'What are the latest market trends?',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-      AgentChatMessage(
-        id: 'msg_2_2',
-        sessionId: 'session_2',
-        role: MessageRole.agent,
-        content: 'I can help you with market analysis. Let me check the latest trends for you.',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
-        subAgentName: 'Market Analyzer',
-      ),
-    ];
-
-    // Messages for session_3 - empty for now
-    _messages['session_3'] = [];
-  }
+  String _getMessagesKey(String sessionId) => 'agent_chat_messages_$sessionId';
 
   @override
   Future<Result<List<AgentChatMessage>>> loadMessages(String sessionId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
-    return success(_messages[sessionId]?.toList() ?? []);
+    try {
+      final messagesJson = await _storage.read(key: _getMessagesKey(sessionId));
+
+      if (messagesJson == null) {
+        return success([]);
+      }
+
+      final messagesList = jsonDecode(messagesJson) as List;
+      final messages = messagesList
+          .map((json) => _messageFromJson(json as Map<String, dynamic>))
+          .toList();
+
+      return success(messages);
+    } on StorageException catch (e) {
+      _logger.e('Error loading messages', error: e);
+      return failure(const StorageFailure(details: 'Failed to load messages'));
+    }
   }
 
   @override
@@ -70,58 +58,122 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     required String content,
     Map<String, dynamic>? context,
   }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Create agent response based on content
-    final agentResponse = _generateAgentResponse(content);
-
-    final agentMessage = AgentChatMessage(
-      id: _uuid.v4(),
+    // For non-streaming, we'll use the streaming method internally
+    return sendMessageStreaming(
       sessionId: sessionId,
-      role: MessageRole.agent,
-      content: agentResponse['content'] as String,
-      timestamp: DateTime.now(),
-      subAgentName: agentResponse['subAgentName'] as String?,
+      content: content,
+      context: context,
+      onStatus: (_, _) {}, // Ignore status updates for non-streaming
     );
-
-    // Add to messages
-    _messages[sessionId] ??= [];
-    _messages[sessionId]!.add(agentMessage);
-
-    return success([agentMessage]);
   }
 
-  Map<String, dynamic> _generateAgentResponse(String userMessage) {
-    final lowerMessage = userMessage.toLowerCase();
+  @override
+  Future<Result<List<AgentChatMessage>>> sendMessageStreaming({
+    required String sessionId,
+    required String content,
+    required void Function(String status, String? subAgent) onStatus, Map<String, dynamic>? context,
+    void Function(String chunk)? onMessageChunk,
+  }) async {
+    try {
+      final agentMessages = <AgentChatMessage>[];
 
-    if (lowerMessage.contains('github') || lowerMessage.contains('repo')) {
-      return {
-        'content': 'I can help you analyze your GitHub repositories. Let me check what repositories you have and provide some insights.',
-        'subAgentName': 'GitHub Agent',
-      };
-    } else if (lowerMessage.contains('market') || lowerMessage.contains('trend')) {
-      return {
-        'content': 'I\'ll analyze the current market trends for you. Based on recent data, there are some interesting patterns emerging.',
-        'subAgentName': 'Market Analyzer',
-      };
-    } else if (lowerMessage.contains('data') || lowerMessage.contains('analyze')) {
-      return {
-        'content': 'I can help you analyze your data. What type of data are you working with and what insights are you looking for?',
-        'subAgentName': 'Carbon Voice Agent',
-      };
-    } else {
-      return {
-        'content': 'I understand you\'re asking about: "$userMessage". How can I help you with this?',
-        'subAgentName': 'Carbon Voice Agent',
-      };
+      await for (final eventJson in _apiService.sendMessageStreaming(
+        userId: _userId,
+        sessionId: sessionId,
+        message: content,
+        context: context,
+      )) {
+        final eventDto = EventDto.fromJson(eventJson);
+
+        // Check for status updates (function calls)
+        final statusMsg = eventDto.getStatusMessage();
+        if (statusMsg != null) {
+          String? subAgent;
+          if (eventDto.author.contains('github')) {
+            subAgent = 'GitHub Agent';
+          } else if (eventDto.author.contains('carbon')) {
+            subAgent = 'Carbon Voice Agent';
+          } else if (eventDto.author.contains('market') || eventDto.author.contains('analyzer')) {
+            subAgent = 'Market Analyzer';
+          }
+
+          onStatus(statusMsg, subAgent);
+        }
+
+        // Convert to message
+        final message = eventDto.toDomain(sessionId);
+        if (message != null) {
+          agentMessages.add(message);
+        }
+      }
+
+      // Save messages locally
+      if (agentMessages.isNotEmpty) {
+        final existingMessages = await loadMessages(sessionId);
+        final allMessages = [
+          ...existingMessages.fold(onSuccess: (m) => m, onFailure: (_) => <AgentChatMessage>[]),
+          ...agentMessages,
+        ];
+        await saveMessagesLocally(sessionId, allMessages);
+      }
+
+      return success(agentMessages);
+    } on ServerException catch (e) {
+      _logger.e('Server error streaming message', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error streaming message', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } catch (e) {
+      _logger.e('Unexpected error streaming message', error: e);
+      return failure(const UnknownFailure(details: 'Failed to stream message'));
     }
   }
 
   @override
-  Future<Result<void>> saveMessagesLocally(String sessionId, List<AgentChatMessage> messages) async {
-    // For Phase 3, just store in memory
-    _messages[sessionId] = messages;
-    return success(null);
+  Future<Result<void>> saveMessagesLocally(
+    String sessionId,
+    List<AgentChatMessage> messages,
+  ) async {
+    try {
+      final messagesJson = jsonEncode(
+        messages.map((m) => _messageToJson(m)).toList(),
+      );
+
+      await _storage.write(key: _getMessagesKey(sessionId), value: messagesJson);
+
+      return success(null);
+    } catch (e) {
+      _logger.e('Error saving messages locally', error: e);
+      return failure(const StorageFailure(details: 'Failed to save messages'));
+    }
+  }
+
+  Map<String, dynamic> _messageToJson(AgentChatMessage message) {
+    return {
+      'id': message.id,
+      'sessionId': message.sessionId,
+      'role': message.role.name,
+      'content': message.content,
+      'timestamp': message.timestamp.toIso8601String(),
+      'status': message.status.name,
+      'subAgentName': message.subAgentName,
+      'subAgentIcon': message.subAgentIcon,
+      'metadata': message.metadata,
+    };
+  }
+
+  AgentChatMessage _messageFromJson(Map<String, dynamic> json) {
+    return AgentChatMessage(
+      id: json['id'] as String,
+      sessionId: json['sessionId'] as String,
+      role: MessageRole.values.firstWhere((r) => r.name == json['role']),
+      content: json['content'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      status: MessageStatus.values.firstWhere((s) => s.name == json['status']),
+      subAgentName: json['subAgentName'] as String?,
+      subAgentIcon: json['subAgentIcon'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
+    );
   }
 }

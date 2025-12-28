@@ -1,6 +1,7 @@
 import 'package:carbon_voice_console/core/config/oauth_config.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -52,4 +53,7 @@ abstract class RegisterModule {
           accessibility: KeychainAccessibility.first_unlock,
         ),
       );
+
+  @lazySingleton
+  http.Client get httpClient => http.Client();
 }
