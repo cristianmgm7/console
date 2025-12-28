@@ -19,8 +19,14 @@ def carbon_voice_header_provider(readonly_context):
     """
     Header provider for Carbon Voice MCP tools authentication.
 
-    Injects API key authorization header from OAuth tokens stored in session state.
-    Automatically refreshes expired tokens.
+    Injects API key authorization header from OAuth tokens stored in session state
+    that were pre-populated by Flutter.
+
+    Flutter Flow:
+    1. Flutter handles OAuth and gets access_token
+    2. Flutter calls session init with token
+    3. This header_provider reads token from session
+    4. MCP tools use the token
 
     Args:
         readonly_context: ADK ReadonlyContext with session state access
@@ -30,32 +36,25 @@ def carbon_voice_header_provider(readonly_context):
     """
     session_state = readonly_context.session.state
 
-    # Check for existing OAuth token
+    # Check for existing OAuth token (populated by Flutter)
     cached_token_json = session_state.get(CARBON_TOKEN_KEY)
 
     if cached_token_json:
         try:
-            # Parse stored credentials
+            # Parse token data (simple format: {"token": "cv_..."})
             token_data = json.loads(cached_token_json)
-            creds = Credentials.from_authorized_user_info(
-                token_data,
-                scopes=config.CARBON_SCOPES
-            )
+            access_token = token_data.get("token")
 
-            # Automatic token refresh if expired
-            if not creds.valid and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-                session_state[CARBON_TOKEN_KEY] = creds.to_json()
-
-            # Return Authorization header with API key
-            if creds.valid:
+            if access_token:
+                # Return Authorization header for Carbon Voice API
                 return {
-                    "Authorization": f"Bearer {creds.token}"
+                    "Authorization": f"Bearer {access_token}"
                 }
         except Exception as e:
-            print(f"Carbon Voice auth error: {e}")
+            print(f"⚠️  Carbon Voice token parse error: {e}")
 
-    # No token available
+    # No token available - Flutter needs to authenticate first
+    print(f"⚠️  No Carbon Voice token in session. Flutter must authenticate user.")
     return {}
 
 
