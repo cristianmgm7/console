@@ -11,8 +11,7 @@ abstract class AgentChatRepository {
   Future<Result<List<AgentChatMessage>>> sendMessageStreaming({
     required String sessionId,
     required String content,
-    Map<String, dynamic>? context,
-    required void Function(String status, String? subAgent) onStatus,
+    required void Function(String status, String? subAgent) onStatus, Map<String, dynamic>? context,
     void Function(String chunk)? onMessageChunk,
   });
   Future<Result<void>> saveMessagesLocally(String sessionId, List<AgentChatMessage> messages);

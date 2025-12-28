@@ -124,7 +124,7 @@ class AdkApiService {
       'user_id': userId,
       'message': message,
       if (sessionId.isNotEmpty) 'session_id': sessionId,
-      if (context != null) 'context': context,
+      'context': ?context,
     };
 
     _logger.d('Sending streaming message: $url');
