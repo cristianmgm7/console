@@ -20,7 +20,13 @@ def github_header_provider(readonly_context):
 
     This function is called by ADK before each MCP tool request to inject
     authentication headers. It retrieves OAuth tokens from session state
-    and automatically refreshes expired tokens.
+    that were pre-populated by Flutter.
+
+    Flutter Flow:
+    1. Flutter handles OAuth and gets access_token
+    2. Flutter calls session init with token
+    3. This header_provider reads token from session
+    4. MCP tools use the token
 
     Args:
         readonly_context: ADK ReadonlyContext with session state access
@@ -30,35 +36,26 @@ def github_header_provider(readonly_context):
     """
     session_state = readonly_context.session.state
 
-    # Check for existing OAuth token in session
+    # Check for existing OAuth token in session (populated by Flutter)
     cached_token_json = session_state.get(GITHUB_TOKEN_KEY)
 
     if cached_token_json:
         try:
-            # Parse stored credentials
+            # Parse token data (simple format: {"token": "gho_..."})
             token_data = json.loads(cached_token_json)
-            creds = Credentials.from_authorized_user_info(
-                token_data,
-                scopes=config.GITHUB_SCOPES
-            )
+            access_token = token_data.get("token")
 
-            # Automatic token refresh if expired
-            if not creds.valid and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-                # Update session with refreshed token
-                session_state[GITHUB_TOKEN_KEY] = creds.to_json()
-
-            # Return Authorization header
-            if creds.valid:
+            if access_token:
+                # Return Authorization header for GitHub API
                 return {
-                    "Authorization": f"Bearer {creds.token}"
+                    "Authorization": f"Bearer {access_token}"
                 }
         except Exception as e:
             # Log error but don't break - tool will fail with 401
-            print(f"GitHub auth error: {e}")
+            print(f"⚠️  GitHub token parse error: {e}")
 
-    # No token available - MCP tool will fail with 401
-    # Agent will need to handle authentication flow
+    # No token available - Flutter needs to authenticate first
+    print(f"⚠️  No GitHub token in session. Flutter must authenticate user.")
     return {}
 
 

@@ -3,6 +3,7 @@
 from google.adk.agents import Agent
 from src.agents.github_agent import github_agent
 from src.agents.carbon_voice_agent import carbon_voice_agent
+from src.agents.atlassian_agent import atlassian_agent
 
 
 # Create root orchestrator agent
@@ -35,5 +36,5 @@ root_agent = Agent(
     - Handle authentication requirements transparently (sub-agents will manage OAuth)
 
     Always prioritize user intent and provide helpful, accurate assistance.''',
-    sub_agents=[github_agent, carbon_voice_agent],
+    sub_agents=[github_agent, carbon_voice_agent, atlassian_agent],
 )

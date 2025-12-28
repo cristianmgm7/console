@@ -3,5 +3,6 @@
 from src.agents.github_agent import github_agent
 from src.agents.carbon_voice_agent import carbon_voice_agent
 from src.agents.root_agent import root_agent
+from src.agents.atlassian_agent import atlassian_agent
 
-__all__ = ['github_agent', 'carbon_voice_agent', 'root_agent']
+__all__ = ['github_agent', 'carbon_voice_agent', 'root_agent', 'atlassian_agent']
