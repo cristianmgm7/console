@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
-import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/session_list_item.dart';
+import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/session_list_item.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SessionListSidebar extends StatelessWidget {
   const SessionListSidebar({super.key});
@@ -23,7 +23,7 @@ class SessionListSidebar extends StatelessWidget {
         children: [
           // Header with "New Chat" button
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
               child: AppButton(
               onPressed: () {
                 context.read<SessionBloc>().add(const CreateNewSession());

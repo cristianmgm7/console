@@ -5,12 +5,7 @@ import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 
-class ChatMessageBubble extends StatelessWidget {
-  final String content;
-  final MessageRole role;
-  final DateTime timestamp;
-  final String? subAgentName; // For agent messages
-  final String? subAgentIconName; // For agent messages (icon name)
+class ChatMessageBubble extends StatelessWidget { // For agent messages (icon name)
 
   const ChatMessageBubble({
     required this.content,
@@ -20,13 +15,18 @@ class ChatMessageBubble extends StatelessWidget {
     this.subAgentIconName,
     super.key,
   });
+  final String content;
+  final MessageRole role;
+  final DateTime timestamp;
+  final String? subAgentName; // For agent messages
+  final String? subAgentIconName;
 
   @override
   Widget build(BuildContext context) {
     final isUser = role == MessageRole.user;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +54,7 @@ class ChatMessageBubble extends StatelessWidget {
             child: GlassContainer(
               opacity: 0.3,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -117,7 +117,7 @@ class ChatMessageBubble extends StatelessWidget {
   String _formatTimestamp(DateTime timestamp) {
     final hour = timestamp.hour > 12 ? timestamp.hour - 12 : timestamp.hour;
     final period = timestamp.hour >= 12 ? 'PM' : 'AM';
-    return '${hour}:${timestamp.minute.toString().padLeft(2, '0')} $period';
+    return '$hour:${timestamp.minute.toString().padLeft(2, '0')} $period';
   }
 
   IconData? _getIconData(String? iconName) {

@@ -6,13 +6,13 @@ import 'package:uuid/uuid.dart';
 
 @LazySingleton(as: AgentChatRepository)
 class AgentChatRepositoryImpl implements AgentChatRepository {
-  final Map<String, List<AgentChatMessage>> _messages = {};
-  final Uuid _uuid = const Uuid();
 
   AgentChatRepositoryImpl() {
     // Initialize with some mock data for Phase 3
     _initializeMockData();
   }
+  final Map<String, List<AgentChatMessage>> _messages = {};
+  final Uuid _uuid = const Uuid();
 
   void _initializeMockData() {
     // Messages for session_1
@@ -28,7 +28,7 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         id: 'msg_1_2',
         sessionId: 'session_1',
         role: MessageRole.agent,
-        content: 'I\'d be happy to help you analyze your data. What specific information are you looking for?',
+        content: "I'd be happy to help you analyze your data. What specific information are you looking for?",
         timestamp: DateTime.now().subtract(const Duration(minutes: 9)),
         subAgentName: 'Carbon Voice Agent',
       ),

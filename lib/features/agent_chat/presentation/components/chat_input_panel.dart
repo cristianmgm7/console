@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
+import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChatInputPanel extends StatefulWidget {
   const ChatInputPanel({super.key});
@@ -51,8 +51,8 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
         final isSending = state is ChatLoaded && state.isSending;
 
         return Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
             color: AppColors.surface,
             border: Border(
               top: BorderSide(color: AppColors.border),
