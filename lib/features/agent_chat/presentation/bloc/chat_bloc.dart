@@ -12,7 +12,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ChatBloc(this._repository, this._logger) : super(const ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
-    on<SendMessage>(_onSendMessage);
     on<SendMessageStreaming>(_onSendMessageStreaming);
     on<MessageReceived>(_onMessageReceived);
     on<ClearMessages>(_onClearMessages);
@@ -39,68 +38,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       onFailure: (failure) {
         _logger.e('Failed to load messages', error: failure);
         emit(ChatError(failure.failure.details ?? 'Failed to load messages'));
-      },
-    );
-  }
-
-  Future<void> _onSendMessage(
-    SendMessage event,
-    Emitter<ChatState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is! ChatLoaded) return;
-
-    // Create user message
-    final userMessage = AgentChatMessage(
-      id: _uuid.v4(),
-      sessionId: event.sessionId,
-      role: MessageRole.user,
-      content: event.content,
-      timestamp: DateTime.now(),
-      status: MessageStatus.sending,
-    );
-
-    // Add to UI immediately
-    emit(currentState.copyWith(
-      messages: [...currentState.messages, userMessage],
-      isSending: true,
-    ));
-
-    // Send to agent
-    final result = await _repository.sendMessage(
-      sessionId: event.sessionId,
-      content: event.content,
-      context: event.context,
-    );
-
-    result.fold(
-      onSuccess: (agentMessages) {
-        // Update user message to sent
-        final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-        final allMessages = [
-          ...currentState.messages.where((m) => m.id != userMessage.id),
-          updatedUserMessage,
-          ...agentMessages,
-        ];
-
-        emit(currentState.copyWith(
-          messages: allMessages,
-          isSending: false,
-        ));
-      },
-      onFailure: (failure) {
-        _logger.e('Failed to send message', error: failure);
-
-        // Update user message to error
-        final errorMessage = userMessage.copyWith(status: MessageStatus.error);
-        final updatedMessages = currentState.messages
-            .map((m) => m.id == userMessage.id ? errorMessage : m)
-            .toList();
-
-        emit(currentState.copyWith(
-          messages: updatedMessages,
-          isSending: false,
-        ));
       },
     );
   }
