@@ -16,6 +16,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ChatBloc(this._repository, this._logger) : super(const ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
     on<SendMessage>(_onSendMessage);
+    on<SendMessageStreaming>(_onSendMessageStreaming);
     on<MessageReceived>(_onMessageReceived);
     on<ClearMessages>(_onClearMessages);
   }
@@ -102,6 +103,106 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ));
       },
     );
+  }
+
+  Future<void> _onSendMessageStreaming(
+    SendMessageStreaming event,
+    Emitter<ChatState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    // Create user message
+    final userMessage = AgentChatMessage(
+      id: _uuid.v4(),
+      sessionId: event.sessionId,
+      role: MessageRole.user,
+      content: event.content,
+      timestamp: DateTime.now(),
+      status: MessageStatus.sending,
+    );
+
+    // Add to UI immediately
+    emit(currentState.copyWith(
+      messages: [...currentState.messages, userMessage],
+      isSending: true,
+    ));
+
+    try {
+      // Send with streaming
+      final result = await _repository.sendMessageStreaming(
+        sessionId: event.sessionId,
+        content: event.content,
+        context: event.context,
+        onStatus: (status, subAgent) {
+          // Update status in real-time
+          final currentState = state;
+          if (currentState is ChatLoaded) {
+            emit(currentState.copyWith(
+              statusMessage: status,
+              statusSubAgent: subAgent,
+            ));
+          }
+        },
+        onMessageChunk: (chunk) {
+          // Handle streaming text chunks if needed
+          // For now, we'll wait for complete messages
+        },
+      );
+
+      result.fold(
+        onSuccess: (agentMessages) {
+          // Update user message to sent
+          final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+          final allMessages = [
+            ...currentState.messages.where((m) => m.id != userMessage.id),
+            updatedUserMessage,
+            ...agentMessages,
+          ];
+
+          emit(ChatLoaded(
+            messages: allMessages,
+            currentSessionId: event.sessionId,
+            isSending: false,
+            statusMessage: null,
+            statusSubAgent: null,
+          ));
+        },
+        onFailure: (failure) {
+          _logger.e('Failed to send streaming message', error: failure);
+
+          // Update user message to error
+          final errorMessage = userMessage.copyWith(status: MessageStatus.error);
+          final updatedMessages = currentState.messages
+              .map((m) => m.id == userMessage.id ? errorMessage : m)
+              .toList();
+
+          emit(ChatLoaded(
+            messages: updatedMessages,
+            currentSessionId: event.sessionId,
+            isSending: false,
+            statusMessage: null,
+            statusSubAgent: null,
+          ));
+        },
+      );
+    } catch (e) {
+      _logger.e('Error in streaming', error: e);
+
+      // Update user message to error
+      final errorMessage = userMessage.copyWith(status: MessageStatus.error);
+      final updatedMessages = currentState.messages
+          .map((m) => m.id == userMessage.id ? errorMessage : m)
+          .toList();
+
+      emit(ChatLoaded(
+        messages: updatedMessages,
+        currentSessionId: event.sessionId,
+        isSending: false,
+        statusMessage: null,
+        statusSubAgent: null,
+      ));
+    }
   }
 
   Future<void> _onMessageReceived(

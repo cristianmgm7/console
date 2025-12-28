@@ -1,101 +1,190 @@
+import 'dart:convert';
+
+import 'package:carbon_voice_console/core/errors/exceptions.dart';
+import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/datasources/adk_api_service.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/mappers/session_mapper.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/models/session_dto.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_session.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_session_repository.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
-import 'package:uuid/uuid.dart';
+import 'package:logger/logger.dart';
 
 @LazySingleton(as: AgentSessionRepository)
 class AgentSessionRepositoryImpl implements AgentSessionRepository {
-  final List<AgentChatSession> _sessions = [];
-  final Uuid _uuid = const Uuid();
 
-  AgentSessionRepositoryImpl() {
-    // Initialize with some mock data for Phase 3
-    _initializeMockData();
-  }
+  AgentSessionRepositoryImpl(
+    this._apiService,
+    this._storage,
+    this._logger,
+  );
+  final AdkApiService _apiService;
+  final FlutterSecureStorage _storage;
+  final Logger _logger;
 
-  void _initializeMockData() {
-    _sessions.addAll([
-      AgentChatSession(
-        id: 'session_1',
-        userId: 'user_123',
-        appName: 'root_agent',
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        lastUpdateTime: DateTime.now().subtract(const Duration(hours: 2)),
-        lastMessagePreview: 'Hello, can you help me analyze some data?',
-      ),
-      AgentChatSession(
-        id: 'session_2',
-        userId: 'user_123',
-        appName: 'root_agent',
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        lastUpdateTime: DateTime.now().subtract(const Duration(hours: 1)),
-        lastMessagePreview: 'What are the latest market trends?',
-      ),
-      AgentChatSession(
-        id: 'session_3',
-        userId: 'user_123',
-        appName: 'root_agent',
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-        lastUpdateTime: DateTime.now().subtract(const Duration(minutes: 30)),
-        lastMessagePreview: 'Please review my GitHub repositories',
-      ),
-    ]);
+  static const _sessionsKey = 'agent_chat_sessions';
+
+  String get _userId {
+    // TODO: Get from UserProfileCubit or auth service
+    return 'test_user'; // Placeholder - matches ADK test user
   }
 
   @override
   Future<Result<List<AgentChatSession>>> loadSessions() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
-    return success(_sessions.toList());
+    try {
+      // Load from local storage first for offline access
+      final sessionsJson = await _storage.read(key: _sessionsKey);
+
+      if (sessionsJson == null) {
+        return success([]);
+      }
+
+      final sessionsList = jsonDecode(sessionsJson) as List;
+      final sessions = sessionsList
+          .map((json) => SessionDto.fromJson(json as Map<String, dynamic>).toDomain())
+          .toList();
+
+      // Sort by last update time
+      sessions.sort((a, b) => b.lastUpdateTime.compareTo(a.lastUpdateTime));
+
+      return success(sessions);
+    } on StorageException catch (e) {
+      _logger.e('Error loading sessions', error: e);
+      return failure(const StorageFailure(details: 'Failed to load sessions'));
+    }
   }
 
   @override
   Future<Result<AgentChatSession>> createSession(String sessionId) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 300));
+    try {
+      final sessionData = await _apiService.createSession(
+        userId: _userId,
+        sessionId: sessionId,
+      );
 
-    final newSession = AgentChatSession(
-      id: sessionId,
-      userId: 'user_123',
-      appName: 'root_agent',
-      createdAt: DateTime.now(),
-      lastUpdateTime: DateTime.now(),
-    );
+      final sessionDto = SessionDto.fromJson(sessionData);
+      final session = sessionDto.toDomain();
 
-    _sessions.insert(0, newSession); // Add to beginning
-    return success(newSession);
+      // Save to local storage
+      await saveSessionLocally(session);
+
+      return success(session);
+    } on ServerException catch (e) {
+      _logger.e('Server error creating session', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error creating session', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } on Exception catch (e) {
+      _logger.e('Unexpected error creating session', error: e);
+      return failure(const UnknownFailure(details: 'Failed to create session'));
+    }
   }
 
   @override
   Future<Result<AgentChatSession>> getSession(String sessionId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      final sessionData = await _apiService.getSession(
+        userId: _userId,
+        sessionId: sessionId,
+      );
 
-    final session = _sessions.firstWhere(
-      (s) => s.id == sessionId,
-      orElse: () => throw Exception('Session not found'),
-    );
+      final sessionDto = SessionDto.fromJson(sessionData);
+      final session = sessionDto.toDomain();
 
-    return success(session);
+      return success(session);
+    } on ServerException catch (e) {
+      _logger.e('Server error getting session', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error getting session', error: e);
+      return failure(NetworkFailure(details: e.message));
+    // ignore: avoid_catches_without_on_clauses
+    } on Exception catch (e) {
+      _logger.e('Unexpected error getting session', error: e);
+      return failure(const UnknownFailure(details: 'Failed to get session'));
+    }
   }
 
   @override
   Future<Result<void>> deleteSession(String sessionId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      await _apiService.deleteSession(
+        userId: _userId,
+        sessionId: sessionId,
+      );
 
-    _sessions.removeWhere((s) => s.id == sessionId);
-    return success(null);
+      // Remove from local storage
+      final sessionsResult = await loadSessions();
+      final sessions = sessionsResult.fold(
+        onSuccess: (s) => s,
+        onFailure: (_) => <AgentChatSession>[],
+      );
+
+      final updatedSessions = sessions.where((s) => s.id != sessionId).toList();
+
+      final sessionsJson = jsonEncode(
+        updatedSessions.map((s) => {
+          'id': s.id,
+          'appName': s.appName,
+          'userId': s.userId,
+          'state': s.state,
+          'events': [],
+          'lastUpdateTime': s.lastUpdateTime.millisecondsSinceEpoch / 1000,
+        }).toList(),
+      );
+
+      await _storage.write(key: _sessionsKey, value: sessionsJson);
+
+      return success(null);
+    } on ServerException catch (e) {
+      _logger.e('Server error deleting session', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error deleting session', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } catch (e) {
+      _logger.e('Unexpected error deleting session', error: e);
+      return failure(const UnknownFailure(details: 'Failed to delete session'));
+    }
   }
 
   @override
   Future<Result<void>> saveSessionLocally(AgentChatSession session) async {
-    // For Phase 3, just store in memory
-    final index = _sessions.indexWhere((s) => s.id == session.id);
-    if (index >= 0) {
-      _sessions[index] = session;
-    } else {
-      _sessions.add(session);
+    try {
+      final sessionsResult = await loadSessions();
+      final sessions = sessionsResult.fold(
+        onSuccess: (s) => s,
+        onFailure: (_) => <AgentChatSession>[],
+      );
+
+      // Add or update session
+      final existingIndex = sessions.indexWhere((s) => s.id == session.id);
+      if (existingIndex >= 0) {
+        sessions[existingIndex] = session;
+      } else {
+        sessions.add(session);
+      }
+
+      final sessionsJson = jsonEncode(
+        sessions.map((s) => {
+          'id': s.id,
+          'appName': s.appName,
+          'userId': s.userId,
+          'state': s.state,
+          'events': [],
+          'lastUpdateTime': s.lastUpdateTime.millisecondsSinceEpoch / 1000,
+        }).toList(),
+      );
+
+      await _storage.write(key: _sessionsKey, value: sessionsJson);
+
+      return success(null);
+    } catch (e) {
+      _logger.e('Error saving session locally', error: e);
+      return failure(const StorageFailure(details: 'Failed to save session'));
     }
-    return success(null);
   }
 }
