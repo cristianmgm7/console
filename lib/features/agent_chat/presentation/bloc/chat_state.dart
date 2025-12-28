@@ -17,11 +17,6 @@ class ChatLoading extends ChatState {
 }
 
 class ChatLoaded extends ChatState {
-  final List<AgentChatMessage> messages;
-  final String currentSessionId;
-  final bool isSending;
-  final String? statusMessage;
-  final String? statusSubAgent;
 
   const ChatLoaded({
     required this.messages,
@@ -30,6 +25,11 @@ class ChatLoaded extends ChatState {
     this.statusMessage,
     this.statusSubAgent,
   });
+  final List<AgentChatMessage> messages;
+  final String currentSessionId;
+  final bool isSending;
+  final String? statusMessage;
+  final String? statusSubAgent;
 
   @override
   List<Object?> get props => [
@@ -58,9 +58,9 @@ class ChatLoaded extends ChatState {
 }
 
 class ChatError extends ChatState {
-  final String message;
 
   const ChatError(this.message);
+  final String message;
 
   @override
   List<Object?> get props => [message];

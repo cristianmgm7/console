@@ -1,17 +1,14 @@
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
-import 'chat_event.dart';
-import 'chat_state.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
 
 @injectable
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  final AgentChatRepository _repository;
-  final Logger _logger;
-  final Uuid _uuid = const Uuid();
 
   ChatBloc(this._repository, this._logger) : super(const ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
@@ -20,6 +17,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<MessageReceived>(_onMessageReceived);
     on<ClearMessages>(_onClearMessages);
   }
+  final AgentChatRepository _repository;
+  final Logger _logger;
+  final Uuid _uuid = const Uuid();
 
   Future<void> _onLoadMessages(
     LoadMessages event,

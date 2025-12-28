@@ -8,49 +8,45 @@ sealed class ChatEvent extends Equatable {
 }
 
 class LoadMessages extends ChatEvent {
-  final String sessionId;
 
   const LoadMessages(this.sessionId);
+  final String sessionId;
 
   @override
   List<Object?> get props => [sessionId];
 }
 
 class SendMessage extends ChatEvent {
-  final String sessionId;
-  final String content;
-  final Map<String, dynamic>? context;
 
   const SendMessage({
     required this.sessionId,
     required this.content,
     this.context,
   });
+  final String sessionId;
+  final String content;
+  final Map<String, dynamic>? context;
 
   @override
   List<Object?> get props => [sessionId, content, context];
 }
 
 class SendMessageStreaming extends ChatEvent {
-  final String sessionId;
-  final String content;
-  final Map<String, dynamic>? context;
 
   const SendMessageStreaming({
     required this.sessionId,
     required this.content,
     this.context,
   });
+  final String sessionId;
+  final String content;
+  final Map<String, dynamic>? context;
 
   @override
   List<Object?> get props => [sessionId, content, context];
 }
 
 class MessageReceived extends ChatEvent {
-  final String messageId;
-  final String content;
-  final String? subAgentName;
-  final String? subAgentIcon;
 
   const MessageReceived({
     required this.messageId,
@@ -58,6 +54,10 @@ class MessageReceived extends ChatEvent {
     this.subAgentName,
     this.subAgentIcon,
   });
+  final String messageId;
+  final String content;
+  final String? subAgentName;
+  final String? subAgentIcon;
 
   @override
   List<Object?> get props => [messageId, content, subAgentName, subAgentIcon];
