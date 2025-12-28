@@ -16,21 +16,6 @@ class LoadMessages extends ChatEvent {
   List<Object?> get props => [sessionId];
 }
 
-class SendMessage extends ChatEvent {
-
-  const SendMessage({
-    required this.sessionId,
-    required this.content,
-    this.context,
-  });
-  final String sessionId;
-  final String content;
-  final Map<String, dynamic>? context;
-
-  @override
-  List<Object?> get props => [sessionId, content, context];
-}
-
 class SendMessageStreaming extends ChatEvent {
 
   const SendMessageStreaming({

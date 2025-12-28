@@ -53,21 +53,6 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
   }
 
   @override
-  Future<Result<List<AgentChatMessage>>> sendMessage({
-    required String sessionId,
-    required String content,
-    Map<String, dynamic>? context,
-  }) async {
-    // For non-streaming, we'll use the streaming method internally
-    return sendMessageStreaming(
-      sessionId: sessionId,
-      content: content,
-      context: context,
-      onStatus: (_, _) {}, // Ignore status updates for non-streaming
-    );
-  }
-
-  @override
   Future<Result<List<AgentChatMessage>>> sendMessageStreaming({
     required String sessionId,
     required String content,
