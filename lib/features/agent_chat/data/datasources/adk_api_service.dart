@@ -118,13 +118,20 @@ class AdkApiService {
     required String message,
     Map<String, dynamic>? context,
   }) async* {
-    final url = Uri.parse('${AdkConfig.baseUrl}/chat/stream');
+    final url = Uri.parse('${AdkConfig.baseUrl}/run_sse');
 
     final requestBody = {
-      'user_id': userId,
-      'message': message,
-      if (sessionId.isNotEmpty) 'session_id': sessionId,
-      'context': ?context,
+      'appName': AdkConfig.appName,
+      'userId': userId,
+      'sessionId': sessionId,
+      'newMessage': {
+        'role': 'user',
+        'parts': [
+          {'text': message},
+          if (context != null) {'metadata': context},
+        ],
+      },
+      'streaming': false, // Enable token-level streaming if needed
     };
 
     _logger.d('Sending streaming message: $url');
@@ -145,7 +152,7 @@ class AdkApiService {
       }
 
       await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
-        // SSE format: "event: event_name\ndata: {...}\n\n"
+        // SSE format: "data: {...}\n\n"
         final lines = chunk.split('\n');
         for (final line in lines) {
           if (line.startsWith('data: ')) {
