@@ -1,12 +1,24 @@
-import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 
 abstract class AgentChatRepository {
-  Future<Result<List<AgentChatMessage>>> sendMessageStreaming({
+  /// Send a message and receive a stream of ADK events
+  ///
+  /// This stream includes all events from the agent: text responses,
+  /// function calls, authentication requests, status updates, etc.
+  Stream<AdkEvent> sendMessageStreaming({
     required String sessionId,
     required String content,
-    required void Function(String status, String? subAgent) onStatus,
     Map<String, dynamic>? context,
-    void Function(String chunk)? onMessageChunk,
+  });
+
+  /// Send authentication credentials back to the ADK agent
+  ///
+  /// This is called after the user completes OAuth flow for MCP tools
+  Future<void> sendAuthenticationCredentials({
+    required String sessionId,
+    required String provider,
+    required String accessToken,
+    String? refreshToken,
+    DateTime? expiresAt,
   });
 }
