@@ -56,12 +56,16 @@ class PartDto {
   PartDto({
     this.text,
     this.inlineData,
+    this.functionCall,
+    this.functionResponse,
   });
 
   factory PartDto.fromJson(Map<String, dynamic> json) =>
       _$PartDtoFromJson(json);
   final String? text;
   final InlineDataDto? inlineData;
+  final FunctionCallDto? functionCall;
+  final FunctionResponseDto? functionResponse;
 
   Map<String, dynamic> toJson() => _$PartDtoToJson(this);
 }
