@@ -404,9 +404,9 @@ abstract class AgentChatRepository {
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] All new domain entities compile without errors: `flutter analyze lib/features/agent_chat/domain/entities/adk_event.dart`
-- [ ] Repository interface compiles: `flutter analyze lib/features/agent_chat/domain/repositories/agent_chat_repository.dart`
-- [ ] No breaking changes to existing code yet (we haven't modified implementations)
+- [x] All new domain entities compile without errors: `flutter analyze lib/features/agent_chat/domain/entities/adk_event.dart`
+- [x] Repository interface compiles: `flutter analyze lib/features/agent_chat/domain/repositories/agent_chat_repository.dart`
+- [x] No breaking changes to existing code yet (we haven't modified implementations)
 
 #### Manual Verification:
 - [ ] Review entity structure matches ADK event documentation
@@ -637,10 +637,10 @@ Keep this file unchanged for now. We'll deprecate it in Phase 4 after migrating 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] New mapper compiles: `flutter analyze lib/features/agent_chat/data/mappers/adk_event_mapper.dart`
-- [ ] Repository implementation compiles: `flutter analyze lib/features/agent_chat/data/repositories/agent_chat_repository_impl.dart`
-- [ ] Run code generation: `flutter pub run build_runner build --delete-conflicting-outputs`
-- [ ] No compilation errors: `flutter analyze`
+- [x] New mapper compiles: `flutter analyze lib/features/agent_chat/data/mappers/adk_event_mapper.dart`
+- [x] Repository implementation compiles: `flutter analyze lib/features/agent_chat/data/repositories/agent_chat_repository_impl.dart`
+- [x] Run code generation: `flutter pub run build_runner build --delete-conflicting-outputs`
+- [x] No compilation errors: `flutter analyze`
 
 #### Manual Verification:
 - [ ] Review mapper preserves all DTO information
@@ -986,12 +986,12 @@ class SendAuthenticationCredentialsUseCase {
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Categorized event types compile: `flutter analyze lib/features/agent_chat/domain/entities/categorized_event.dart`
-- [ ] Chat messages use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart`
-- [ ] Auth requests use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart`
-- [ ] Send credentials use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart`
-- [ ] Regenerate DI code: `flutter pub run build_runner build --delete-conflicting-outputs`
-- [ ] No compilation errors: `flutter analyze`
+- [x] Categorized event types compile: `flutter analyze lib/features/agent_chat/domain/entities/categorized_event.dart`
+- [x] Chat messages use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart`
+- [x] Auth requests use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart`
+- [x] Send credentials use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart`
+- [x] Regenerate DI code: `flutter pub run build_runner build --delete-conflicting-outputs`
+- [x] No compilation errors: `flutter analyze`
 
 #### Manual Verification:
 - [ ] Review event filtering logic in each use case
