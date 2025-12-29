@@ -58,11 +58,10 @@ AdkApiService (Data Layer)
 AgentChatRepositoryImpl (Data Layer)
     ↓ Maps to Domain Events (no filtering)
     ↓ Stream<AdkEvent>
-AdkEventCoordinator (Application Layer - Singleton)
-    ↓ Categorizes & Routes Events
-    ├─→ Stream<ChatEvent> → ChatBloc
-    ├─→ Stream<AuthenticationEvent> → AuthenticationCoordinator
-    └─→ Stream<StatusEvent> → StatusBloc (optional)
+Domain Use Cases (Application Layer)
+    ├─→ GetChatMessagesFromEventsUseCase → ChatBloc
+    ├─→ GetAuthenticationRequestsUseCase → McpAuthBloc
+    └─→ (function calls/responses handled in ChatBloc for "thinking" indicators)
 ```
 
 ### Success Criteria
@@ -97,9 +96,10 @@ AdkEventCoordinator (Application Layer - Singleton)
 
 This refactoring follows Clean Architecture principles:
 1. **Preserve Information**: Stop filtering events in data layer
-2. **Single Responsibility**: Coordinator handles event interpretation
-3. **Separation of Concerns**: Blocs receive semantic outputs, not protocol details
-4. **Open/Closed**: Easy to add new event consumers without modifying existing code
+2. **Single Responsibility**: Each use case handles one type of event filtering
+3. **Separation of Concerns**: Blocs receive typed streams from use cases, not raw protocol
+4. **Dependency Inversion**: Blocs depend on use case abstractions, not repository directly
+5. **Open/Closed**: Easy to add new use cases without modifying existing code
 
 We'll implement incrementally, ensuring each phase is testable before proceeding.
 
@@ -651,10 +651,10 @@ Keep this file unchanged for now. We'll deprecate it in Phase 4 after migrating 
 
 ---
 
-## Phase 3: Application Layer - Create Event Coordinator
+## Phase 3: Domain Layer - Create Event Processing Use Cases
 
 ### Overview
-Create a singleton service that subscribes to the raw ADK event stream, categorizes events, and broadcasts them to multiple consumers through typed streams.
+Create domain use cases that filter and transform raw ADK event streams for specific purposes. Each use case is injected into the relevant bloc, following the established use case pattern in the codebase.
 
 ### Changes Required
 
@@ -747,28 +747,26 @@ class AgentErrorEvent extends CategorizedEvent {
 }
 ```
 
-#### 2. Create Event Coordinator Service
-**File**: `lib/features/agent_chat/domain/services/adk_event_coordinator.dart`
+#### 2. Create Get Chat Messages Use Case
+**File**: `lib/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart`
 
 ```dart
-import 'dart:async';
-
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
-/// Singleton service that coordinates ADK event stream processing
+/// Use case to filter ADK events for chat messages and function call indicators
 /// 
-/// This service:
-/// - Subscribes to raw ADK event stream from repository
-/// - Categorizes events based on their content
-/// - Broadcasts categorized events to multiple typed streams
-/// - Maintains application-wide state for active sessions
-@LazySingleton()
-class AdkEventCoordinator {
-  AdkEventCoordinator(
+/// This use case processes the raw event stream and yields:
+/// - ChatMessageEvent for text content (complete and partial)
+/// - FunctionCallEvent for "thinking..." indicators
+/// - FunctionResponseEvent for function completion
+/// - AgentErrorEvent for errors
+@injectable
+class GetChatMessagesFromEventsUseCase {
+  const GetChatMessagesFromEventsUseCase(
     this._repository,
     this._logger,
   );
@@ -776,214 +774,211 @@ class AdkEventCoordinator {
   final AgentChatRepository _repository;
   final Logger _logger;
 
-  // Stream controllers for different event categories
-  final _chatMessageController = StreamController<ChatMessageEvent>.broadcast();
-  final _functionCallController = StreamController<FunctionCallEvent>.broadcast();
-  final _functionResponseController = StreamController<FunctionResponseEvent>.broadcast();
-  final _authenticationRequestController = StreamController<AuthenticationRequestEvent>.broadcast();
-  final _errorController = StreamController<AgentErrorEvent>.broadcast();
-
-  // Track active session streams
-  final Map<String, StreamSubscription<AdkEvent>> _activeStreams = {};
-
-  /// Stream of chat messages (text from agent)
-  Stream<ChatMessageEvent> get chatMessages => _chatMessageController.stream;
-
-  /// Stream of function calls (for status indicators)
-  Stream<FunctionCallEvent> get functionCalls => _functionCallController.stream;
-
-  /// Stream of function responses (mostly for debugging)
-  Stream<FunctionResponseEvent> get functionResponses => _functionResponseController.stream;
-
-  /// Stream of authentication requests (triggers OAuth flows)
-  Stream<AuthenticationRequestEvent> get authenticationRequests =>
-      _authenticationRequestController.stream;
-
-  /// Stream of errors
-  Stream<AgentErrorEvent> get errors => _errorController.stream;
-
-  /// Start streaming messages for a session
-  /// 
-  /// This initiates the event stream from the repository and starts
-  /// categorizing and broadcasting events.
-  Future<void> startSession({
+  /// Process event stream for a session, yielding chat-relevant events
+  Stream<CategorizedEvent> call({
     required String sessionId,
     required String message,
     Map<String, dynamic>? context,
-  }) async {
-    _logger.i('Starting ADK session: $sessionId');
-
-    // Cancel any existing stream for this session
-    await _cancelSession(sessionId);
-
+  }) async* {
     try {
+      _logger.i('Starting chat event stream for session: $sessionId');
+
       final eventStream = _repository.sendMessageStreaming(
         sessionId: sessionId,
         content: message,
         context: context,
       );
 
-      // Subscribe and categorize events
-      final subscription = eventStream.listen(
-        (event) => _processEvent(sessionId, event),
-        onError: (error, stackTrace) {
-          _logger.e('Error in session $sessionId', error: error, stackTrace: stackTrace);
-          _errorController.add(
-            AgentErrorEvent(
-              sourceEvent: AdkEvent(
-                id: '',
-                invocationId: '',
-                author: 'system',
-                timestamp: DateTime.now(),
-                content: const AdkContent(role: 'system', parts: []),
-              ),
-              errorMessage: error.toString(),
-            ),
+      await for (final event in eventStream) {
+        _logger.d('Processing event from ${event.author}');
+
+        // Skip authentication requests (handled by auth use case)
+        if (event.isAuthenticationRequest) {
+          _logger.d('Skipping auth request in chat stream');
+          continue;
+        }
+
+        // 1. Function calls (for "thinking..." status)
+        if (event.functionCalls.isNotEmpty) {
+          for (final call in event.functionCalls) {
+            _logger.d('Function call: ${call.name}');
+            yield FunctionCallEvent(
+              sourceEvent: event,
+              functionName: call.name,
+              args: call.args,
+            );
+          }
+        }
+
+        // 2. Function responses (to clear "thinking..." status)
+        for (final part in event.content.parts) {
+          if (part.functionResponse != null) {
+            _logger.d('Function response: ${part.functionResponse!.name}');
+            yield FunctionResponseEvent(
+              sourceEvent: event,
+              functionName: part.functionResponse!.name,
+              response: part.functionResponse!.response,
+            );
+          }
+        }
+
+        // 3. Text content (actual chat messages)
+        final textContent = event.textContent;
+        if (textContent != null && textContent.isNotEmpty) {
+          _logger.d('Chat message (${event.partial ? "partial" : "complete"}): '
+              '${textContent.substring(0, textContent.length > 50 ? 50 : textContent.length)}...');
+          yield ChatMessageEvent(
+            sourceEvent: event,
+            text: textContent,
+            isPartial: event.partial,
           );
-        },
-        onDone: () {
-          _logger.d('Session $sessionId stream completed');
-          _activeStreams.remove(sessionId);
-        },
-      );
+        }
+      }
 
-      _activeStreams[sessionId] = subscription;
+      _logger.i('Chat event stream completed for session: $sessionId');
     } catch (e, stackTrace) {
-      _logger.e('Failed to start session $sessionId', error: e, stackTrace: stackTrace);
-      _errorController.add(
-        AgentErrorEvent(
-          sourceEvent: AdkEvent(
-            id: '',
-            invocationId: '',
-            author: 'system',
-            timestamp: DateTime.now(),
-            content: const AdkContent(role: 'system', parts: []),
-          ),
-          errorMessage: 'Failed to start session: $e',
+      _logger.e('Error in chat event stream', error: e, stackTrace: stackTrace);
+      yield AgentErrorEvent(
+        sourceEvent: AdkEvent(
+          id: '',
+          invocationId: '',
+          author: 'system',
+          timestamp: DateTime.now(),
+          content: const AdkContent(role: 'system', parts: []),
         ),
+        errorMessage: e.toString(),
       );
     }
   }
+}
+```
 
-  /// Process and categorize a raw ADK event
-  void _processEvent(String sessionId, AdkEvent event) {
-    _logger.d('Processing event from ${event.author} (session: $sessionId)');
+#### 3. Create Get Authentication Requests Use Case
+**File**: `lib/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart`
 
-    // 1. Check for authentication requests (highest priority)
-    if (event.isAuthenticationRequest) {
-      final authRequest = event.authenticationRequest!;
-      _logger.i('Authentication request for provider: ${authRequest.provider}');
-      _authenticationRequestController.add(
-        AuthenticationRequestEvent(
-          sourceEvent: event,
-          request: authRequest,
-        ),
+```dart
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
+import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
+
+/// Use case to filter ADK events for authentication requests
+/// 
+/// This use case processes the raw event stream and yields only
+/// AuthenticationRequestEvent when the agent requests MCP tool authentication
+@injectable
+class GetAuthenticationRequestsUseCase {
+  const GetAuthenticationRequestsUseCase(
+    this._repository,
+    this._logger,
+  );
+
+  final AgentChatRepository _repository;
+  final Logger _logger;
+
+  /// Process event stream for authentication requests
+  Stream<AuthenticationRequestEvent> call({
+    required String sessionId,
+    required String message,
+    Map<String, dynamic>? context,
+  }) async* {
+    try {
+      _logger.i('Starting auth request stream for session: $sessionId');
+
+      final eventStream = _repository.sendMessageStreaming(
+        sessionId: sessionId,
+        content: message,
+        context: context,
       );
-      return; // Don't process further
-    }
 
-    // 2. Check for function calls (tool usage indicators)
-    if (event.functionCalls.isNotEmpty) {
-      for (final call in event.functionCalls) {
-        _logger.d('Function call: ${call.name}');
-        _functionCallController.add(
-          FunctionCallEvent(
+      await for (final event in eventStream) {
+        // Only yield authentication request events
+        if (event.isAuthenticationRequest) {
+          final authRequest = event.authenticationRequest!;
+          _logger.i('Authentication request for provider: ${authRequest.provider}');
+          
+          yield AuthenticationRequestEvent(
             sourceEvent: event,
-            functionName: call.name,
-            args: call.args,
-          ),
-        );
+            request: authRequest,
+          );
+        }
       }
-    }
 
-    // 3. Check for function responses
-    for (final part in event.content.parts) {
-      if (part.functionResponse != null) {
-        _logger.d('Function response: ${part.functionResponse!.name}');
-        _functionResponseController.add(
-          FunctionResponseEvent(
-            sourceEvent: event,
-            functionName: part.functionResponse!.name,
-            response: part.functionResponse!.response,
-          ),
-        );
-      }
-    }
-
-    // 4. Check for text content (chat messages)
-    final textContent = event.textContent;
-    if (textContent != null && textContent.isNotEmpty) {
-      _logger.d('Chat message (${event.partial ? "partial" : "complete"}): '
-          '${textContent.substring(0, textContent.length > 50 ? 50 : textContent.length)}...');
-      _chatMessageController.add(
-        ChatMessageEvent(
-          sourceEvent: event,
-          text: textContent,
-          isPartial: event.partial,
-        ),
-      );
+      _logger.i('Auth request stream completed for session: $sessionId');
+    } catch (e, stackTrace) {
+      _logger.e('Error in auth request stream', error: e, stackTrace: stackTrace);
+      // Don't yield errors here - let them propagate to chat use case
+      rethrow;
     }
   }
+}
+```
 
-  /// Cancel the stream for a specific session
-  Future<void> _cancelSession(String sessionId) async {
-    final subscription = _activeStreams.remove(sessionId);
-    await subscription?.cancel();
-  }
+#### 4. Create Send Authentication Credentials Use Case
+**File**: `lib/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart`
 
-  /// Send authentication credentials back to agent
-  Future<void> sendAuthenticationCredentials({
+```dart
+import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
+import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
+import 'package:oauth2/oauth2.dart' as oauth2;
+
+/// Use case to send authentication credentials back to the ADK agent
+@injectable
+class SendAuthenticationCredentialsUseCase {
+  const SendAuthenticationCredentialsUseCase(
+    this._repository,
+    this._logger,
+  );
+
+  final AgentChatRepository _repository;
+  final Logger _logger;
+
+  /// Send credentials obtained from OAuth flow back to agent
+  Future<void> call({
     required String sessionId,
     required String provider,
-    required String accessToken,
-    String? refreshToken,
-    DateTime? expiresAt,
+    required oauth2.Credentials credentials,
   }) async {
-    _logger.i('Sending auth credentials to session $sessionId');
-
     try {
+      _logger.i('Sending auth credentials for provider: $provider');
+
       await _repository.sendAuthenticationCredentials(
         sessionId: sessionId,
         provider: provider,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        expiresAt: expiresAt,
+        accessToken: credentials.accessToken,
+        refreshToken: credentials.refreshToken,
+        expiresAt: credentials.expiration,
       );
+
+      _logger.i('Credentials sent successfully');
     } catch (e, stackTrace) {
       _logger.e('Failed to send credentials', error: e, stackTrace: stackTrace);
-      _errorController.add(
-        AgentErrorEvent(
-          sourceEvent: AdkEvent(
-            id: '',
-            invocationId: '',
-            author: 'system',
-            timestamp: DateTime.now(),
-            content: const AdkContent(role: 'system', parts: []),
-          ),
-          errorMessage: 'Failed to send authentication credentials: $e',
-        ),
-      );
       rethrow;
     }
   }
 
-  /// Dispose all resources
-  @disposeMethod
-  Future<void> dispose() async {
-    _logger.d('Disposing AdkEventCoordinator');
+  /// Send authentication error back to agent
+  Future<void> sendError({
+    required String sessionId,
+    required String provider,
+    required String errorMessage,
+  }) async {
+    try {
+      _logger.w('Sending authentication error: $errorMessage');
 
-    // Cancel all active streams
-    for (final subscription in _activeStreams.values) {
-      await subscription.cancel();
+      // Send error as credentials with ERROR token
+      await _repository.sendAuthenticationCredentials(
+        sessionId: sessionId,
+        provider: provider,
+        accessToken: 'ERROR',
+        refreshToken: errorMessage,
+      );
+    } catch (e, stackTrace) {
+      _logger.e('Failed to send auth error', error: e, stackTrace: stackTrace);
+      rethrow;
     }
-    _activeStreams.clear();
-
-    // Close all controllers
-    await _chatMessageController.close();
-    await _functionCallController.close();
-    await _functionResponseController.close();
-    await _authenticationRequestController.close();
-    await _errorController.close();
   }
 }
 ```
@@ -992,14 +987,16 @@ class AdkEventCoordinator {
 
 #### Automated Verification:
 - [ ] Categorized event types compile: `flutter analyze lib/features/agent_chat/domain/entities/categorized_event.dart`
-- [ ] Coordinator service compiles: `flutter analyze lib/features/agent_chat/domain/services/adk_event_coordinator.dart`
+- [ ] Chat messages use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart`
+- [ ] Auth requests use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart`
+- [ ] Send credentials use case compiles: `flutter analyze lib/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart`
 - [ ] Regenerate DI code: `flutter pub run build_runner build --delete-conflicting-outputs`
 - [ ] No compilation errors: `flutter analyze`
 
 #### Manual Verification:
-- [ ] Review event categorization logic for correctness
-- [ ] Verify all event types are properly handled
-- [ ] Confirm stream controller setup is correct
+- [ ] Review event filtering logic in each use case
+- [ ] Verify use cases follow existing patterns in codebase
+- [ ] Confirm each use case has single, clear responsibility
 
 **Implementation Note**: After completing this phase and automated verification passes, proceed to integrate with presentation layer.
 
@@ -1008,7 +1005,7 @@ class AdkEventCoordinator {
 ## Phase 4: Presentation Layer - Update Chat Bloc
 
 ### Overview
-Refactor `ChatBloc` to consume categorized events from the coordinator instead of collapsed messages from the repository.
+Refactor `ChatBloc` to use the `GetChatMessagesFromEventsUseCase` instead of calling the repository directly. The use case provides filtered, categorized events.
 
 ### Changes Required
 
@@ -1076,7 +1073,7 @@ import 'dart:async';
 
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/services/adk_event_coordinator.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1087,27 +1084,20 @@ import 'package:uuid/uuid.dart';
 @injectable
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ChatBloc(
-    this._coordinator,
+    this._getChatMessagesUseCase,
     this._logger,
   ) : super(const ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
     on<SendMessageStreaming>(_onSendMessageStreaming);
     on<MessageReceived>(_onMessageReceived);
     on<ClearMessages>(_onClearMessages);
-
-    // Subscribe to coordinator streams
-    _chatMessageSubscription = _coordinator.chatMessages.listen(_onChatMessage);
-    _functionCallSubscription = _coordinator.functionCalls.listen(_onFunctionCall);
-    _errorSubscription = _coordinator.errors.listen(_onError);
   }
 
-  final AdkEventCoordinator _coordinator;
+  final GetChatMessagesFromEventsUseCase _getChatMessagesUseCase;
   final Logger _logger;
   final Uuid _uuid = const Uuid();
 
-  StreamSubscription<ChatMessageEvent>? _chatMessageSubscription;
-  StreamSubscription<FunctionCallEvent>? _functionCallSubscription;
-  StreamSubscription<AgentErrorEvent>? _errorSubscription;
+  StreamSubscription<CategorizedEvent>? _eventSubscription;
 
   // Track streaming message accumulation
   String? _currentStreamingMessageId;
@@ -1115,9 +1105,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   @override
   Future<void> close() {
-    _chatMessageSubscription?.cancel();
-    _functionCallSubscription?.cancel();
-    _errorSubscription?.cancel();
+    _eventSubscription?.cancel();
     return super.close();
   }
 
@@ -1161,24 +1149,43 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _currentStreamingMessageId = null;
     _streamingTextBuffer.clear();
 
-    // Start coordinator session (events will come through stream listeners)
+    // Start use case stream (events will come through subscription)
     try {
-      await _coordinator.startSession(
+      // Cancel any existing subscription
+      await _eventSubscription?.cancel();
+
+      // Start new event stream from use case
+      final eventStream = _getChatMessagesUseCase(
         sessionId: event.sessionId,
         message: event.content,
         context: event.context,
       );
 
-      // Update user message to sent
-      final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-      final updatedMessages = currentState.messages
-          .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
-          .toList();
-
-      emit(currentState.copyWith(
-        messages: updatedMessages,
-        isSending: false,
-      ));
+      // Subscribe to categorized events
+      _eventSubscription = eventStream.listen(
+        (categorizedEvent) => _handleCategorizedEvent(categorizedEvent),
+        onError: (error, stackTrace) {
+          _logger.e('Error in event stream', error: error, stackTrace: stackTrace);
+          add(MessageReceived(
+            messageId: _uuid.v4(),
+            content: '⚠️ Error: $error',
+          ));
+        },
+        onDone: () {
+          _logger.d('Event stream completed');
+          // Mark user message as sent when stream completes
+          final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+          final updatedMessages = (state as ChatLoaded).messages
+              .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
+              .toList();
+          
+          emit(ChatLoaded(
+            messages: updatedMessages,
+            currentSessionId: event.sessionId,
+            isSending: false,
+          ));
+        },
+      );
     } catch (e) {
       _logger.e('Error starting session', error: e);
 
@@ -1196,7 +1203,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  /// Handle chat message events from coordinator
+  /// Handle categorized events from use case
+  void _handleCategorizedEvent(CategorizedEvent event) {
+    if (event is ChatMessageEvent) {
+      _onChatMessage(event);
+    } else if (event is FunctionCallEvent) {
+      _onFunctionCall(event);
+    } else if (event is FunctionResponseEvent) {
+      _onFunctionResponse(event);
+    } else if (event is AgentErrorEvent) {
+      _onError(event);
+    }
+  }
+
+  /// Handle chat message events
   void _onChatMessage(ChatMessageEvent event) {
     final currentState = state;
     if (currentState is! ChatLoaded) return;
@@ -1284,12 +1304,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  /// Handle function call events (for status indicators)
+  /// Handle function call events (for "thinking..." indicators)
   void _onFunctionCall(FunctionCallEvent event) {
     final currentState = state;
     if (currentState is! ChatLoaded) return;
 
-    // Show status indicator
+    // Show "thinking..." status indicator
     final statusMessage = 'Calling ${event.functionName}...';
     final subAgent = _extractSubAgentName(event.sourceEvent.author);
 
@@ -1297,6 +1317,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       statusMessage: statusMessage,
       statusSubAgent: subAgent,
     ));
+  }
+
+  /// Handle function response events (to clear "thinking..." indicator)
+  void _onFunctionResponse(FunctionResponseEvent event) {
+    final currentState = state;
+    if (currentState is! ChatLoaded) return;
+
+    // Clear status indicator when function completes
+    emit(currentState.copyWith(clearStatus: true));
   }
 
   /// Handle error events
@@ -1384,125 +1413,339 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
 ---
 
-## Phase 5: Authentication Flow - Create Auth Coordinator
+## Phase 5: Authentication Flow - Create MCP Auth Bloc
 
 ### Overview
-Create a dedicated service to handle authentication request events from the coordinator and manage OAuth flows for MCP tools.
+Create a dedicated Bloc to handle authentication request events using the `GetAuthenticationRequestsUseCase` and manage OAuth flows for MCP tools.
 
 ### Changes Required
 
-#### 1. Create MCP Authentication Service
-**File**: `lib/features/agent_chat/domain/services/mcp_authentication_service.dart`
+#### 1. Create MCP Auth Bloc Events and States
+**File**: `lib/features/agent_chat/presentation/bloc/mcp_auth_event.dart`
 
 ```dart
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/services/adk_event_coordinator.dart';
+import 'package:equatable/equatable.dart';
+
+sealed class McpAuthEvent extends Equatable {
+  const McpAuthEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
+/// Start listening for authentication requests for a session
+class StartAuthListening extends McpAuthEvent {
+  const StartAuthListening({
+    required this.sessionId,
+    required this.message,
+    this.context,
+  });
+
+  final String sessionId;
+  final String message;
+  final Map<String, dynamic>? context;
+
+  @override
+  List<Object?> get props => [sessionId, message, context];
+}
+
+/// User provided authorization code from OAuth flow
+class AuthCodeProvided extends McpAuthEvent {
+  const AuthCodeProvided({
+    required this.authorizationCode,
+    required this.request,
+    required this.sessionId,
+  });
+
+  final String authorizationCode;
+  final AuthenticationRequest request;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [authorizationCode, request, sessionId];
+}
+
+/// User cancelled authentication
+class AuthCancelled extends McpAuthEvent {
+  const AuthCancelled({
+    required this.request,
+    required this.sessionId,
+  });
+
+  final AuthenticationRequest request;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [request, sessionId];
+}
+
+/// Stop listening for authentication requests
+class StopAuthListening extends McpAuthEvent {
+  const StopAuthListening();
+}
+```
+
+**File**: `lib/features/agent_chat/presentation/bloc/mcp_auth_state.dart`
+
+```dart
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
+import 'package:equatable/equatable.dart';
+
+sealed class McpAuthState extends Equatable {
+  const McpAuthState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class McpAuthInitial extends McpAuthState {
+  const McpAuthInitial();
+}
+
+class McpAuthListening extends McpAuthState {
+  const McpAuthListening({required this.sessionId});
+
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [sessionId];
+}
+
+/// Authentication is required - show dialog
+class McpAuthRequired extends McpAuthState {
+  const McpAuthRequired({
+    required this.request,
+    required this.sessionId,
+  });
+
+  final AuthenticationRequest request;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [request, sessionId];
+}
+
+/// Processing authentication (exchanging code for token)
+class McpAuthProcessing extends McpAuthState {
+  const McpAuthProcessing({
+    required this.provider,
+    required this.sessionId,
+  });
+
+  final String provider;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [provider, sessionId];
+}
+
+/// Authentication completed successfully
+class McpAuthSuccess extends McpAuthState {
+  const McpAuthSuccess({
+    required this.provider,
+    required this.sessionId,
+  });
+
+  final String provider;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [provider, sessionId];
+}
+
+/// Authentication failed
+class McpAuthError extends McpAuthState {
+  const McpAuthError({
+    required this.message,
+    required this.sessionId,
+  });
+
+  final String message;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [message, sessionId];
+}
+```
+
+#### 2. Create MCP Auth Bloc
+**File**: `lib/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart`
+
+```dart
+import 'dart:async';
+
+import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 
-/// Service to handle MCP tool authentication requests from agents
-@LazySingleton()
-class McpAuthenticationService {
-  McpAuthenticationService(
-    this._coordinator,
+@injectable
+class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
+  McpAuthBloc(
+    this._getAuthRequestsUseCase,
+    this._sendCredentialsUseCase,
     this._logger,
-  ) {
-    _subscribeToAuthRequests();
+  ) : super(const McpAuthInitial()) {
+    on<StartAuthListening>(_onStartAuthListening);
+    on<AuthCodeProvided>(_onAuthCodeProvided);
+    on<AuthCancelled>(_onAuthCancelled);
+    on<StopAuthListening>(_onStopAuthListening);
   }
 
-  final AdkEventCoordinator _coordinator;
+  final GetAuthenticationRequestsUseCase _getAuthRequestsUseCase;
+  final SendAuthenticationCredentialsUseCase _sendCredentialsUseCase;
   final Logger _logger;
 
-  // Callback to trigger UI authentication dialog
-  void Function(AuthenticationRequest, String sessionId)? _onAuthenticationRequired;
+  StreamSubscription? _authRequestSubscription;
 
-  /// Set callback for when authentication is required
-  void setAuthenticationHandler(
-    void Function(AuthenticationRequest, String sessionId) handler,
-  ) {
-    _onAuthenticationRequired = handler;
+  @override
+  Future<void> close() {
+    _authRequestSubscription?.cancel();
+    return super.close();
   }
 
-  /// Clear authentication handler
-  void clearAuthenticationHandler() {
-    _onAuthenticationRequired = null;
-  }
+  Future<void> _onStartAuthListening(
+    StartAuthListening event,
+    Emitter<McpAuthState> emit,
+  ) async {
+    _logger.i('Starting auth listening for session: ${event.sessionId}');
 
-  void _subscribeToAuthRequests() {
-    _coordinator.authenticationRequests.listen((event) {
-      _logger.i('Authentication request received for: ${event.request.provider}');
-      
-      // Extract session ID from source event
-      // The invocationId contains the session context
-      final sessionId = _extractSessionId(event.sourceEvent);
-      
-      if (_onAuthenticationRequired != null) {
-        _onAuthenticationRequired!(event.request, sessionId);
-      } else {
-        _logger.w('No authentication handler set, ignoring auth request');
-      }
-    });
-  }
+    // Cancel any existing subscription
+    await _authRequestSubscription?.cancel();
 
-  /// Perform OAuth2 authorization code flow
-  /// 
-  /// This opens a browser for the user to authorize, then exchanges
-  /// the code for an access token
-  Future<oauth2.Credentials?> performOAuth2Flow({
-    required AuthenticationRequest request,
-    required String redirectUri,
-  }) async {
+    emit(McpAuthListening(sessionId: event.sessionId));
+
     try {
-      _logger.i('Starting OAuth2 flow for ${request.provider}');
-
-      final authorizationEndpoint = Uri.parse(request.authorizationUrl);
-      final tokenEndpoint = Uri.parse(request.tokenUrl);
-
-      // Create OAuth2 grant
-      final grant = oauth2.AuthorizationCodeGrant(
-        'agent-client-id', // Client ID - may need to be dynamic per provider
-        authorizationEndpoint,
-        tokenEndpoint,
-        secret: null, // Public client (no secret for desktop apps)
+      // Subscribe to authentication request events
+      final authStream = _getAuthRequestsUseCase(
+        sessionId: event.sessionId,
+        message: event.message,
+        context: event.context,
       );
 
-      // Generate authorization URL
-      final authUrl = grant.getAuthorizationUrl(
-        Uri.parse(redirectUri),
-        scopes: request.scopes,
+      _authRequestSubscription = authStream.listen(
+        (authEvent) {
+          _logger.i('Auth request for provider: ${authEvent.request.provider}');
+          emit(McpAuthRequired(
+            request: authEvent.request,
+            sessionId: event.sessionId,
+          ));
+        },
+        onError: (error, stackTrace) {
+          _logger.e('Error in auth stream', error: error, stackTrace: stackTrace);
+          emit(McpAuthError(
+            message: error.toString(),
+            sessionId: event.sessionId,
+          ));
+        },
+        onDone: () {
+          _logger.d('Auth stream completed');
+        },
       );
-
-      _logger.d('Authorization URL: $authUrl');
-
-      // TODO: This will be replaced with automatic browser opening
-      // For now, we'll return null and the UI will handle showing the URL
-      return null;
     } catch (e, stackTrace) {
-      _logger.e('OAuth2 flow failed', error: e, stackTrace: stackTrace);
-      return null;
+      _logger.e('Failed to start auth listening', error: e, stackTrace: stackTrace);
+      emit(McpAuthError(
+        message: e.toString(),
+        sessionId: event.sessionId,
+      ));
     }
   }
 
-  /// Complete OAuth2 flow with authorization code
-  /// 
-  /// Call this after user completes OAuth in browser and returns with code
-  Future<oauth2.Credentials?> completeOAuth2Flow({
+  Future<void> _onAuthCodeProvided(
+    AuthCodeProvided event,
+    Emitter<McpAuthState> emit,
+  ) async {
+    emit(McpAuthProcessing(
+      provider: event.request.provider,
+      sessionId: event.sessionId,
+    ));
+
+    try {
+      // Exchange authorization code for credentials
+      final credentials = await _completeOAuth2Flow(
+        authorizationCode: event.authorizationCode,
+        request: event.request,
+      );
+
+      if (credentials == null) {
+        throw Exception('Failed to obtain credentials from OAuth provider');
+      }
+
+      // Send credentials back to agent
+      await _sendCredentialsUseCase(
+        sessionId: event.sessionId,
+        provider: event.request.provider,
+        credentials: credentials,
+      );
+
+      emit(McpAuthSuccess(
+        provider: event.request.provider,
+        sessionId: event.sessionId,
+      ));
+
+      // Return to listening state
+      emit(McpAuthListening(sessionId: event.sessionId));
+    } catch (e, stackTrace) {
+      _logger.e('Authentication failed', error: e, stackTrace: stackTrace);
+
+      // Send error to agent
+      await _sendCredentialsUseCase.sendError(
+        sessionId: event.sessionId,
+        provider: event.request.provider,
+        errorMessage: e.toString(),
+      );
+
+      emit(McpAuthError(
+        message: e.toString(),
+        sessionId: event.sessionId,
+      ));
+    }
+  }
+
+  Future<void> _onAuthCancelled(
+    AuthCancelled event,
+    Emitter<McpAuthState> emit,
+  ) async {
+    _logger.i('Authentication cancelled by user');
+
+    // Send cancellation error to agent
+    await _sendCredentialsUseCase.sendError(
+      sessionId: event.sessionId,
+      provider: event.request.provider,
+      errorMessage: 'User cancelled authentication',
+    );
+
+    emit(McpAuthListening(sessionId: event.sessionId));
+  }
+
+  Future<void> _onStopAuthListening(
+    StopAuthListening event,
+    Emitter<McpAuthState> emit,
+  ) async {
+    await _authRequestSubscription?.cancel();
+    _authRequestSubscription = null;
+    emit(const McpAuthInitial());
+  }
+
+  /// Complete OAuth2 authorization code flow
+  Future<oauth2.Credentials?> _completeOAuth2Flow({
     required String authorizationCode,
-    required String redirectUri,
     required AuthenticationRequest request,
   }) async {
     try {
-      _logger.i('Completing OAuth2 flow with authorization code');
-
       final authorizationEndpoint = Uri.parse(request.authorizationUrl);
       final tokenEndpoint = Uri.parse(request.tokenUrl);
 
       final grant = oauth2.AuthorizationCodeGrant(
-        'agent-client-id',
+        'agent-client-id', // TODO: Make configurable per provider
         authorizationEndpoint,
         tokenEndpoint,
-        secret: null,
+        secret: null, // Public client
       );
 
       // Exchange code for token
@@ -1512,66 +1755,9 @@ class McpAuthenticationService {
 
       return client.credentials;
     } catch (e, stackTrace) {
-      _logger.e('Failed to complete OAuth2 flow', error: e, stackTrace: stackTrace);
+      _logger.e('OAuth2 flow failed', error: e, stackTrace: stackTrace);
       return null;
     }
-  }
-
-  /// Send credentials back to the agent
-  Future<void> sendCredentialsToAgent({
-    required String sessionId,
-    required String provider,
-    required oauth2.Credentials credentials,
-  }) async {
-    try {
-      _logger.i('Sending credentials to agent for session: $sessionId');
-
-      await _coordinator.sendAuthenticationCredentials(
-        sessionId: sessionId,
-        provider: provider,
-        accessToken: credentials.accessToken,
-        refreshToken: credentials.refreshToken,
-        expiresAt: credentials.expiration,
-      );
-
-      _logger.i('Credentials sent successfully');
-    } catch (e, stackTrace) {
-      _logger.e('Failed to send credentials', error: e, stackTrace: stackTrace);
-      rethrow;
-    }
-  }
-
-  /// Send authentication error back to agent
-  Future<void> sendAuthenticationError({
-    required String sessionId,
-    required String provider,
-    required String errorMessage,
-  }) async {
-    try {
-      _logger.w('Sending authentication error to agent: $errorMessage');
-
-      // Send error as a function response with error details
-      // The ADK agent will handle this and potentially retry or inform the user
-      await _coordinator.sendAuthenticationCredentials(
-        sessionId: sessionId,
-        provider: provider,
-        accessToken: 'ERROR', // Signal error
-        refreshToken: errorMessage,
-      );
-    } catch (e, stackTrace) {
-      _logger.e('Failed to send auth error', error: e, stackTrace: stackTrace);
-    }
-  }
-
-  String _extractSessionId(AdkEvent event) {
-    // The invocationId typically contains or correlates to the session ID
-    // If not, we may need to track this mapping in the coordinator
-    return event.invocationId;
-  }
-
-  @disposeMethod
-  void dispose() {
-    _onAuthenticationRequired = null;
   }
 }
 ```
@@ -1792,119 +1978,146 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
 }
 ```
 
-#### 3. Integrate Authentication Handler in Main Chat Screen
-**File**: `lib/features/agent_chat/presentation/screens/agent_chat_screen.dart`
-
-Add authentication handling (update existing file):
+#### 3. Create MCP Auth Listener Widget
+**File**: `lib/features/agent_chat/presentation/widgets/mcp_auth_listener.dart`
 
 ```dart
-// Add imports at top
-import 'package:carbon_voice_console/core/di/injection.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/services/mcp_authentication_service.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_state.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/mcp_authentication_dialog.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-// In the State class, add:
-class _AgentChatScreenState extends State<AgentChatScreen> {
-  late final McpAuthenticationService _authService;
+/// Widget that listens to MCP auth state and shows authentication dialogs
+class McpAuthListener extends StatelessWidget {
+  const McpAuthListener({
+    required this.child,
+    super.key,
+  });
 
-  @override
-  void initState() {
-    super.initState();
-    
-    // Get authentication service and set handler
-    _authService = getIt<McpAuthenticationService>();
-    _authService.setAuthenticationHandler(_handleAuthenticationRequest);
-  }
+  final Widget child;
 
   @override
-  void dispose() {
-    _authService.clearAuthenticationHandler();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return BlocListener<McpAuthBloc, McpAuthState>(
+      listener: (context, state) {
+        if (state is McpAuthRequired) {
+          _showAuthenticationDialog(context, state);
+        } else if (state is McpAuthSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Successfully authenticated with ${state.provider}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (state is McpAuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Authentication error: ${state.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: child,
+    );
   }
 
-  void _handleAuthenticationRequest(
-    AuthenticationRequest request,
-    String sessionId,
-  ) {
+  void _showAuthenticationDialog(BuildContext context, McpAuthRequired state) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => McpAuthenticationDialog(
-        request: request,
-        onAuthenticate: (authCode) async {
-          try {
-            // Complete OAuth flow
-            final credentials = await _authService.completeOAuth2Flow(
-              authorizationCode: authCode,
-              redirectUri: 'http://localhost:8080/callback', // TODO: Make configurable
-              request: request,
-            );
-
-            if (credentials != null) {
-              // Send credentials to agent
-              await _authService.sendCredentialsToAgent(
-                sessionId: sessionId,
-                provider: request.provider,
-                credentials: credentials,
-              );
-
-              if (mounted) {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Successfully authenticated with ${request.provider}'),
-                  ),
-                );
-              }
-            } else {
-              throw Exception('Failed to obtain credentials');
-            }
-          } catch (e) {
-            // Send error to agent
-            await _authService.sendAuthenticationError(
-              sessionId: sessionId,
-              provider: request.provider,
-              errorMessage: e.toString(),
-            );
-
-            if (mounted) {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Authentication failed: $e'),
-                  backgroundColor: Colors.red,
+      builder: (dialogContext) => McpAuthenticationDialog(
+        request: state.request,
+        onAuthenticate: (authCode) {
+          // Dispatch event to bloc
+          context.read<McpAuthBloc>().add(
+                AuthCodeProvided(
+                  authorizationCode: authCode,
+                  request: state.request,
+                  sessionId: state.sessionId,
                 ),
               );
-            }
-          }
+          Navigator.of(dialogContext).pop();
         },
-        onCancel: () async {
-          // Send cancellation error to agent
-          await _authService.sendAuthenticationError(
-            sessionId: sessionId,
-            provider: request.provider,
-            errorMessage: 'User cancelled authentication',
-          );
-
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
+        onCancel: () {
+          // Dispatch cancel event to bloc
+          context.read<McpAuthBloc>().add(
+                AuthCancelled(
+                  request: state.request,
+                  sessionId: state.sessionId,
+                ),
+              );
+          Navigator.of(dialogContext).pop();
         },
       ),
     );
   }
+}
+```
 
-  // ... rest of screen implementation
+#### 4. Integrate MCP Auth Bloc in Main Chat Screen
+**File**: `lib/features/agent_chat/presentation/screens/agent_chat_screen.dart`
+
+Update to provide `McpAuthBloc` and wrap with listener:
+
+```dart
+// Add imports
+import 'package:carbon_voice_console/core/di/injection.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/mcp_auth_listener.dart';
+
+// In the Widget build method:
+@override
+Widget build(BuildContext context) {
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider(
+        create: (context) => getIt<ChatBloc>(),
+      ),
+      BlocProvider(
+        create: (context) => getIt<McpAuthBloc>(),
+      ),
+    ],
+    child: McpAuthListener(
+      child: Scaffold(
+        // ... existing screen content
+      ),
+    ),
+  );
+}
+
+// When sending a message, also start auth listening:
+void _sendMessage(String sessionId, String content) {
+  // Send message through chat bloc
+  context.read<ChatBloc>().add(
+        SendMessageStreaming(
+          sessionId: sessionId,
+          content: content,
+        ),
+      );
+
+  // Start auth listening
+  context.read<McpAuthBloc>().add(
+        StartAuthListening(
+          sessionId: sessionId,
+          message: content,
+        ),
+      );
 }
 ```
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Authentication service compiles: `flutter analyze lib/features/agent_chat/domain/services/mcp_authentication_service.dart`
+- [ ] MCP auth events compile: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_event.dart`
+- [ ] MCP auth states compile: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_state.dart`
+- [ ] MCP auth bloc compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart`
+- [ ] Auth listener widget compiles: `flutter analyze lib/features/agent_chat/presentation/widgets/mcp_auth_listener.dart`
 - [ ] Dialog widget compiles: `flutter analyze lib/features/agent_chat/presentation/widgets/mcp_authentication_dialog.dart`
-- [ ] Screen updates compile: `flutter analyze lib/features/agent_chat/presentation/screens/agent_chat_screen.dart`
+- [ ] Screen integration compiles: `flutter analyze lib/features/agent_chat/presentation/screens/agent_chat_screen.dart`
 - [ ] Regenerate DI: `flutter pub run build_runner build --delete-conflicting-outputs`
 - [ ] No linting errors: `flutter analyze`
 
@@ -1976,9 +2189,10 @@ This feature implements ADK (Agent Development Kit) chat functionality with supp
 - **AuthenticationRequest**: Extracted auth request details
 - **CategorizedEvent**: Base for typed events (ChatMessageEvent, AuthenticationRequestEvent, etc.)
 
-#### Services
-- **AdkEventCoordinator**: Singleton service that categorizes raw ADK events and broadcasts to typed streams
-- **McpAuthenticationService**: Handles OAuth2 flows for MCP tool authentication
+#### Use Cases
+- **GetChatMessagesFromEventsUseCase**: Filters event stream for chat-relevant events (text, function calls, errors)
+- **GetAuthenticationRequestsUseCase**: Filters event stream for authentication requests only
+- **SendAuthenticationCredentialsUseCase**: Sends OAuth credentials back to ADK agent
 
 #### Repositories
 - **AgentChatRepository**: Exposes `Stream<AdkEvent>` for raw event streaming
@@ -1986,11 +2200,13 @@ This feature implements ADK (Agent Development Kit) chat functionality with supp
 ### Presentation Layer
 
 #### Blocs
-- **ChatBloc**: Subscribes to coordinator's chat message stream, manages chat UI state
+- **ChatBloc**: Uses `GetChatMessagesFromEventsUseCase`, manages chat UI state and "thinking" indicators
+- **McpAuthBloc**: Uses `GetAuthenticationRequestsUseCase`, manages OAuth flows for MCP tools
 - **SessionBloc**: Manages session list and selection
 
 #### Widgets
 - **McpAuthenticationDialog**: Modal for handling OAuth2 authentication requests
+- **McpAuthListener**: BlocListener that shows auth dialogs based on `McpAuthBloc` state
 
 ## Event Flow
 
@@ -2001,40 +2217,44 @@ AdkApiService (Data)
     ↓ Stream<EventDto>
 AgentChatRepositoryImpl (Data)
     ↓ Stream<AdkEvent> (no filtering)
-AdkEventCoordinator (Domain - Singleton)
-    ↓ Categorizes & Routes
-    ├─→ Stream<ChatMessageEvent> → ChatBloc → Chat UI
-    ├─→ Stream<AuthenticationRequestEvent> → McpAuthenticationService → Auth Dialog
-    └─→ Stream<FunctionCallEvent> → ChatBloc (status indicators)
+Domain Use Cases (Application Layer)
+    ├─→ GetChatMessagesFromEventsUseCase → ChatBloc → Chat UI
+    ├─→ GetAuthenticationRequestsUseCase → McpAuthBloc → Auth Dialog
+    └─→ (function calls/responses → ChatBloc for "thinking" indicators)
 ```
 
 ## Key Design Principles
 
 1. **Preserve Information**: Data layer never filters events
-2. **Single Responsibility**: Coordinator handles all event interpretation
-3. **Separation of Concerns**: Blocs receive semantic events, not raw protocol
-4. **Open/Closed**: Easy to add new event consumers
+2. **Single Responsibility**: Each use case handles one type of event filtering
+3. **Dependency Inversion**: Blocs depend on use cases, not repository directly
+4. **Separation of Concerns**: Blocs receive typed event streams, not raw protocol
+5. **Testability**: Use cases are easily mockable, no singleton dependencies
+6. **Open/Closed**: Easy to add new use cases for different event types
 
 ## Adding New Event Types
 
 To handle a new type of ADK event:
 
 1. Create new categorized event type in `domain/entities/categorized_event.dart`
-2. Add detection logic in `AdkEventCoordinator._processEvent()`
-3. Create new stream controller in coordinator
-4. Subscribe to the new stream where needed
+2. Create new use case in `domain/usecases/get_[event_type]_usecase.dart`
+3. Implement filtering logic in the use case
+4. Inject use case into relevant bloc
+5. Handle the new event type in bloc logic
 
 ## Authentication Flow
 
 When agent requests MCP tool authentication:
 
 1. ADK sends `adk_request_credential` function call
-2. Coordinator detects and emits `AuthenticationRequestEvent`
-3. `McpAuthenticationService` receives event
-4. Service triggers registered handler (shows dialog in UI)
-5. User completes OAuth2 flow in browser
-6. Service sends credentials back to ADK via repository
-7. Agent can now use authenticated MCP tools
+2. Both `ChatBloc` and `McpAuthBloc` receive events from their respective use cases
+3. `GetAuthenticationRequestsUseCase` filters and yields auth request to `McpAuthBloc`
+4. `McpAuthBloc` emits `McpAuthRequired` state
+5. `McpAuthListener` widget shows authentication dialog
+6. User completes OAuth2 flow in browser, provides auth code
+7. `McpAuthBloc` exchanges code for credentials via `SendAuthenticationCredentialsUseCase`
+8. Credentials sent back to ADK via repository
+9. Agent can now use authenticated MCP tools
 
 ## Testing
 
@@ -2140,17 +2360,22 @@ Add comprehensive dartdoc comments to all public APIs in:
 ## Performance Considerations
 
 1. **Stream Memory Management**:
-   - Coordinatior uses broadcast streams to avoid memory leaks
-   - Active session streams are tracked and cancelled when done
-   - Dispose method ensures cleanup
+   - Each use case creates a new stream per invocation
+   - Blocs manage subscriptions and cancel on dispose
+   - No global state or broadcast streams needed
 
 2. **Event Processing**:
-   - Events processed synchronously in coordinator
-   - No heavy computation in event handlers
+   - Use cases filter events efficiently using stream operators
+   - Minimal overhead per event
    - Authentication dialog shown asynchronously
 
-3. **Message Accumulation**:
-   - Streaming messages accumulated in-memory
+3. **Parallel Streams**:
+   - Multiple use cases can process same repository stream
+   - Each bloc gets filtered events independently
+   - No contention or locking needed
+
+4. **Message Accumulation**:
+   - Streaming messages accumulated in-memory by bloc
    - Final messages replace streaming versions
    - Old messages should be paginated (future enhancement)
 
@@ -2176,25 +2401,33 @@ result.fold(
 
 **New Pattern:**
 ```dart
-// In bloc constructor, subscribe to coordinator
-_subscription = coordinator.chatMessages.listen((event) {
-  // Handle chat message event
-});
+// In bloc, inject use case
+class ChatBloc extends Bloc<ChatEvent, ChatState> {
+  ChatBloc(this._getChatMessagesUseCase, this._logger);
 
-// To send message
-await coordinator.startSession(
-  sessionId: sessionId,
-  message: content,
-);
+  final GetChatMessagesFromEventsUseCase _getChatMessagesUseCase;
+  
+  // In event handler
+  Future<void> _onSendMessage(SendMessage event, Emitter emit) async {
+    // Start use case stream
+    final eventStream = _getChatMessagesUseCase(
+      sessionId: event.sessionId,
+      message: event.content,
+    );
 
-// Events come through stream subscription
+    // Subscribe to categorized events
+    _subscription = eventStream.listen(_handleCategorizedEvent);
+  }
+}
 ```
 
 ### Breaking Changes
 
-- `AgentChatRepository.sendMessageStreaming()` signature changed
+- `AgentChatRepository.sendMessageStreaming()` signature changed to return `Stream<AdkEvent>`
 - `AgentChatMessage` no longer created in data layer
-- Need to inject `AdkEventCoordinator` instead of repository in blocs
+- Blocs now inject use cases instead of repository directly
+- No more `onStatus` callback in repository - use `FunctionCallEvent` from use case
+- No more accumulated `Future<Result<List<Message>>>` - use streaming `Stream<CategorizedEvent>`
 
 ## References
 
