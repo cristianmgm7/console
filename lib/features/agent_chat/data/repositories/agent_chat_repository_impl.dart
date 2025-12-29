@@ -17,11 +17,9 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
 
   AgentChatRepositoryImpl(
     this._apiService,
-    this._storage,
     this._logger,
   );
   final AdkApiService _apiService;
-  final FlutterSecureStorage _storage;
   final Logger _logger;
 
   String get _userId {
@@ -29,28 +27,6 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     return 'test_user'; // Placeholder - matches ADK test user
   }
 
-  String _getMessagesKey(String sessionId) => 'agent_chat_messages_$sessionId';
-
-  @override
-  Future<Result<List<AgentChatMessage>>> loadMessages(String sessionId) async {
-    try {
-      final messagesJson = await _storage.read(key: _getMessagesKey(sessionId));
-
-      if (messagesJson == null) {
-        return success([]);
-      }
-
-      final messagesList = jsonDecode(messagesJson) as List;
-      final messages = messagesList
-          .map((json) => _messageFromJson(json as Map<String, dynamic>))
-          .toList();
-
-      return success(messages);
-    } on StorageException catch (e) {
-      _logger.e('Error loading messages', error: e);
-      return failure(const StorageFailure(details: 'Failed to load messages'));
-    }
-  }
 
   @override
   Future<Result<List<AgentChatMessage>>> sendMessageStreaming({
@@ -92,16 +68,6 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         }
       }
 
-      // Save messages locally
-      if (agentMessages.isNotEmpty) {
-        final existingMessages = await loadMessages(sessionId);
-        final allMessages = [
-          ...existingMessages.fold(onSuccess: (m) => m, onFailure: (_) => <AgentChatMessage>[]),
-          ...agentMessages,
-        ];
-        await saveMessagesLocally(sessionId, allMessages);
-      }
-
       return success(agentMessages);
     } on ServerException catch (e) {
       _logger.e('Server error streaming message', error: e);
@@ -113,52 +79,5 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
       _logger.e('Unexpected error streaming message', error: e);
       return failure(const UnknownFailure(details: 'Failed to stream message'));
     }
-  }
-
-  @override
-  Future<Result<void>> saveMessagesLocally(
-    String sessionId,
-    List<AgentChatMessage> messages,
-  ) async {
-    try {
-      final messagesJson = jsonEncode(
-        messages.map((m) => _messageToJson(m)).toList(),
-      );
-
-      await _storage.write(key: _getMessagesKey(sessionId), value: messagesJson);
-
-      return success(null);
-    } catch (e) {
-      _logger.e('Error saving messages locally', error: e);
-      return failure(const StorageFailure(details: 'Failed to save messages'));
-    }
-  }
-
-  Map<String, dynamic> _messageToJson(AgentChatMessage message) {
-    return {
-      'id': message.id,
-      'sessionId': message.sessionId,
-      'role': message.role.name,
-      'content': message.content,
-      'timestamp': message.timestamp.toIso8601String(),
-      'status': message.status.name,
-      'subAgentName': message.subAgentName,
-      'subAgentIcon': message.subAgentIcon,
-      'metadata': message.metadata,
-    };
-  }
-
-  AgentChatMessage _messageFromJson(Map<String, dynamic> json) {
-    return AgentChatMessage(
-      id: json['id'] as String,
-      sessionId: json['sessionId'] as String,
-      role: MessageRole.values.firstWhere((r) => r.name == json['role']),
-      content: json['content'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      status: MessageStatus.values.firstWhere((s) => s.name == json['status']),
-      subAgentName: json['subAgentName'] as String?,
-      subAgentIcon: json['subAgentIcon'] as String?,
-      metadata: json['metadata'] as Map<String, dynamic>?,
-    );
   }
 }

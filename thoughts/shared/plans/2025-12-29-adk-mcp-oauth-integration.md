@@ -73,14 +73,15 @@ This follows the ADK documentation pattern where the client only provides `auth_
 
 1. User sends message: "Show me my GitHub repositories"
 2. Agent attempts to call GitHub MCP tool
-3. Agent detects missing credentials, emits `adk_request_credential` event
+3. Agent detects missing credentials, emits `adk_request_credential` in `actions.functionCalls[]`
 4. UI shows: "🔐 GitHub authentication required" with "Authorize" button
-5. User clicks "Authorize" → Browser/WebView opens to GitHub OAuth page
-6. User authorizes → Redirected back to app with authorization code
-7. App exchanges code for access token
-8. App submits token back to agent via new SSE message with `FunctionResponse`
-9. Agent retries original tool call with valid credentials
-10. Chat continues seamlessly with GitHub data
+5. User clicks "Authorize" → Browser opens to GitHub OAuth page
+6. User authorizes → Provider redirects back to app with authorization code in URL
+7. **App captures the full callback URL** (e.g., `carbonvoice://callback?code=abc&state=xyz`)
+8. **App submits callback URL to ADK backend** via `FunctionResponse` with `auth_response_uri`
+9. **ADK backend exchanges code for token** and stores it securely (client never sees token)
+10. Agent retries original tool call with valid credentials from backend
+11. Chat continues seamlessly with GitHub data
 
 ### Verification Criteria
 
@@ -91,49 +92,137 @@ This follows the ADK documentation pattern where the client only provides `auth_
 - [ ] Code generation produces valid serialization code
 
 **Manual Verification:**
-- [ ] Agent emits `adk_request_credential` event when prompting "Show me my GitHub repos" (without prior auth)
+- [ ] Agent emits `adk_request_credential` in `actions.functionCalls[]` when prompting "Show me my GitHub repos" (without prior auth)
 - [ ] UI displays OAuth authorization button when credential request detected
-- [ ] Clicking "Authorize" opens GitHub OAuth page in browser/webview
-- [ ] After authorization, callback is captured and token exchanged
-- [ ] Function response is successfully submitted back to agent
-- [ ] Agent continues with original request using new credentials
-- [ ] Subsequent requests to same provider use cached credentials (no re-auth)
+- [ ] Clicking "Authorize" opens GitHub OAuth page in browser
+- [ ] After authorization, callback URL is captured (with code and state parameters)
+- [ ] Function response with `auth_response_uri` is successfully submitted back to agent
+- [ ] Agent continues with original request (backend has exchanged code for token)
+- [ ] Subsequent requests to same provider use backend-cached credentials (no re-auth)
 - [ ] Multiple providers (GitHub, Carbon Voice) can be authorized independently
-- [ ] Tokens persist across app restarts (loaded from secure storage)
+- [ ] Client never stores or logs access tokens (only callback URLs)
 
 ## What We're NOT Doing
 
-- **Not implementing token refresh for MCP providers** (v1 will require re-auth on expiry)
+- **Not exchanging tokens on client side** (ADK backend handles token exchange and storage)
+- **Not storing access/refresh tokens in Flutter app** (only callback URLs are handled client-side)
+- **Not implementing token refresh** (backend responsibility, client just triggers re-auth if needed)
 - **Not building a credentials management UI** (v1 is inline auth only)
 - **Not supporting multiple accounts per provider** (one GitHub account, one Carbon Voice account)
 - **Not implementing Atlassian OAuth** (agent config shows it doesn't require OAuth yet)
 - **Not modifying the agent Python code** (only Flutter changes)
-- **Not changing the existing Carbon Voice API OAuth flow** (that's for app-level auth, separate from MCP auth)
 
 ## Implementation Approach
 
-We'll extend the existing SSE event processing to detect `adk_request_credential` events, extract OAuth configuration, launch provider-specific OAuth flows, and submit credentials back to the agent. This leverages existing OAuth infrastructure (PKCE, platform-specific storage, deep linking) while introducing new components for:
+We'll extend the existing SSE event processing to detect `adk_request_credential` function calls in the `actions.functionCalls[]` array, extract OAuth configuration from the arguments, launch the OAuth flow in a browser, capture the callback URL, and submit it back to the agent via function response. The ADK backend handles all token operations.
 
-1. **MCP credential detection** in SSE stream
-2. **Provider-specific OAuth configs** (GitHub, Carbon Voice MCP)
-3. **Function response submission** mechanism
-4. **MCP credential storage** (separate from app auth)
+**Simplified client responsibilities:**
+1. **Detect credential requests** in `actions.functionCalls[]`
+2. **Open authorization URL** in browser (from `authConfig.exchangedAuthCredential.oauth2.auth_uri`)
+3. **Capture callback URL** via deep linking (desktop) or route handling (web)
+4. **Submit callback URL** to backend via function response (as `auth_response_uri`)
+5. **Display UI status** during OAuth flow
+
+**Backend responsibilities (ADK agent):**
+- Token exchange (code → access token)
+- Secure token storage
+- Token refresh (if applicable)
+- Retry original tool call with credentials
 
 The implementation follows the existing architecture:
-- **Data layer**: New DTOs for `adk_request_credential` events, new repository for MCP OAuth
-- **Domain layer**: Entities for MCP providers and credentials, use cases for OAuth flow
-- **Presentation layer**: New BLoC for MCP auth state, UI components for authorization prompts
+- **Data layer**: Update `ActionsDto` to include `functionCalls[]`, create minimal OAuth DTOs for auth config
+- **Domain layer**: Lightweight entities for providers (no credential entities needed - backend handles tokens)
+- **Presentation layer**: BLoC for OAuth state, UI components for authorization prompts
 
 ---
 
 ## Phase 1: Data Layer - Event Models and Detection
 
 ### Overview
-Create data models to deserialize `adk_request_credential` function call events and extract OAuth configuration.
+Update `ActionsDto` to include the `functionCalls[]` array, create DTOs for OAuth configuration, and add event detection logic to identify `adk_request_credential` function calls in the `actions` object.
 
 ### Changes Required
 
-#### 1. Add MCP Auth DTOs
+#### 1. Update ActionsDto to Include FunctionCalls Array
+**File**: `lib/features/agent_chat/data/models/event_dto.dart`
+
+**Current ActionsDto** (lines 100-115):
+```dart
+@JsonSerializable()
+class ActionsDto {
+  ActionsDto({
+    this.stateDelta,
+    this.artifactDelta,
+  });
+
+  factory ActionsDto.fromJson(Map<String, dynamic> json) =>
+      _$ActionsDtoFromJson(json);
+
+  final Map<String, dynamic>? stateDelta;
+  final Map<String, dynamic>? artifactDelta;
+
+  Map<String, dynamic> toJson() => _$ActionsDtoToJson(this);
+}
+```
+
+**Updated ActionsDto** (add functionCalls and functionResponses):
+```dart
+@JsonSerializable()
+class ActionsDto {
+  ActionsDto({
+    this.stateDelta,
+    this.artifactDelta,
+    this.functionCalls,      // NEW
+    this.functionResponses,  // NEW
+  });
+
+  factory ActionsDto.fromJson(Map<String, dynamic> json) =>
+      _$ActionsDtoFromJson(json);
+
+  final Map<String, dynamic>? stateDelta;
+  final Map<String, dynamic>? artifactDelta;
+  final List<FunctionCallItemDto>? functionCalls;      // NEW
+  final List<FunctionResponseItemDto>? functionResponses;  // NEW
+
+  Map<String, dynamic> toJson() => _$ActionsDtoToJson(this);
+}
+
+/// Function call item in actions.functionCalls[] array
+@JsonSerializable()
+class FunctionCallItemDto {
+  FunctionCallItemDto({
+    required this.name,
+    required this.args,
+  });
+
+  factory FunctionCallItemDto.fromJson(Map<String, dynamic> json) =>
+      _$FunctionCallItemDtoFromJson(json);
+
+  final String name;
+  final Map<String, dynamic> args;
+
+  Map<String, dynamic> toJson() => _$FunctionCallItemDtoToJson(this);
+}
+
+/// Function response item in actions.functionResponses[] array
+@JsonSerializable()
+class FunctionResponseItemDto {
+  FunctionResponseItemDto({
+    required this.name,
+    required this.response,
+  });
+
+  factory FunctionResponseItemDto.fromJson(Map<String, dynamic> json) =>
+      _$FunctionResponseItemDtoFromJson(json);
+
+  final String name;
+  final Map<String, dynamic> response;
+
+  Map<String, dynamic> toJson() => _$FunctionResponseItemDtoToJson(this);
+}
+```
+
+#### 2. Add MCP Auth DTOs
 **File**: `lib/features/agent_chat/data/models/mcp_auth_dto.dart` (NEW)
 
 **Purpose**: Deserialize the `authConfig` object from `adk_request_credential` function call args
@@ -228,7 +317,7 @@ class OAuth2ConfigDto {
 }
 ```
 
-#### 2. Extend Event Mapper to Detect Credential Requests
+#### 3. Extend Event Mapper to Detect Credential Requests
 **File**: `lib/features/agent_chat/data/mappers/event_mapper.dart`
 
 **Add method** (after existing `getStatusMessage` method):
@@ -239,32 +328,29 @@ import 'package:carbon_voice_console/features/agent_chat/data/models/mcp_auth_dt
 extension EventDtoMapper on EventDto {
   // ... existing toDomain and getStatusMessage methods ...
 
-  /// Check if this event is an adk_request_credential function call
+  /// Check if this event contains an adk_request_credential function call
   bool isCredentialRequest() {
-    final functionCalls = content.parts
-        .where((p) => p.functionCall != null)
-        .toList();
+    if (actions == null || actions!.functionCalls == null) return false;
 
-    if (functionCalls.isEmpty) return false;
-
-    return functionCalls.any((p) => p.functionCall!.name == 'adk_request_credential');
+    return actions!.functionCalls!.any((call) => call.name == 'adk_request_credential');
   }
 
   /// Extract credential request data if this is a credential request event
   /// Returns null if not a credential request
   CredentialRequestData? getCredentialRequest() {
-    final functionCalls = content.parts
-        .where((p) => p.functionCall != null && p.functionCall!.name == 'adk_request_credential')
+    if (actions == null || actions!.functionCalls == null) return null;
+
+    final credentialCalls = actions!.functionCalls!
+        .where((call) => call.name == 'adk_request_credential')
         .toList();
 
-    if (functionCalls.isEmpty) return null;
+    if (credentialCalls.isEmpty) return null;
 
-    final call = functionCalls.first.functionCall!;
+    final call = credentialCalls.first;
 
     try {
       final requestDto = AdkRequestCredentialDto.fromJson(call.args);
       return CredentialRequestData(
-        functionCallId: call.id,
         authConfig: requestDto.authConfig,
         provider: _extractProviderFromAuthor(author),
       );
@@ -287,18 +373,16 @@ extension EventDtoMapper on EventDto {
 /// Data class for credential request information
 class CredentialRequestData {
   CredentialRequestData({
-    required this.functionCallId,
     required this.authConfig,
     required this.provider,
   });
 
-  final String functionCallId;
   final AuthConfigDto authConfig;
   final String provider;
 }
 ```
 
-#### 3. Update Repository to Detect and Emit Credential Requests
+#### 4. Update Repository to Detect and Emit Credential Requests
 **File**: `lib/features/agent_chat/data/repositories/agent_chat_repository_impl.dart`
 
 **Add new callback parameter** to `sendMessageStreaming` method signature (line 56):
@@ -326,7 +410,7 @@ if (eventDto.isCredentialRequest()) {
 }
 ```
 
-#### 4. Update Agent Chat Repository Interface
+#### 5. Update Agent Chat Repository Interface
 **File**: `lib/features/agent_chat/domain/repositories/agent_chat_repository.dart`
 
 **Update method signature** (add new callback parameter):
@@ -356,8 +440,8 @@ abstract class AgentChatRepository {
 - [ ] Code follows linting rules: `dart fix --dry-run`
 
 #### Manual Verification:
-- [ ] When agent emits `adk_request_credential`, `onCredentialRequest` callback is invoked
-- [ ] `CredentialRequestData` contains valid `functionCallId`, `authConfig`, and `provider`
+- [ ] When agent emits `adk_request_credential` in `actions.functionCalls[]`, `onCredentialRequest` callback is invoked
+- [ ] `CredentialRequestData` contains valid `authConfig` and `provider`
 - [ ] OAuth configuration includes `auth_uri`, `token_uri`, `client_id`, `client_secret`
 - [ ] Provider is correctly identified from `author` field ("github", "carbon", etc.)
 
@@ -365,199 +449,127 @@ abstract class AgentChatRepository {
 
 ---
 
-## Phase 2: Domain Layer - MCP OAuth Entities and Repository Interface
+## Phase 2: Domain Layer - MCP Provider Entity and Function Response Builder
 
 ### Overview
-Define domain entities for MCP providers and their credentials, and create repository interface for MCP OAuth operations.
+Create a lightweight MCP Provider entity to hold OAuth configuration extracted from `authConfig`, and add a helper to build the function response payload for submitting callback URLs to the ADK backend.
 
 ### Changes Required
 
 #### 1. Create MCP Provider Entity
 **File**: `lib/features/agent_chat/domain/entities/mcp_provider.dart` (NEW)
 
-**Purpose**: Represent an MCP provider (GitHub, Carbon Voice) with its OAuth configuration
+**Purpose**: Represent an MCP provider with OAuth configuration (lightweight, no credential storage)
 
 ```dart
+import 'package:carbon_voice_console/features/agent_chat/data/models/mcp_auth_dto.dart';
 import 'package:equatable/equatable.dart';
 
 /// Represents an MCP provider that requires OAuth authentication
+/// Note: This only holds config for the OAuth flow, NOT credentials/tokens
 class McpProvider extends Equatable {
   const McpProvider({
     required this.id,
-    required this.name,
     required this.displayName,
-    required this.authorizationUrl,
-    required this.tokenUrl,
-    required this.clientId,
-    required this.clientSecret,
-    required this.scopes,
-    required this.redirectUri,
+    required this.authConfig,
   });
+
+  /// Factory to build from ADK auth config
+  factory McpProvider.fromAuthConfig({
+    required String providerId,
+    required AuthConfigDto authConfig,
+  }) {
+    String displayName;
+    switch (providerId) {
+      case 'github':
+        displayName = 'GitHub';
+        break;
+      case 'carbon':
+        displayName = 'Carbon Voice';
+        break;
+      case 'atlassian':
+        displayName = 'Atlassian';
+        break;
+      default:
+        displayName = providerId.toUpperCase();
+    }
+
+    return McpProvider(
+      id: providerId,
+      displayName: displayName,
+      authConfig: authConfig,
+    );
+  }
 
   /// Unique identifier for this provider (e.g., "github", "carbon")
   final String id;
 
-  /// Internal name for this provider (e.g., "github_agent", "carbon_voice_agent")
-  final String name;
-
   /// User-facing display name (e.g., "GitHub", "Carbon Voice")
   final String displayName;
 
-  /// OAuth authorization endpoint
-  final String authorizationUrl;
+  /// OAuth configuration from ADK (contains auth_uri, token_uri, client_id, etc.)
+  final AuthConfigDto authConfig;
 
-  /// OAuth token exchange endpoint
-  final String tokenUrl;
+  /// Get authorization URL from auth config
+  String get authorizationUrl => authConfig.exchangedAuthCredential.oauth2.authUri;
 
-  /// OAuth client ID
-  final String clientId;
-
-  /// OAuth client secret
-  final String clientSecret;
-
-  /// Required OAuth scopes
-  final List<String> scopes;
-
-  /// Redirect URI for OAuth callback
-  final String redirectUri;
+  /// Get scopes from auth config
+  List<String> get scopes => authConfig.exchangedAuthCredential.oauth2.scopes ?? [];
 
   @override
-  List<Object?> get props => [
-        id,
-        name,
-        displayName,
-        authorizationUrl,
-        tokenUrl,
-        clientId,
-        clientSecret,
-        scopes,
-        redirectUri,
-      ];
+  List<Object?> get props => [id, displayName, authConfig];
 }
 ```
 
-#### 2. Create MCP Credentials Entity
-**File**: `lib/features/agent_chat/domain/entities/mcp_credentials.dart` (NEW)
+#### 2. Create Function Response Builder Utility
+**File**: `lib/features/agent_chat/domain/utils/mcp_oauth_utils.dart` (NEW)
 
-**Purpose**: Represent OAuth credentials for an MCP provider
-
-```dart
-import 'package:equatable/equatable.dart';
-
-/// Represents OAuth credentials for an MCP provider
-class McpCredentials extends Equatable {
-  const McpCredentials({
-    required this.providerId,
-    required this.accessToken,
-    required this.tokenType,
-    required this.expiresAt,
-    this.refreshToken,
-    this.scopes,
-  });
-
-  /// Provider ID this credential belongs to (e.g., "github", "carbon")
-  final String providerId;
-
-  /// OAuth access token
-  final String accessToken;
-
-  /// Token type (usually "Bearer")
-  final String tokenType;
-
-  /// Expiration timestamp (milliseconds since epoch)
-  final int expiresAt;
-
-  /// Optional refresh token for renewing access
-  final String? refreshToken;
-
-  /// Scopes granted for this token
-  final List<String>? scopes;
-
-  /// Check if the token is expired
-  bool get isExpired {
-    return DateTime.now().millisecondsSinceEpoch >= expiresAt;
-  }
-
-  @override
-  List<Object?> get props => [
-        providerId,
-        accessToken,
-        tokenType,
-        expiresAt,
-        refreshToken,
-        scopes,
-      ];
-}
-```
-
-#### 3. Create MCP OAuth Repository Interface
-**File**: `lib/features/agent_chat/domain/repositories/mcp_oauth_repository.dart` (NEW)
-
-**Purpose**: Define contract for MCP OAuth operations
+**Purpose**: Build ADK function response payload for submitting OAuth callback URL
 
 ```dart
-import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/models/mcp_auth_dto.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/mcp_credentials.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/mcp_provider.dart';
 
-abstract class McpOAuthRepository {
-  /// Generate OAuth authorization URL for a provider
-  Future<Result<String>> getAuthorizationUrl({
-    required McpProvider provider,
-  });
-
-  /// Exchange authorization code for access token
-  Future<Result<McpCredentials>> exchangeCodeForToken({
-    required McpProvider provider,
-    required String code,
-    required String codeVerifier,
-  });
-
-  /// Save credentials for a provider
-  Future<Result<void>> saveCredentials({
-    required String providerId,
-    required McpCredentials credentials,
-  });
-
-  /// Load saved credentials for a provider
-  Future<Result<McpCredentials?>> loadCredentials({
-    required String providerId,
-  });
-
-  /// Delete credentials for a provider
-  Future<Result<void>> deleteCredentials({
-    required String providerId,
-  });
-
-  /// Build provider configuration from ADK auth config
-  McpProvider buildProviderFromAuthConfig({
-    required String providerId,
-    required AuthConfigDto authConfig,
-  });
-
-  /// Build function response payload for ADK
-  Map<String, dynamic> buildFunctionResponse({
-    required String functionCallId,
+class McpOAuthUtils {
+  /// Build function response content for ADK
+  /// This submits the callback URL to the backend, which then handles token exchange
+  static Map<String, dynamic> buildFunctionResponse({
     required AuthConfigDto authConfig,
     required String callbackUrl,
     required String redirectUri,
-  });
+  }) {
+    // Update auth config with callback URL and redirect URI
+    authConfig.exchangedAuthCredential.oauth2.authResponseUri = callbackUrl;
+    authConfig.exchangedAuthCredential.oauth2.redirectUri = redirectUri;
+
+    // Build function response content matching ADK format
+    // The function call name is always 'adk_request_credential'
+    return {
+      'role': 'user',
+      'parts': [
+        {
+          'function_response': {
+            'name': 'adk_request_credential',
+            'response': authConfig.toJson(),
+          },
+        },
+      ],
+    };
+  }
 }
 ```
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] All entity classes compile without errors: `dart analyze`
-- [ ] Repository interface compiles without errors
+- [ ] Entity and utility classes compile without errors: `dart analyze`
+- [ ] `McpProvider` factory creates correct instances from auth config
+- [ ] `McpOAuthUtils.buildFunctionResponse()` generates valid JSON structure
 - [ ] Equatable implementations are correct (no missing props)
 
 #### Manual Verification:
-- [ ] Entity classes are immutable (all fields `final`)
-- [ ] Entities use `Equatable` for value equality
-- [ ] Repository interface methods have clear contracts
-- [ ] `McpCredentials.isExpired` correctly checks expiration
+- [ ] Provider display names are correct for known providers (GitHub, Carbon Voice, Atlassian)
+- [ ] Authorization URL is correctly extracted from auth config
+- [ ] Function response payload matches ADK expected format
 
 **Implementation Note**: This phase has no manual testing requirements. Proceed to Phase 3 immediately after automated verification passes.
 
