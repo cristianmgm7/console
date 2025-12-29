@@ -59,12 +59,11 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
   @override
   Future<Result<AgentChatSession>> createSession(String sessionId) async {
     try {
-      final sessionData = await _apiService.createSession(
+      final sessionDto = await _apiService.createSession(
         userId: _userId,
         sessionId: sessionId,
       );
 
-      final sessionDto = SessionDto.fromJson(sessionData);
       final session = sessionDto.toDomain();
 
       // Save to local storage
@@ -86,12 +85,11 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
   @override
   Future<Result<AgentChatSession>> getSession(String sessionId) async {
     try {
-      final sessionData = await _apiService.getSession(
+      final sessionDto = await _apiService.getSession(
         userId: _userId,
         sessionId: sessionId,
       );
 
-      final sessionDto = SessionDto.fromJson(sessionData);
       final session = sessionDto.toDomain();
 
       return success(session);
@@ -126,12 +124,12 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
       final updatedSessions = sessions.where((s) => s.id != sessionId).toList();
 
       final sessionsJson = jsonEncode(
-        updatedSessions.map((s) => {
+        updatedSessions.map((s) => <String, dynamic>{
           'id': s.id,
           'appName': s.appName,
           'userId': s.userId,
           'state': s.state,
-          'events': [],
+          'events': <dynamic>[],
           'lastUpdateTime': s.lastUpdateTime.millisecondsSinceEpoch / 1000,
         }).toList(),
       );
@@ -169,12 +167,12 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
       }
 
       final sessionsJson = jsonEncode(
-        sessions.map((s) => {
+        sessions.map((s) => <String, dynamic>{
           'id': s.id,
           'appName': s.appName,
           'userId': s.userId,
           'state': s.state,
-          'events': [],
+          'events': <dynamic>[],
           'lastUpdateTime': s.lastUpdateTime.millisecondsSinceEpoch / 1000,
         }).toList(),
       );

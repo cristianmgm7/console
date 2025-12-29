@@ -27,15 +27,17 @@ extension EventDtoMapper on EventDto {
     }
 
     return AgentChatMessage(
-      id: id,
+      id: id ?? '',
       sessionId: sessionId,
       role: MessageRole.agent,
       content: combinedText,
-      timestamp: DateTime.fromMillisecondsSinceEpoch((timestamp * 1000).toInt()),
+      timestamp: timestamp != null 
+          ? DateTime.fromMillisecondsSinceEpoch((timestamp! * 1000).toInt())
+          : DateTime.now(),
       subAgentName: subAgentName,
       subAgentIcon: subAgentIcon,
       metadata: {
-        'invocationId': invocationId,
+        'invocationId': invocationId ?? '',
         'author': author,
       },
     );
@@ -43,10 +45,10 @@ extension EventDtoMapper on EventDto {
 
   /// Extract status message for function calls
   String? getStatusMessage() {
-    final functionCalls = content.parts.where((p) => p.functionCall != null).toList();
+    final functionCalls = actions?.functionCalls ?? [];
 
     if (functionCalls.isNotEmpty) {
-      final call = functionCalls.first.functionCall!;
+      final call = functionCalls.first;
       return 'Calling ${call.name}...';
     }
 

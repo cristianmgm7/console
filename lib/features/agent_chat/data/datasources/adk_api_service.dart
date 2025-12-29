@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/config/adk_config.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/models/event_dto.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/models/session_dto.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -16,7 +18,7 @@ class AdkApiService {
   final Logger _logger;
 
   /// Create a new session
-  Future<Map<String, dynamic>> createSession({
+  Future<SessionDto> createSession({
     required String userId,
     required String sessionId,
     Map<String, dynamic>? initialState,
@@ -37,7 +39,8 @@ class AdkApiService {
           .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return SessionDto.fromJson(data);
       } else {
         throw ServerException(
           statusCode: response.statusCode,
@@ -52,7 +55,7 @@ class AdkApiService {
   }
 
   /// Get session details
-  Future<Map<String, dynamic>> getSession({
+  Future<SessionDto> getSession({
     required String userId,
     required String sessionId,
   }) async {
@@ -68,7 +71,8 @@ class AdkApiService {
           .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return SessionDto.fromJson(data);
       } else {
         throw ServerException(
           statusCode: response.statusCode,
@@ -112,7 +116,7 @@ class AdkApiService {
   }
 
   /// Send message to agent (streaming with SSE)
-  Stream<Map<String, dynamic>> sendMessageStreaming({
+  Stream<EventDto> sendMessageStreaming({
     required String userId,
     required String sessionId,
     required String message,
@@ -158,8 +162,8 @@ class AdkApiService {
           if (line.startsWith('data: ')) {
             final jsonData = line.substring(6); // Remove "data: " prefix
             try {
-              final event = jsonDecode(jsonData) as Map<String, dynamic>;
-              yield event;
+              final jsonMap = jsonDecode(jsonData) as Map<String, dynamic>;
+              yield EventDto.fromJson(jsonMap);
             } catch (e) {
               _logger.w('Failed to parse SSE event: $line', error: e);
             }

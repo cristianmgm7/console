@@ -6,23 +6,29 @@ part 'event_dto.g.dart';
 class EventDto {
 
   EventDto({
-    required this.id,
-    required this.invocationId,
-    required this.author,
-    required this.timestamp,
-    required this.content,
+    required this.author, 
+    required this.content, 
+    this.id,
+    this.invocationId,
+    this.timestamp,
     this.actions,
+    this.longRunningToolIds,
+    this.branch,
+    this.partial,
   });
 
   factory EventDto.fromJson(Map<String, dynamic> json) =>
       _$EventDtoFromJson(json);
 
-  final String id;
-  final String invocationId;
+  final String? id;
+  final String? invocationId;
   final String author;
-  final double timestamp;
+  final double? timestamp;
   final ContentDto content;
   final ActionsDto? actions;
+  final List<String>? longRunningToolIds;
+  final String? branch;
+  final bool? partial;
 
   Map<String, dynamic> toJson() => _$EventDtoToJson(this);
 }
@@ -37,6 +43,7 @@ class ContentDto {
 
   factory ContentDto.fromJson(Map<String, dynamic> json) =>
       _$ContentDtoFromJson(json);
+      
   final String role;
   final List<PartDto> parts;
 
@@ -48,31 +55,43 @@ class PartDto {
 
   PartDto({
     this.text,
-    this.functionCall,
-    this.functionResponse,
+    this.inlineData,
   });
 
   factory PartDto.fromJson(Map<String, dynamic> json) =>
       _$PartDtoFromJson(json);
   final String? text;
-  final FunctionCallDto? functionCall;
-  final FunctionResponseDto? functionResponse;
+  final InlineDataDto? inlineData;
 
   Map<String, dynamic> toJson() => _$PartDtoToJson(this);
+}
+
+@JsonSerializable()
+class InlineDataDto {
+  InlineDataDto({
+    required this.mimeType,
+    required this.data,
+  });
+
+  factory InlineDataDto.fromJson(Map<String, dynamic> json) =>
+      _$InlineDataDtoFromJson(json);
+
+  final String mimeType;
+  final String data;
+
+  Map<String, dynamic> toJson() => _$InlineDataDtoToJson(this);
 }
 
 @JsonSerializable()
 class FunctionCallDto {
 
   FunctionCallDto({
-    required this.id,
     required this.name,
     required this.args,
   });
 
   factory FunctionCallDto.fromJson(Map<String, dynamic> json) =>
       _$FunctionCallDtoFromJson(json);
-  final String id;
   final String name;
   final Map<String, dynamic> args;
 
@@ -83,14 +102,12 @@ class FunctionCallDto {
 class FunctionResponseDto {
 
   FunctionResponseDto({
-    required this.id,
     required this.name,
     required this.response,
   });
 
   factory FunctionResponseDto.fromJson(Map<String, dynamic> json) =>
       _$FunctionResponseDtoFromJson(json);
-  final String id;
   final String name;
   final Map<String, dynamic> response;
 
@@ -101,15 +118,17 @@ class FunctionResponseDto {
 class ActionsDto {
 
   ActionsDto({
-    this.stateDelta,
-    this.artifactDelta,
+    this.functionCalls,
+    this.functionResponses,
+    this.skipSummarization,
   });
 
   factory ActionsDto.fromJson(Map<String, dynamic> json) =>
       _$ActionsDtoFromJson(json);
 
-  final Map<String, dynamic>? stateDelta;
-  final Map<String, dynamic>? artifactDelta;
+  final List<FunctionCallDto>? functionCalls;
+  final List<FunctionResponseDto>? functionResponses;
+  final bool? skipSummarization;
 
   Map<String, dynamic> toJson() => _$ActionsDtoToJson(this);
 }
