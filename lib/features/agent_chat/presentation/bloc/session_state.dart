@@ -17,13 +17,13 @@ class SessionLoading extends SessionState {
 }
 
 class SessionLoaded extends SessionState {
-  final List<AgentChatSession> sessions;
-  final String? selectedSessionId;
 
   const SessionLoaded({
     required this.sessions,
     this.selectedSessionId,
   });
+  final List<AgentChatSession> sessions;
+  final String? selectedSessionId;
 
   @override
   List<Object?> get props => [sessions, selectedSessionId];
