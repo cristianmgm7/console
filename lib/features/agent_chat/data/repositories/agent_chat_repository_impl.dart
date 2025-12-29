@@ -1,14 +1,10 @@
-import 'dart:convert';
-
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/datasources/adk_api_service.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/mappers/event_mapper.dart';
-import 'package:carbon_voice_console/features/agent_chat/data/models/event_dto.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
@@ -38,14 +34,12 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     try {
       final agentMessages = <AgentChatMessage>[];
 
-      await for (final eventJson in _apiService.sendMessageStreaming(
+      await for (final eventDto in _apiService.sendMessageStreaming(
         userId: _userId,
         sessionId: sessionId,
         message: content,
         context: context,
       )) {
-        final eventDto = EventDto.fromJson(eventJson);
-
         // Check for status updates (function calls)
         final statusMsg = eventDto.getStatusMessage();
         if (statusMsg != null) {
