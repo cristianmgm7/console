@@ -28,8 +28,10 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
   Future<Result<List<AgentChatMessage>>> sendMessageStreaming({
     required String sessionId,
     required String content,
-    required void Function(String status, String? subAgent) onStatus, Map<String, dynamic>? context,
+    required void Function(String status, String? subAgent) onStatus,
+    Map<String, dynamic>? context,
     void Function(String chunk)? onMessageChunk,
+    void Function(CredentialRequestData credentialRequest)? onCredentialRequest,
   }) async {
     try {
       final agentMessages = <AgentChatMessage>[];
@@ -40,6 +42,14 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         message: content,
         context: context,
       )) {
+        // Check for credential requests
+        if (eventDto.isCredentialRequest()) {
+          final credentialRequest = eventDto.getCredentialRequest();
+          if (credentialRequest != null && onCredentialRequest != null) {
+            onCredentialRequest(credentialRequest);
+          }
+        }
+
         // Check for status updates (function calls)
         final statusMsg = eventDto.getStatusMessage();
         if (statusMsg != null) {
@@ -72,6 +82,31 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     } catch (e) {
       _logger.e('Unexpected error streaming message', error: e);
       return failure(const UnknownFailure(details: 'Failed to stream message'));
+    }
+  }
+
+  @override
+  Future<Result<void>> submitFunctionResponse({
+    required String sessionId,
+    required String userId,
+    required Map<String, dynamic> functionResponseContent,
+  }) async {
+    try {
+      await _apiService.submitFunctionResponse(
+        sessionId: sessionId,
+        userId: userId,
+        functionResponseContent: functionResponseContent,
+      );
+      return success(null);
+    } on ServerException catch (e) {
+      _logger.e('Server error submitting function response', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
+    } on NetworkException catch (e) {
+      _logger.e('Network error submitting function response', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } catch (e) {
+      _logger.e('Unexpected error submitting function response', error: e);
+      return failure(const UnknownFailure(details: 'Failed to submit function response'));
     }
   }
 }
