@@ -26,20 +26,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     emit(const ChatLoading());
 
-    final result = await _repository.loadMessages(event.sessionId);
-
-    result.fold(
-      onSuccess: (messages) {
-        emit(ChatLoaded(
-          messages: messages,
-          currentSessionId: event.sessionId,
-        ));
-      },
-      onFailure: (failure) {
-        _logger.e('Failed to load messages', error: failure);
-        emit(ChatError(failure.failure.details ?? 'Failed to load messages'));
-      },
-    );
+    
   }
 
   Future<void> _onSendMessageStreaming(
