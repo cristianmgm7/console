@@ -3,6 +3,8 @@ import 'package:carbon_voice_console/features/agent_chat/presentation/screens/ag
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/mcp_auth_listener.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart'
@@ -129,8 +131,13 @@ class BlocProviders {
         BlocProvider<ChatBloc>(
           create: (_) => getIt<ChatBloc>(),
         ),
+        BlocProvider<McpAuthBloc>(
+          create: (_) => getIt<McpAuthBloc>(),
+        ),
       ],
-      child: const AgentChatScreen(),
+      child: const McpAuthListener(
+        child: AgentChatScreen(),
+      ),
     );
   }
 }

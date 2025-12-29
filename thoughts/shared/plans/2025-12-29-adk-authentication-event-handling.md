@@ -1393,10 +1393,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Chat state compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/chat_state.dart`
-- [ ] Chat bloc compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/chat_bloc.dart`
-- [ ] Regenerate DI: `flutter pub run build_runner build --delete-conflicting-outputs`
-- [ ] No compilation errors: `flutter analyze`
+- [x] Chat state compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/chat_state.dart`
+- [x] Chat bloc compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/chat_bloc.dart`
+- [x] Regenerate DI: `flutter pub run build_runner build --delete-conflicting-outputs`
+- [x] No compilation errors: `flutter analyze`
 
 #### Manual Verification:
 - [ ] Test sending a message in chat UI
@@ -2095,14 +2095,14 @@ void _sendMessage(String sessionId, String content) {
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] MCP auth events compile: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_event.dart`
-- [ ] MCP auth states compile: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_state.dart`
-- [ ] MCP auth bloc compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart`
-- [ ] Auth listener widget compiles: `flutter analyze lib/features/agent_chat/presentation/widgets/mcp_auth_listener.dart`
-- [ ] Dialog widget compiles: `flutter analyze lib/features/agent_chat/presentation/widgets/mcp_authentication_dialog.dart`
-- [ ] Screen integration compiles: `flutter analyze lib/features/agent_chat/presentation/screens/agent_chat_screen.dart`
-- [ ] Regenerate DI: `flutter pub run build_runner build --delete-conflicting-outputs`
-- [ ] No linting errors: `flutter analyze`
+- [x] MCP auth events compile: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_event.dart`
+- [x] MCP auth states compile: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_state.dart`
+- [x] MCP auth bloc compiles: `flutter analyze lib/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart`
+- [x] Auth listener widget compiles: `flutter analyze lib/features/agent_chat/presentation/widgets/mcp_auth_listener.dart`
+- [x] Dialog widget compiles: `flutter analyze lib/features/agent_chat/presentation/widgets/mcp_authentication_dialog.dart`
+- [x] Screen integration compiles: `flutter analyze lib/features/agent_chat/presentation/screens/agent_chat_screen.dart`
+- [x] Regenerate DI: `flutter pub run build_runner build --delete-conflicting-outputs`
+- [x] No linting errors: `flutter analyze`
 
 #### Manual Verification:
 - [ ] Trigger an authentication request from agent (e.g., ask to create GitHub issue)

@@ -4,6 +4,8 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +41,13 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
     context.read<ChatBloc>().add(SendMessageStreaming(
       sessionId: sessionState.selectedSessionId!,
       content: text,
+      context: null, // TODO: Add context support later
+    ));
+
+    // Start auth listening for this session
+    context.read<McpAuthBloc>().add(StartAuthListening(
+      sessionId: sessionState.selectedSessionId!,
+      message: text,
       context: null, // TODO: Add context support later
     ));
 

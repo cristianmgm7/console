@@ -24,12 +24,14 @@ class ChatLoaded extends ChatState {
     this.isSending = false,
     this.statusMessage,
     this.statusSubAgent,
+    this.activeSessionId, // NEW: Track which session is actively streaming
   });
   final List<AgentChatMessage> messages;
   final String currentSessionId;
   final bool isSending;
   final String? statusMessage;
   final String? statusSubAgent;
+  final String? activeSessionId; // NEW
 
   @override
   List<Object?> get props => [
@@ -38,6 +40,7 @@ class ChatLoaded extends ChatState {
         isSending,
         statusMessage,
         statusSubAgent,
+        activeSessionId, // NEW
       ];
 
   ChatLoaded copyWith({
@@ -46,13 +49,16 @@ class ChatLoaded extends ChatState {
     bool? isSending,
     String? statusMessage,
     String? statusSubAgent,
+    String? activeSessionId,
+    bool clearStatus = false, // NEW: Allow clearing status
   }) {
     return ChatLoaded(
       messages: messages ?? this.messages,
       currentSessionId: currentSessionId ?? this.currentSessionId,
       isSending: isSending ?? this.isSending,
-      statusMessage: statusMessage ?? this.statusMessage,
-      statusSubAgent: statusSubAgent ?? this.statusSubAgent,
+      statusMessage: clearStatus ? null : (statusMessage ?? this.statusMessage),
+      statusSubAgent: clearStatus ? null : (statusSubAgent ?? this.statusSubAgent),
+      activeSessionId: activeSessionId ?? this.activeSessionId,
     );
   }
 }
