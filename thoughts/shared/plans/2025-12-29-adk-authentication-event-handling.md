@@ -1149,43 +1149,62 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _currentStreamingMessageId = null;
     _streamingTextBuffer.clear();
 
-    // Start use case stream (events will come through subscription)
+    // Start use case stream using emit.forEach pattern
     try {
-      // Cancel any existing subscription
-      await _eventSubscription?.cancel();
-
-      // Start new event stream from use case
       final eventStream = _getChatMessagesUseCase(
         sessionId: event.sessionId,
         message: event.content,
         context: event.context,
       );
 
-      // Subscribe to categorized events
-      _eventSubscription = eventStream.listen(
-        (categorizedEvent) => _handleCategorizedEvent(categorizedEvent),
+      // Process each event using emit.forEach (no manual subscription!)
+      await emit.forEach<CategorizedEvent>(
+        eventStream,
+        onData: (categorizedEvent) {
+          // Handle each categorized event
+          if (categorizedEvent is ChatMessageEvent) {
+            return _handleChatMessage(categorizedEvent, currentState);
+          } else if (categorizedEvent is FunctionCallEvent) {
+            return _handleFunctionCall(categorizedEvent, currentState);
+          } else if (categorizedEvent is FunctionResponseEvent) {
+            return _handleFunctionResponse(categorizedEvent, currentState);
+          } else if (categorizedEvent is AgentErrorEvent) {
+            return _handleError(categorizedEvent, currentState);
+          }
+          return currentState; // Unknown event type
+        },
         onError: (error, stackTrace) {
           _logger.e('Error in event stream', error: error, stackTrace: stackTrace);
-          add(MessageReceived(
-            messageId: _uuid.v4(),
-            content: '⚠️ Error: $error',
-          ));
-        },
-        onDone: () {
-          _logger.d('Event stream completed');
-          // Mark user message as sent when stream completes
-          final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-          final updatedMessages = (state as ChatLoaded).messages
-              .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
-              .toList();
           
-          emit(ChatLoaded(
-            messages: updatedMessages,
+          // Create error message
+          final errorMessage = AgentChatMessage(
+            id: _uuid.v4(),
+            sessionId: event.sessionId,
+            role: MessageRole.agent,
+            content: '⚠️ Error: $error',
+            timestamp: DateTime.now(),
+            status: MessageStatus.error,
+          );
+
+          return ChatLoaded(
+            messages: [...currentState.messages, errorMessage],
             currentSessionId: event.sessionId,
             isSending: false,
-          ));
+          );
         },
       );
+
+      // Stream completed - mark user message as sent
+      final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+      final updatedMessages = currentState.messages
+          .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
+          .toList();
+
+      emit(ChatLoaded(
+        messages: updatedMessages,
+        currentSessionId: event.sessionId,
+        isSending: false,
+      ));
     } catch (e) {
       _logger.e('Error starting session', error: e);
 
@@ -1203,23 +1222,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  /// Handle categorized events from use case
-  void _handleCategorizedEvent(CategorizedEvent event) {
-    if (event is ChatMessageEvent) {
-      _onChatMessage(event);
-    } else if (event is FunctionCallEvent) {
-      _onFunctionCall(event);
-    } else if (event is FunctionResponseEvent) {
-      _onFunctionResponse(event);
-    } else if (event is AgentErrorEvent) {
-      _onError(event);
-    }
-  }
-
-  /// Handle chat message events
-  void _onChatMessage(ChatMessageEvent event) {
-    final currentState = state;
-    if (currentState is! ChatLoaded) return;
+  /// Handle chat message events (returns new state)
+  ChatState _handleChatMessage(ChatMessageEvent event, ChatLoaded currentState) {
 
     // Only process if this is for the active session
     if (currentState.activeSessionId != currentState.currentSessionId) return;
@@ -1246,10 +1250,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           },
         );
 
-        emit(currentState.copyWith(
+        return currentState.copyWith(
           messages: [...currentState.messages, streamingMessage],
-          clearStatus: true, // Clear function call status
-        ));
+          clearStatus: true,
+        );
       } else {
         // Update existing streaming message
         final updatedMessages = currentState.messages.map((m) {
@@ -1259,7 +1263,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           return m;
         }).toList();
 
-        emit(currentState.copyWith(messages: updatedMessages));
+        return currentState.copyWith(messages: updatedMessages);
       }
     } else {
       // Complete message
@@ -1272,14 +1276,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           return m;
         }).toList();
 
-        emit(currentState.copyWith(
-          messages: updatedMessages,
-          clearStatus: true,
-        ));
-
         // Reset streaming state
         _currentStreamingMessageId = null;
         _streamingTextBuffer.clear();
+
+        return currentState.copyWith(
+          messages: updatedMessages,
+          clearStatus: true,
+        );
       } else {
         // Single complete message (non-streaming)
         final agentMessage = AgentChatMessage(
@@ -1296,43 +1300,34 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           },
         );
 
-        emit(currentState.copyWith(
+        return currentState.copyWith(
           messages: [...currentState.messages, agentMessage],
           clearStatus: true,
-        ));
+        );
       }
     }
   }
 
   /// Handle function call events (for "thinking..." indicators)
-  void _onFunctionCall(FunctionCallEvent event) {
-    final currentState = state;
-    if (currentState is! ChatLoaded) return;
-
+  ChatState _handleFunctionCall(FunctionCallEvent event, ChatLoaded currentState) {
     // Show "thinking..." status indicator
     final statusMessage = 'Calling ${event.functionName}...';
     final subAgent = _extractSubAgentName(event.sourceEvent.author);
 
-    emit(currentState.copyWith(
+    return currentState.copyWith(
       statusMessage: statusMessage,
       statusSubAgent: subAgent,
-    ));
+    );
   }
 
   /// Handle function response events (to clear "thinking..." indicator)
-  void _onFunctionResponse(FunctionResponseEvent event) {
-    final currentState = state;
-    if (currentState is! ChatLoaded) return;
-
+  ChatState _handleFunctionResponse(FunctionResponseEvent event, ChatLoaded currentState) {
     // Clear status indicator when function completes
-    emit(currentState.copyWith(clearStatus: true));
+    return currentState.copyWith(clearStatus: true);
   }
 
   /// Handle error events
-  void _onError(AgentErrorEvent event) {
-    final currentState = state;
-    if (currentState is! ChatLoaded) return;
-
+  ChatState _handleError(AgentErrorEvent event, ChatLoaded currentState) {
     _logger.e('Agent error: ${event.errorMessage}');
 
     // Show error message in chat
@@ -1345,11 +1340,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       status: MessageStatus.error,
     );
 
-    emit(currentState.copyWith(
+    return currentState.copyWith(
       messages: [...currentState.messages, errorMessage],
       isSending: false,
       clearStatus: true,
-    ));
+    );
   }
 
   Future<void> _onMessageReceived(
@@ -1573,8 +1568,6 @@ class McpAuthError extends McpAuthState {
 **File**: `lib/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart`
 
 ```dart
-import 'dart:async';
-
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
@@ -1601,52 +1594,43 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
   final SendAuthenticationCredentialsUseCase _sendCredentialsUseCase;
   final Logger _logger;
 
-  StreamSubscription? _authRequestSubscription;
-
-  @override
-  Future<void> close() {
-    _authRequestSubscription?.cancel();
-    return super.close();
-  }
-
   Future<void> _onStartAuthListening(
     StartAuthListening event,
     Emitter<McpAuthState> emit,
   ) async {
     _logger.i('Starting auth listening for session: ${event.sessionId}');
 
-    // Cancel any existing subscription
-    await _authRequestSubscription?.cancel();
-
     emit(McpAuthListening(sessionId: event.sessionId));
 
     try {
-      // Subscribe to authentication request events
       final authStream = _getAuthRequestsUseCase(
         sessionId: event.sessionId,
         message: event.message,
         context: event.context,
       );
 
-      _authRequestSubscription = authStream.listen(
-        (authEvent) {
+      // Use emit.forEach to automatically handle stream (no manual subscription!)
+      await emit.forEach<AuthenticationRequestEvent>(
+        authStream,
+        onData: (authEvent) {
           _logger.i('Auth request for provider: ${authEvent.request.provider}');
-          emit(McpAuthRequired(
+          return McpAuthRequired(
             request: authEvent.request,
             sessionId: event.sessionId,
-          ));
+          );
         },
         onError: (error, stackTrace) {
           _logger.e('Error in auth stream', error: error, stackTrace: stackTrace);
-          emit(McpAuthError(
+          return McpAuthError(
             message: error.toString(),
             sessionId: event.sessionId,
-          ));
-        },
-        onDone: () {
-          _logger.d('Auth stream completed');
+          );
         },
       );
+
+      _logger.d('Auth stream completed');
+      // Return to listening state after stream completes
+      emit(McpAuthListening(sessionId: event.sessionId));
     } catch (e, stackTrace) {
       _logger.e('Failed to start auth listening', error: e, stackTrace: stackTrace);
       emit(McpAuthError(
@@ -1727,8 +1711,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     StopAuthListening event,
     Emitter<McpAuthState> emit,
   ) async {
-    await _authRequestSubscription?.cancel();
-    _authRequestSubscription = null;
+    // No need to cancel subscription - emit.forEach handles it automatically
     emit(const McpAuthInitial());
   }
 
@@ -2409,14 +2392,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   
   // In event handler
   Future<void> _onSendMessage(SendMessage event, Emitter emit) async {
-    // Start use case stream
-    final eventStream = _getChatMessagesUseCase(
-      sessionId: event.sessionId,
-      message: event.content,
+    // Use emit.forEach pattern (no manual subscription!)
+    await emit.forEach<CategorizedEvent>(
+      _getChatMessagesUseCase(
+        sessionId: event.sessionId,
+        message: event.content,
+      ),
+      onData: (categorizedEvent) {
+        // Return new state for each event
+        if (categorizedEvent is ChatMessageEvent) {
+          return _handleChatMessage(categorizedEvent);
+        }
+        // ... handle other event types
+        return state;
+      },
     );
-
-    // Subscribe to categorized events
-    _subscription = eventStream.listen(_handleCategorizedEvent);
   }
 }
 ```
