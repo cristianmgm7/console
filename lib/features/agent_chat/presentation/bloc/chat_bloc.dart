@@ -100,9 +100,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           emit(ChatLoaded(
             messages: allMessages,
             currentSessionId: event.sessionId,
-            isSending: false,
-            statusMessage: null,
-            statusSubAgent: null,
           ));
         },
         onFailure: (failure) {

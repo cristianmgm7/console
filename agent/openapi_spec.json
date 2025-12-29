@@ -1,0 +1,552 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ADK API - Agent Development Kit",
+    "version": "1.0.0",
+    "description": "API for interacting with ADK agents. Generated manually due to MCP compatibility issues."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root endpoint",
+        "responses": {
+          "200": {
+            "description": "API root response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "ADK API Server"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs": {
+      "get": {
+        "summary": "API Documentation",
+        "responses": {
+          "200": {
+            "description": "HTML documentation page",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/list-apps": {
+      "get": {
+        "summary": "List available agents",
+        "parameters": [
+          {
+            "name": "detailed",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Return detailed app information"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of agents",
+            "content": {
+              "application/json": {
+                "oneOf": [
+                  {
+                    "schema": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["root_agent"]
+                    },
+                    "description": "Simple list of agent names"
+                  },
+                  {
+                    "schema": {
+                      "$ref": "#/components/schemas/ListAppsResponse"
+                    },
+                    "description": "Detailed agent information"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/apps/{app_name}/users/{user_id}/sessions": {
+      "post": {
+        "summary": "Create a new session",
+        "parameters": [
+          {
+            "name": "app_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the agent/app"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User identifier"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found"
+          }
+        }
+      }
+    },
+    "/apps/{app_name}/users/{user_id}/sessions/{session_id}": {
+      "get": {
+        "summary": "Get session details",
+        "parameters": [
+          {
+            "name": "app_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete session",
+        "parameters": [
+          {
+            "name": "app_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session deleted"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/run": {
+      "post": {
+        "summary": "Run agent (non-streaming)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunAgentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent execution completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/run_sse": {
+      "post": {
+        "summary": "Run agent (streaming via SSE)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunAgentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Streaming response with events",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Server-sent events stream with Event objects as JSON"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ListAppsResponse": {
+        "type": "object",
+        "properties": {
+          "apps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppInfo"
+            }
+          }
+        }
+      },
+      "AppInfo": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Agent name"
+          },
+          "rootAgentName": {
+            "type": "string",
+            "description": "Root agent name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Agent description"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["yaml", "python"],
+            "description": "Agent language/format"
+          }
+        }
+      },
+      "CreateSessionRequest": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Optional session ID. If not provided, one will be generated."
+          },
+          "state": {
+            "type": "object",
+            "description": "Initial session state",
+            "additionalProperties": true
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "description": "Initial events for the session"
+          }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Session ID"
+          },
+          "appName": {
+            "type": "string",
+            "description": "Agent/app name"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "state": {
+            "type": "object",
+            "description": "Session state",
+            "additionalProperties": true
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "description": "Session events"
+          },
+          "lastUpdateTime": {
+            "type": "number",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "appName", "userId"]
+      },
+      "RunAgentRequest": {
+        "type": "object",
+        "properties": {
+          "appName": {
+            "type": "string",
+            "description": "Agent/app name"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Session ID"
+          },
+          "newMessage": {
+            "$ref": "#/components/schemas/Content"
+          },
+          "streaming": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to use streaming response"
+          },
+          "stateDelta": {
+            "type": "object",
+            "description": "State changes to apply",
+            "additionalProperties": true
+          },
+          "invocationId": {
+            "type": "string",
+            "description": "Invocation ID for resuming long-running functions"
+          }
+        },
+        "required": ["appName", "userId", "sessionId", "newMessage"]
+      },
+      "Event": {
+        "type": "object",
+        "description": "Represents an event in the conversation",
+        "properties": {
+          "invocationId": {
+            "type": "string",
+            "description": "Invocation ID"
+          },
+          "author": {
+            "type": "string",
+            "description": "Author of the event ('user' or agent name)"
+          },
+          "content": {
+            "$ref": "#/components/schemas/Content"
+          },
+          "actions": {
+            "$ref": "#/components/schemas/EventActions"
+          },
+          "longRunningToolIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs of long-running tool calls"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Branch path (agent hierarchy)"
+          },
+          "id": {
+            "type": "string",
+            "description": "Event ID"
+          },
+          "timestamp": {
+            "type": "number",
+            "description": "Event timestamp"
+          },
+          "partial": {
+            "type": "boolean",
+            "description": "Whether this is a partial response"
+          }
+        },
+        "required": ["author", "content"]
+      },
+      "Content": {
+        "type": "object",
+        "description": "Content can be text, parts, or other media",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "model"],
+            "description": "Content role"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "inlineData": {
+                      "type": "object",
+                      "properties": {
+                        "mimeType": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "type": "string",
+                          "description": "Base64 encoded data"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "EventActions": {
+        "type": "object",
+        "description": "Actions taken by the agent",
+        "properties": {
+          "functionCalls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "functionResponses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "response": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "skipSummarization": {
+            "type": "boolean",
+            "description": "Whether to skip summarization"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
