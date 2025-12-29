@@ -1,5 +1,4 @@
 import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/agent_chat/data/mappers/event_mapper.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 
 abstract class AgentChatRepository {
@@ -9,12 +8,5 @@ abstract class AgentChatRepository {
     required void Function(String status, String? subAgent) onStatus,
     Map<String, dynamic>? context,
     void Function(String chunk)? onMessageChunk,
-    void Function(CredentialRequestData credentialRequest)? onCredentialRequest,
-  });
-
-  Future<Result<void>> submitFunctionResponse({
-    required String sessionId,
-    required String userId,
-    required Map<String, dynamic> functionResponseContent,
   });
 }

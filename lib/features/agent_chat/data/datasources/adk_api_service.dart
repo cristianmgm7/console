@@ -177,49 +177,6 @@ class AdkApiService {
     }
   }
 
-  /// Submit a function response to continue an agent session
-  /// Used for OAuth credential submission after user authorization
-  Future<void> submitFunctionResponse({
-    required String sessionId,
-    required String userId,
-    required Map<String, dynamic> functionResponseContent,
-  }) async {
-    try {
-      final url = Uri.parse('${AdkConfig.baseUrl}/run_sse');
-
-      final requestBody = {
-        'appName': AdkConfig.appName,
-        'userId': userId,
-        'sessionId': sessionId,
-        'newMessage': functionResponseContent,
-        'streaming': false,
-      };
-
-      _logger.d('Submitting function response: $url');
-      _logger.d('Request body: ${jsonEncode(requestBody)}');
-
-      final response = await _client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      ).timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        _logger.e('Failed to submit function response: ${response.body}');
-        throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to submit function response: ${response.body}',
-        );
-      }
-
-      _logger.d('Function response submitted successfully');
-    } catch (e) {
-      _logger.e('Error submitting function response', error: e);
-      if (e is ServerException) rethrow;
-      throw NetworkException(message: 'Failed to submit function response: $e');
-    }
-  }
-
   /// Check if ADK server is reachable
   Future<bool> healthCheck() async {
     try {
