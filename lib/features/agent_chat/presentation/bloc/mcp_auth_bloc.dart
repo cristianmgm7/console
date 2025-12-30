@@ -93,16 +93,27 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       }
 
       // Send credentials back to agent
-      await _sendCredentialsUseCase(
+      final sendResult = await _sendCredentialsUseCase(
         sessionId: event.sessionId,
         provider: event.request.provider,
         credentials: credentials,
       );
 
-      emit(McpAuthSuccess(
-        provider: event.request.provider,
-        sessionId: event.sessionId,
-      ));
+      sendResult.fold(
+        onSuccess: (_) {
+          emit(McpAuthSuccess(
+            provider: event.request.provider,
+            sessionId: event.sessionId,
+          ));
+        },
+        onFailure: (failure) {
+          _logger.e('Failed to send authentication credentials', error: failure);
+          emit(McpAuthError(
+            message: 'Failed to send credentials: ${failure.failure.details ?? failure.failure.code}',
+            sessionId: event.sessionId,
+          ));
+        },
+      );
 
       // Return to listening state
       emit(McpAuthListening(sessionId: event.sessionId));
@@ -110,10 +121,19 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       _logger.e('Authentication failed', error: e, stackTrace: stackTrace);
 
       // Send error to agent
-      await _sendCredentialsUseCase.sendError(
+      final errorResult = await _sendCredentialsUseCase.sendError(
         sessionId: event.sessionId,
         provider: event.request.provider,
         errorMessage: e.toString(),
+      );
+
+      errorResult.fold(
+        onSuccess: (_) {
+          _logger.i('Authentication error sent to agent successfully');
+        },
+        onFailure: (failure) {
+          _logger.e('Failed to send authentication error to agent', error: failure);
+        },
       );
 
       emit(McpAuthError(
@@ -130,10 +150,19 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     _logger.i('Authentication cancelled by user');
 
     // Send cancellation error to agent
-    await _sendCredentialsUseCase.sendError(
+    final cancelResult = await _sendCredentialsUseCase.sendError(
       sessionId: event.sessionId,
       provider: event.request.provider,
       errorMessage: 'User cancelled authentication',
+    );
+
+    cancelResult.fold(
+      onSuccess: (_) {
+        _logger.i('Authentication cancellation sent to agent successfully');
+      },
+      onFailure: (failure) {
+        _logger.e('Failed to send authentication cancellation to agent', error: failure);
+      },
     );
 
     emit(McpAuthListening(sessionId: event.sessionId));
