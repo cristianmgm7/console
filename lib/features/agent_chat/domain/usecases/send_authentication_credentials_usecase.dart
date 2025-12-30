@@ -1,3 +1,5 @@
+import 'package:carbon_voice_console/core/errors/failures.dart';
+import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -25,7 +27,7 @@ class SendAuthenticationCredentialsUseCase {
   final Logger _logger;
 
   /// Send credentials obtained from OAuth flow back to agent
-  Future<void> call({
+  Future<Result<void>> call({
     required String sessionId,
     required String provider,
     required oauth2.Credentials credentials,
@@ -33,7 +35,7 @@ class SendAuthenticationCredentialsUseCase {
     try {
       _logger.i('Sending auth credentials for provider: $provider');
 
-      await _repository.sendAuthenticationCredentials(
+      final result = await _repository.sendAuthenticationCredentials(
         sessionId: sessionId,
         provider: provider,
         accessToken: credentials.accessToken,
@@ -41,15 +43,24 @@ class SendAuthenticationCredentialsUseCase {
         expiresAt: credentials.expiration,
       );
 
-      _logger.i('Credentials sent successfully');
+      return result.fold(
+        onSuccess: (_) {
+          _logger.i('Credentials sent successfully');
+          return success(null);
+        },
+        onFailure: (failure) {
+          _logger.e('Failed to send credentials', error: failure);
+          return failure;
+        },
+      );
     } catch (e, stackTrace) {
-      _logger.e('Failed to send credentials', error: e, stackTrace: stackTrace);
-      rethrow;
+      _logger.e('Unexpected error sending credentials', error: e, stackTrace: stackTrace);
+      return failure(UnknownFailure(details: 'Failed to send credentials: $e'));
     }
   }
 
   /// Send authentication error back to agent
-  Future<void> sendError({
+  Future<Result<void>> sendError({
     required String sessionId,
     required String provider,
     required String errorMessage,
@@ -58,15 +69,26 @@ class SendAuthenticationCredentialsUseCase {
       _logger.w('Sending authentication error: $errorMessage');
 
       // Send error as credentials with ERROR token
-      await _repository.sendAuthenticationCredentials(
+      final result = await _repository.sendAuthenticationCredentials(
         sessionId: sessionId,
         provider: provider,
         accessToken: 'ERROR',
         refreshToken: errorMessage,
       );
+
+      return result.fold(
+        onSuccess: (_) {
+          _logger.i('Authentication error sent successfully');
+          return success(null);
+        },
+        onFailure: (failure) {
+          _logger.e('Failed to send authentication error', error: failure);
+          return failure;
+        },
+      );
     } catch (e, stackTrace) {
-      _logger.e('Failed to send auth error', error: e, stackTrace: stackTrace);
-      rethrow;
+      _logger.e('Unexpected error sending authentication error', error: e, stackTrace: stackTrace);
+      return failure(UnknownFailure(details: 'Failed to send auth error: $e'));
     }
   }
 }

@@ -26,17 +26,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final Logger _logger;
   final Uuid _uuid = const Uuid();
 
-  StreamSubscription<CategorizedEvent>? _eventSubscription;
 
   // Track streaming message accumulation
   String? _currentStreamingMessageId;
   final StringBuffer _streamingTextBuffer = StringBuffer();
 
-  @override
-  Future<void> close() {
-    _eventSubscription?.cancel();
-    return super.close();
-  }
+
 
   Future<void> _onLoadMessages(
     LoadMessages event,
@@ -65,7 +60,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final currentState = state;
     if (currentState is! ChatLoaded) return;
 
-    // Create user message
+     // Create user message
     final userMessage = AgentChatMessage(
       id: _uuid.v4(),
       sessionId: event.sessionId,
@@ -145,17 +140,38 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     } catch (e) {
       _logger.e('Error starting session', error: e);
 
-      // Update user message to error
-      final errorMessage = userMessage.copyWith(status: MessageStatus.error);
-      final updatedMessages = currentState.messages
-          .map((m) => m.id == userMessage.id ? errorMessage : m)
-          .toList();
+      // Check if this is a stale session error that might resolve on retry
+      final errorMessage = e.toString();
+      if (errorMessage.contains('stale session') || errorMessage.contains('last_update_time')) {
+        _logger.w('Detected stale session error, the session may need refreshing');
 
-      emit(ChatLoaded(
-        messages: updatedMessages,
-        currentSessionId: event.sessionId,
-        isSending: false,
-      ));
+        // Update user message to indicate the error but don't mark as permanent failure
+        final retryMessage = userMessage.copyWith(
+          status: MessageStatus.error,
+          content: '${userMessage.content}\n\n⚠️ Session synchronization issue. Please try again.',
+        );
+        final updatedMessages = currentState.messages
+            .map((m) => m.id == userMessage.id ? retryMessage : m)
+            .toList();
+
+        emit(ChatLoaded(
+          messages: updatedMessages,
+          currentSessionId: event.sessionId,
+          isSending: false,
+        ));
+      } else {
+        // For other errors, mark as permanent failure
+        final errorMessageObj = userMessage.copyWith(status: MessageStatus.error);
+        final updatedMessages = currentState.messages
+            .map((m) => m.id == userMessage.id ? errorMessageObj : m)
+            .toList();
+
+        emit(ChatLoaded(
+          messages: updatedMessages,
+          currentSessionId: event.sessionId,
+          isSending: false,
+        ));
+      }
     }
   }
 

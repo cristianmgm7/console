@@ -1,4 +1,6 @@
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
+import 'package:carbon_voice_console/core/errors/failures.dart';
+import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/datasources/adk_api_service.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/mappers/adk_event_mapper.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
@@ -58,7 +60,7 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
   }
 
   @override
-  Future<void> sendAuthenticationCredentials({
+  Future<Result<void>> sendAuthenticationCredentials({
     required String sessionId,
     required String provider,
     required String accessToken,
@@ -105,15 +107,16 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
       });
 
       _logger.i('Authentication credentials sent successfully');
+      return success(null);
     } on ServerException catch (e) {
       _logger.e('Server error sending credentials', error: e);
-      throw ServerException(statusCode: e.statusCode, message: e.message);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
     } on NetworkException catch (e) {
       _logger.e('Network error sending credentials', error: e);
-      throw NetworkException(message: e.message);
-    } catch (e) {
-      _logger.e('Unexpected error sending credentials', error: e);
-      throw NetworkException(message: 'Failed to send credentials: $e');
+      return failure(NetworkFailure(details: e.message));
+    } catch (e, stackTrace) {
+      _logger.e('Unexpected error sending credentials', error: e, stackTrace: stackTrace);
+      return failure(UnknownFailure(details: 'Failed to send credentials: $e'));
     }
   }
 }

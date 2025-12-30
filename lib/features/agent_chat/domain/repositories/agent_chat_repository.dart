@@ -1,3 +1,4 @@
+import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 
 /// Repository interface for ADK agent chat functionality.
@@ -9,7 +10,7 @@ import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_eve
 abstract class AgentChatRepository {
   /// Send a message and receive a stream of ADK events.
   ///
-  /// This stream includes ALL events from the agent execution:
+  /// This method returns a Result containing a stream of ALL events from the agent execution:
   /// - Text responses (complete and partial)
   /// - Function calls and responses
   /// - Authentication requests for MCP tools
@@ -34,7 +35,7 @@ abstract class AgentChatRepository {
   /// APIs (GitHub, etc.) on behalf of the user.
   ///
   /// The agent acknowledges receipt and can then proceed with tool usage.
-  Future<void> sendAuthenticationCredentials({
+  Future<Result<void>> sendAuthenticationCredentials({
     required String sessionId,
     required String provider,
     required String accessToken,
