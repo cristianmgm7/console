@@ -137,6 +137,9 @@ class AdkApiService {
       },
     };
 
+    _logger.d('Sending message to /run: $url');
+    _logger.d('Request body: ${jsonEncode(requestBody)}');
+
     try {
       final response = await _client
           .post(

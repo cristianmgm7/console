@@ -18,6 +18,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     this._deepLinkingService,
     this._logger,
   ) : super(const McpAuthInitial()) {
+    on<StartAuthListening>(_onStartAuthListening);
     on<AuthRequestDetected>(_onAuthRequestDetected);
     on<AuthCodeProvided>(_onAuthCodeProvided);
     on<AuthCancelled>(_onAuthCancelled);
@@ -265,7 +266,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
 
     if (pendingRequest == null) {
       _logger.e('🔐 No pending auth request found for state: ${event.state}');
-      emit(const McpAuthError(
+      emit(McpAuthError(
         message: 'Invalid authentication state. Please try again.',
         sessionId: '', // We don't have session ID without pending request
       ));
