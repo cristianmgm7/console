@@ -30,7 +30,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     StartAuthListening event,
     Emitter<McpAuthState> emit,
   ) async {
-    _logger.i('Starting auth listening for session: ${event.sessionId}');
+    _logger.i('🔐 Starting auth listening for session: ${event.sessionId}');
 
     emit(McpAuthListening(sessionId: event.sessionId));
 
@@ -45,14 +45,15 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       await emit.forEach<AuthenticationRequestEvent>(
         authStream,
         onData: (authEvent) {
-          _logger.i('Auth request for provider: ${authEvent.request.provider}');
+          _logger.i('🔐 AUTH REQUEST DETECTED for provider: ${authEvent.request.provider}');
+          _logger.i('🔐 Authorization URL: ${authEvent.request.authorizationUrl}');
           return McpAuthRequired(
             request: authEvent.request,
             sessionId: event.sessionId,
           );
         },
         onError: (error, stackTrace) {
-          _logger.e('Error in auth stream', error: error, stackTrace: stackTrace);
+          _logger.e('🔐 Error in auth stream', error: error, stackTrace: stackTrace);
           return McpAuthError(
             message: error.toString(),
             sessionId: event.sessionId,
@@ -60,11 +61,11 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
         },
       );
 
-      _logger.d('Auth stream completed');
+      _logger.i('🔐 Auth stream completed for session: ${event.sessionId}');
       // Return to listening state after stream completes
       emit(McpAuthListening(sessionId: event.sessionId));
     } catch (e, stackTrace) {
-      _logger.e('Failed to start auth listening', error: e, stackTrace: stackTrace);
+      _logger.e('🔐 Failed to start auth listening', error: e, stackTrace: stackTrace);
       emit(McpAuthError(
         message: e.toString(),
         sessionId: event.sessionId,
