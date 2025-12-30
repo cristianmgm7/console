@@ -55,7 +55,7 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
 
   void _copyUrlToClipboard() {
     final url = widget.request.authUri.isNotEmpty 
-        ? widget.request.authUri 
+        ? widget.request.correctedAuthUri 
         : widget.request.authorizationUrl ?? '';
     Clipboard.setData(ClipboardData(text: url));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +162,7 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
                   const SizedBox(height: 8),
                   SelectableText(
                     widget.request.authUri.isNotEmpty 
-                        ? widget.request.authUri 
+                        ? widget.request.correctedAuthUri 
                         : widget.request.authorizationUrl ?? 'No URL provided',
                     style: AppTextStyle.bodySmall.copyWith(
                       color: AppColors.primary,

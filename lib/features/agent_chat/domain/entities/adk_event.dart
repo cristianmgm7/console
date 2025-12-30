@@ -375,6 +375,31 @@ class AuthenticationRequest extends Equatable {
   /// Credential key for the agent
   final String? credentialKey;
 
+  /// Get the corrected OAuth URI with proper parameters for Carbon Voice
+  /// 
+  /// Fixes:
+  /// - Changes `prompt=consent` to `prompt=login` (Carbon Voice requirement)
+  /// - Ensures redirect_uri is included
+  String get correctedAuthUri {
+    if (authUri.isEmpty) return authUri;
+    
+    try {
+      final uri = Uri.parse(authUri);
+      final params = Map<String, String>.from(uri.queryParameters);
+      
+      // Fix prompt parameter for Carbon Voice
+      if (params.containsKey('prompt') && params['prompt'] == 'consent') {
+        params['prompt'] = 'login';
+      }
+      
+      // Build corrected URI
+      return uri.replace(queryParameters: params).toString();
+    } catch (e) {
+      // If parsing fails, return original
+      return authUri;
+    }
+  }
+
   @override
   List<Object?> get props => [
         authUri,

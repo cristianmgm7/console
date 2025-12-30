@@ -106,8 +106,9 @@ carbon_voice_agent = Agent(
                 auth_type=AuthCredentialTypes.OAUTH2,
                 oauth2=OAuth2Auth(
                     client_id=os.getenv("CARBON_CLIENT_ID", "YOUR_CARBON_CLIENT_ID"),
-                    client_secret=os.getenv("CARBON_CLIENT_SECRET", "YOUR_CARBON_CLIENT_SECRET")
-                ),
+                    client_secret=os.getenv("CARBON_CLIENT_SECRET", "YOUR_CARBON_CLIENT_SECRET"),
+                    redirect_uri=os.getenv("CARBON_REDIRECT_URI", "https://carbonconsole.ngrok.app/auth/callback"),
+                )
             )
         )
     ],
