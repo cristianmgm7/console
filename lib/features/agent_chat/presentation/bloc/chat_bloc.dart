@@ -27,11 +27,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final Uuid _uuid = const Uuid();
 
 
-  // Track streaming message accumulation
-  String? _currentStreamingMessageId;
-  final StringBuffer _streamingTextBuffer = StringBuffer();
-
-
 
   Future<void> _onLoadMessages(
     LoadMessages event,
@@ -49,6 +44,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     SendMessageStreaming event,
     Emitter<ChatState> emit,
   ) async {
+    _logger.i('📤 Sending message for session: ${event.sessionId}');
+
     // If we're in initial state, transition to loaded state first
     if (state is ChatInitial) {
       emit(ChatLoaded(
@@ -60,7 +57,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final currentState = state;
     if (currentState is! ChatLoaded) return;
 
-     // Create user message
+    // Create user message
     final userMessage = AgentChatMessage(
       id: _uuid.v4(),
       sessionId: event.sessionId,
@@ -77,206 +74,107 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       activeSessionId: event.sessionId,
     ));
 
-    // Reset streaming state
-    _currentStreamingMessageId = null;
-    _streamingTextBuffer.clear();
-
-    // Start use case stream using emit.forEach pattern
     try {
-      final eventStream = _getChatMessagesUseCase(
+      // Get all events at once
+      final eventsResult = await _getChatMessagesUseCase(
         sessionId: event.sessionId,
         message: event.content,
         context: event.context,
       );
 
-      // Process each event using emit.forEach (no manual subscription!)
-      await emit.forEach<CategorizedEvent>(
-        eventStream,
-        onData: (categorizedEvent) {
-          // Get the latest state (not the original currentState!)
-          final latestState = state;
-          if (latestState is! ChatLoaded) return latestState;
-          
-          // Handle each categorized event
-          if (categorizedEvent is ChatMessageEvent) {
-            return _handleChatMessage(categorizedEvent, latestState);
-          } else if (categorizedEvent is FunctionCallEvent) {
-            return _handleFunctionCall(categorizedEvent, latestState);
-          } else if (categorizedEvent is FunctionResponseEvent) {
-            return _handleFunctionResponse(categorizedEvent, latestState);
-          } else if (categorizedEvent is AgentErrorEvent) {
-            return _handleError(categorizedEvent, latestState);
+      await eventsResult.fold(
+        onSuccess: (categorizedEvents) async {
+          _logger.i('📥 Processing ${categorizedEvents.length} categorized events');
+
+          var latestState = state as ChatLoaded;
+
+          // Process each event
+          for (final categorizedEvent in categorizedEvents) {
+            ChatState newState;
+            if (categorizedEvent is ChatMessageEvent) {
+              newState = _handleChatMessage(categorizedEvent, latestState);
+            } else if (categorizedEvent is FunctionCallEvent) {
+              newState = _handleFunctionCall(categorizedEvent, latestState);
+            } else if (categorizedEvent is FunctionResponseEvent) {
+              newState = _handleFunctionResponse(categorizedEvent, latestState);
+            } else if (categorizedEvent is AgentErrorEvent) {
+              newState = _handleError(categorizedEvent, latestState);
+            } else {
+              continue; // Skip unknown event types
+            }
+            
+            // Update latestState and emit
+            if (newState is ChatLoaded) {
+              latestState = newState;
+              emit(latestState);
+            }
           }
-          return latestState; // Unknown event type
-        },
-        onError: (error, stackTrace) {
-          _logger.e('Error in event stream', error: error, stackTrace: stackTrace);
 
-          // Get the latest state for error handling
-          final latestState = state;
-          final latestMessages = latestState is ChatLoaded 
-              ? latestState.messages 
-              : currentState.messages;
+          // Mark user message as sent
+          final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+          final updatedMessages = latestState.messages
+              .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
+              .toList();
 
-          // Create error message
-          final errorMessage = AgentChatMessage(
-            id: _uuid.v4(),
-            sessionId: event.sessionId,
-            role: MessageRole.agent,
-            content: '⚠️ Error: $error',
-            timestamp: DateTime.now(),
-            status: MessageStatus.error,
-          );
-
-          return ChatLoaded(
-            messages: [...latestMessages, errorMessage],
-            currentSessionId: event.sessionId,
+          emit(latestState.copyWith(
+            messages: updatedMessages,
             isSending: false,
-          );
+          ));
+
+          _logger.i('✅ Message processing completed successfully');
+        },
+        onFailure: (failure) async {
+          _logger.e('❌ Failed to send message', error: failure);
+
+          // Mark user message as error
+          final errorUserMessage = userMessage.copyWith(status: MessageStatus.error);
+          final updatedMessages = (state as ChatLoaded).messages
+              .map((m) => m.id == userMessage.id ? errorUserMessage : m)
+              .toList();
+
+          emit((state as ChatLoaded).copyWith(
+            messages: updatedMessages,
+            isSending: false,
+          ));
         },
       );
+    } catch (e, stackTrace) {
+      _logger.e('❌ Error sending message', error: e, stackTrace: stackTrace);
 
-      // Stream completed - mark user message as sent using LATEST state
-      final finalState = state;
-      if (finalState is ChatLoaded) {
-        final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-        final updatedMessages = finalState.messages
-            .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
-            .toList();
+      // Mark user message as error
+      final errorUserMessage = userMessage.copyWith(status: MessageStatus.error);
+      final updatedMessages = (state as ChatLoaded).messages
+          .map((m) => m.id == userMessage.id ? errorUserMessage : m)
+          .toList();
 
-        emit(ChatLoaded(
-          messages: updatedMessages,
-          currentSessionId: event.sessionId,
-          isSending: false,
-        ));
-      }
-    } catch (e) {
-      _logger.e('Error starting session', error: e);
-
-      // Get the latest state for error handling
-      final finalState = state;
-      final latestMessages = finalState is ChatLoaded 
-          ? finalState.messages 
-          : currentState.messages;
-
-      // Check if this is a stale session error that might resolve on retry
-      final errorMessage = e.toString();
-      if (errorMessage.contains('stale session') || errorMessage.contains('last_update_time')) {
-        _logger.w('Detected stale session error, the session may need refreshing');
-
-        // Update user message to indicate the error but don't mark as permanent failure
-        final retryMessage = userMessage.copyWith(
-          status: MessageStatus.error,
-          content: '${userMessage.content}\n\n⚠️ Session synchronization issue. Please try again.',
-        );
-        final updatedMessages = latestMessages
-            .map((m) => m.id == userMessage.id ? retryMessage : m)
-            .toList();
-
-        emit(ChatLoaded(
-          messages: updatedMessages,
-          currentSessionId: event.sessionId,
-          isSending: false,
-        ));
-      } else {
-        // For other errors, mark as permanent failure
-        final errorMessageObj = userMessage.copyWith(status: MessageStatus.error);
-        final updatedMessages = latestMessages
-            .map((m) => m.id == userMessage.id ? errorMessageObj : m)
-            .toList();
-
-        emit(ChatLoaded(
-          messages: updatedMessages,
-          currentSessionId: event.sessionId,
-          isSending: false,
-        ));
-      }
+      emit((state as ChatLoaded).copyWith(
+        messages: updatedMessages,
+        isSending: false,
+      ));
     }
   }
 
   /// Handle chat message events (returns new state)
   ChatState _handleChatMessage(ChatMessageEvent event, ChatLoaded currentState) {
+    // With /run endpoint, all messages are complete (no partial streaming)
+    final agentMessage = AgentChatMessage(
+      id: event.sourceEvent.id,
+      sessionId: currentState.currentSessionId,
+      role: MessageRole.agent,
+      content: event.text,
+      timestamp: event.sourceEvent.timestamp,
+      subAgentName: _extractSubAgentName(event.sourceEvent.author),
+      subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
+      metadata: {
+        'invocationId': event.sourceEvent.invocationId,
+        'author': event.sourceEvent.author,
+      },
+    );
 
-    // Process all chat messages for the current session
-
-    if (event.isPartial) {
-      // Accumulate partial text
-      _streamingTextBuffer.write(event.text);
-
-      // Create or update streaming message
-      if (_currentStreamingMessageId == null) {
-        _currentStreamingMessageId = _uuid.v4();
-
-        final streamingMessage = AgentChatMessage(
-          id: _currentStreamingMessageId!,
-          sessionId: currentState.currentSessionId,
-          role: MessageRole.agent,
-          content: _streamingTextBuffer.toString(),
-          timestamp: event.sourceEvent.timestamp,
-          subAgentName: _extractSubAgentName(event.sourceEvent.author),
-          subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
-          metadata: {
-            'invocationId': event.sourceEvent.invocationId,
-            'author': event.sourceEvent.author,
-          },
-        );
-
-        return currentState.copyWith(
-          messages: [...currentState.messages, streamingMessage],
-          clearStatus: true,
-        );
-      } else {
-        // Update existing streaming message
-        final updatedMessages = currentState.messages.map((m) {
-          if (m.id == _currentStreamingMessageId) {
-            return m.copyWith(content: _streamingTextBuffer.toString());
-          }
-          return m;
-        }).toList();
-
-        return currentState.copyWith(messages: updatedMessages);
-      }
-    } else {
-      // Complete message
-      if (_currentStreamingMessageId != null) {
-        // Update final version of streaming message
-        final updatedMessages = currentState.messages.map((m) {
-          if (m.id == _currentStreamingMessageId) {
-            return m.copyWith(content: event.text);
-          }
-          return m;
-        }).toList();
-
-        // Reset streaming state
-        _currentStreamingMessageId = null;
-        _streamingTextBuffer.clear();
-
-        return currentState.copyWith(
-          messages: updatedMessages,
-          clearStatus: true,
-        );
-      } else {
-        // Single complete message (non-streaming)
-        final agentMessage = AgentChatMessage(
-          id: event.sourceEvent.id,
-          sessionId: currentState.currentSessionId,
-          role: MessageRole.agent,
-          content: event.text,
-          timestamp: event.sourceEvent.timestamp,
-          subAgentName: _extractSubAgentName(event.sourceEvent.author),
-          subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
-          metadata: {
-            'invocationId': event.sourceEvent.invocationId,
-            'author': event.sourceEvent.author,
-          },
-        );
-
-        return currentState.copyWith(
-          messages: [...currentState.messages, agentMessage],
-          clearStatus: true,
-        );
-      }
-    }
+    return currentState.copyWith(
+      messages: [...currentState.messages, agentMessage],
+      clearStatus: true,
+    );
   }
 
   /// Handle function call events (for "thinking..." indicators)
@@ -330,8 +228,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ClearMessages event,
     Emitter<ChatState> emit,
   ) async {
-    _currentStreamingMessageId = null;
-    _streamingTextBuffer.clear();
     emit(const ChatInitial());
   }
 

@@ -4,24 +4,21 @@ import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_eve
 /// Repository interface for ADK agent chat functionality.
 ///
 /// This repository provides access to ADK (Agent Development Kit) backend
-/// communication. Unlike the old implementation that filtered and accumulated
-/// events, this repository preserves the full event stream for processing
-/// by domain use cases at the application layer.
+/// communication. Returns all events from the agent execution as a list
+/// for simpler processing and debugging.
 abstract class AgentChatRepository {
-  /// Send a message and receive a stream of ADK events.
+  /// Send a message and receive all ADK events at once.
   ///
-  /// This method returns a Result containing a stream of ALL events from the agent execution:
-  /// - Text responses (complete and partial)
+  /// This method returns a Result containing ALL events from the agent execution:
+  /// - Text responses (complete)
   /// - Function calls and responses
   /// - Authentication requests for MCP tools
   /// - Status updates and control signals
   /// - Errors and state changes
   ///
-  /// The stream preserves event ordering and timing, enabling real-time
-  /// UI updates and proper handling of streaming responses.
-  ///
-  /// Use cases filter this stream for specific event types they handle.
-  Stream<AdkEvent> sendMessageStreaming({
+  /// Events are returned in order after the agent completes processing.
+  /// Use cases filter this list for specific event types they handle.
+  Future<Result<List<AdkEvent>>> sendMessage({
     required String sessionId,
     required String content,
     Map<String, dynamic>? context,

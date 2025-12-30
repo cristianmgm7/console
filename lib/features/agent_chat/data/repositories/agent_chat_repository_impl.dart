@@ -23,26 +23,29 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     return 'test_user'; // Placeholder - matches ADK test user
   }
 
-  // Track stream instances for debugging
-  static int _streamCounter = 0;
-
   @override
-  Stream<AdkEvent> sendMessageStreaming({
+  Future<Result<List<AdkEvent>>> sendMessage({
     required String sessionId,
     required String content,
     Map<String, dynamic>? context,
-  }) async* {
-    final streamId = ++_streamCounter;
+  }) async {
     try {
-      _logger.d('🌊 [Stream #$streamId] Starting message streaming for session: $sessionId');
+      _logger.d('📤 Sending message for session: $sessionId');
 
-      await for (final eventDto in _apiService.sendMessageStreaming(
+      // Get all events at once from API
+      final eventDtos = await _apiService.sendMessage(
         userId: _userId,
         sessionId: sessionId,
         message: content,
         context: context,
-      )) {
-        _logger.d('🌊 [Stream #$streamId] Received EventDto from API: author=${eventDto.author}, partial=${eventDto.partial}');
+      );
+
+      _logger.d('📥 Received ${eventDtos.length} events from API');
+
+      // Convert all DTOs to domain events
+      final adkEvents = <AdkEvent>[];
+      for (var i = 0; i < eventDtos.length; i++) {
+        final eventDto = eventDtos[i];
         
         // Check if this MIGHT be an auth event by looking at function names
         final hasAuthLikeFunction = eventDto.content.parts.any((p) => 
@@ -53,41 +56,19 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         ) ?? false);
         
         if (hasAuthLikeFunction) {
-          _logger.i('🔐 [Stream #$streamId] ⚠️ EVENT HAS AUTH-LIKE FUNCTION - dumping full DTO JSON');
+          _logger.i('🔐 [Event #$i] ⚠️ EVENT HAS AUTH-LIKE FUNCTION - dumping full DTO JSON');
           try {
-            _logger.i('🔐 [Stream #$streamId] Raw DTO JSON: ${eventDto.toJson()}');
+            _logger.i('🔐 [Event #$i] Raw DTO JSON: ${eventDto.toJson()}');
           } catch (e) {
             _logger.e('Failed to serialize DTO', error: e);
           }
         }
-        
-        // Log raw DTO structure for debugging
-        _logger.d('🌊 [Stream #$streamId]   DTO content.parts count: ${eventDto.content.parts.length}');
-        for (var i = 0; i < eventDto.content.parts.length; i++) {
-          final part = eventDto.content.parts[i];
-          _logger.d('🌊 [Stream #$streamId]   Part $i: text=${part.text?.substring(0, 20) ?? "null"}, '
-              'funcCall=${part.functionCall?.name ?? "null"}, '
-              'funcResp=${part.functionResponse?.name ?? "null"}');
-          
-          // Log function call args if present
-          if (part.functionCall != null) {
-            _logger.d('🌊 [Stream #$streamId]     FunctionCall args: ${part.functionCall!.args}');
-          }
-        }
-        if (eventDto.actions != null) {
-          _logger.d('🌊 [Stream #$streamId]   DTO actions.functionCalls count: ${eventDto.actions!.functionCalls?.length ?? 0}');
-          if (eventDto.actions!.functionCalls != null) {
-            for (var call in eventDto.actions!.functionCalls!) {
-              _logger.d('🌊 [Stream #$streamId]     Action function call: ${call.name}, args: ${call.args}');
-            }
-          }
-        }
 
-        // Map DTO to domain event (no filtering!)
+        // Map DTO to domain event
         final adkEvent = eventDto.toAdkEvent();
 
         // Detailed logging for debugging
-        _logger.d('🌊 [Stream #$streamId] Mapped to AdkEvent: author=${adkEvent.author}, '
+        _logger.d('📋 [Event #$i] Mapped AdkEvent: author=${adkEvent.author}, '
             'text=${adkEvent.textContent?.substring(0, 50) ?? "none"}, '
             'functionCalls=${adkEvent.functionCalls.map((c) => c.name).join(", ")}, '
             'isAuthRequest=${adkEvent.isAuthenticationRequest}');
@@ -95,25 +76,28 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         // Extra logging for function calls
         if (adkEvent.functionCalls.isNotEmpty) {
           for (final call in adkEvent.functionCalls) {
-            _logger.d('🌊 [Stream #$streamId]   Function call: ${call.name}, args: ${call.args}');
+            _logger.d('📋 [Event #$i]   Function call: ${call.name}, args: ${call.args}');
             if (call.name == 'adk_request_credential') {
-              _logger.i('🔐 [Stream #$streamId] FOUND adk_request_credential in repository!');
-              _logger.i('🔐 [Stream #$streamId] Auth request args: ${call.args}');
+              _logger.i('🔐 [Event #$i] FOUND adk_request_credential in repository!');
+              _logger.i('🔐 [Event #$i] Auth request args: ${call.args}');
             }
           }
         }
 
-        yield adkEvent;
+        adkEvents.add(adkEvent);
       }
+
+      _logger.i('✅ Successfully processed ${adkEvents.length} events');
+      return success(adkEvents);
     } on ServerException catch (e) {
-      _logger.e('Server error streaming message', error: e);
-      throw ServerException(statusCode: e.statusCode, message: e.message);
+      _logger.e('Server error sending message', error: e);
+      return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
     } on NetworkException catch (e) {
-      _logger.e('Network error streaming message', error: e);
-      throw NetworkException(message: e.message);
-    } catch (e) {
-      _logger.e('Unexpected error streaming message', error: e);
-      throw NetworkException(message: 'Failed to stream message: $e');
+      _logger.e('Network error sending message', error: e);
+      return failure(NetworkFailure(details: e.message));
+    } catch (e, stackTrace) {
+      _logger.e('Unexpected error sending message', error: e, stackTrace: stackTrace);
+      return failure(UnknownFailure(details: 'Failed to send message: $e'));
     }
   }
 
@@ -154,15 +138,12 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
       };
 
       // Send credential as a message back to the agent
-      await _apiService.sendMessageStreaming(
+      await _apiService.sendMessage(
         userId: _userId,
         sessionId: sessionId,
         message: '', // Empty text, function response in parts
         context: credentialMessage,
-      ).forEach((_) {
-        // Consume the stream but don't need to process response
-        // The agent will acknowledge receipt
-      });
+      );
 
       _logger.i('Authentication credentials sent successfully');
       return success(null);
