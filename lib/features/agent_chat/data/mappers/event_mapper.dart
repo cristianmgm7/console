@@ -1,6 +1,10 @@
+// @deprecated Use adk_event_mapper.dart instead
+// This file is kept temporarily for reference only
+
 import 'package:carbon_voice_console/features/agent_chat/data/models/event_dto.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 
+@Deprecated('Use AdkEventMapper instead')
 extension EventDtoMapper on EventDto {
   AgentChatMessage? toDomain(String sessionId) {
     // Only convert events with text content from agent responses

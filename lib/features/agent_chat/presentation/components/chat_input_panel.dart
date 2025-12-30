@@ -7,6 +7,7 @@ import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,19 +35,35 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
     if (text.isEmpty) return;
 
     final sessionState = context.read<SessionBloc>().state;
-    if (sessionState is! SessionLoaded || sessionState.selectedSessionId == null) {
+
+    // If no sessions exist or none is selected, create a new session
+    if (sessionState is! SessionLoaded ||
+        sessionState.sessions.isEmpty ||
+        sessionState.selectedSessionId == null) {
+      // Create a new session and it will be auto-selected
+      context.read<SessionBloc>().add(const CreateNewSession());
+      // For now, return and let the user try again after the session is created
       return;
     }
 
+    // Use the selected session
+    final sessionId = sessionState.selectedSessionId!;
+
+    // Load messages for this session if not already loaded
+    final chatState = context.read<ChatBloc>().state;
+    if (chatState is! ChatLoaded || chatState.currentSessionId != sessionId) {
+      context.read<ChatBloc>().add(LoadMessages(sessionId));
+    }
+
     context.read<ChatBloc>().add(SendMessageStreaming(
-      sessionId: sessionState.selectedSessionId!,
+      sessionId: sessionId,
       content: text,
       context: null, // TODO: Add context support later
     ));
 
     // Start auth listening for this session
     context.read<McpAuthBloc>().add(StartAuthListening(
-      sessionId: sessionState.selectedSessionId!,
+      sessionId: sessionId,
       message: text,
       context: null, // TODO: Add context support later
     ));

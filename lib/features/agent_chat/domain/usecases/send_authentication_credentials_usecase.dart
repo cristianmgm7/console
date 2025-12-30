@@ -3,7 +3,17 @@ import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:oauth2/oauth2.dart' as oauth2;
 
-/// Use case to send authentication credentials back to the ADK agent
+/// Use case to send authentication credentials back to the ADK agent.
+///
+/// This use case handles the final step of the MCP authentication flow.
+/// After the user completes OAuth2 authentication and receives credentials,
+/// this use case formats and sends them back to the ADK agent as a function response.
+///
+/// The agent can then use the authenticated credentials to access MCP tools
+/// (GitHub API, etc.) on behalf of the user.
+///
+/// Also provides an [sendError] method for cases where authentication fails
+/// or is cancelled by the user.
 @injectable
 class SendAuthenticationCredentialsUseCase {
   const SendAuthenticationCredentialsUseCase(

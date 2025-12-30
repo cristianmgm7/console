@@ -3,10 +3,14 @@ import 'package:carbon_voice_console/features/agent_chat/domain/repositories/age
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
-/// Use case to filter ADK events for authentication requests
+/// Use case to filter ADK events for authentication requests.
 ///
-/// This use case processes the raw event stream and yields only
-/// AuthenticationRequestEvent when the agent requests MCP tool authentication
+/// This use case processes the raw ADK event stream and yields only
+/// [AuthenticationRequestEvent] when the agent sends an `adk_request_credential`
+/// function call requesting MCP tool authentication.
+///
+/// Used by McpAuthBloc to detect when authentication dialogs should be shown.
+/// Other event types are ignored - this use case has a single, focused responsibility.
 @injectable
 class GetAuthenticationRequestsUseCase {
   const GetAuthenticationRequestsUseCase(
