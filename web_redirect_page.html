@@ -83,69 +83,102 @@
     </div>
 
     <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        const error = urlParams.get('error');
-        const errorDescription = urlParams.get('error_description');
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+    const agentAuth = urlParams.get('agent_auth'); // Flag to indicate agent OAuth
 
-        const statusEl = document.getElementById('status');
-        const containerEl = document.getElementById('container');
-        const manualActionEl = document.getElementById('manual-action');
-        const manualLinkEl = document.getElementById('manual-link');
-        const deepLinkEl = document.getElementById('deep-link');
+    // Debug logging
+    console.log('OAuth Callback Debug:');
+    console.log('Full URL:', window.location.href);
+    console.log('Code:', code);
+    console.log('State:', state);
+    console.log('Agent Auth:', agentAuth);
+    console.log('All params:', Object.fromEntries(urlParams.entries()));
 
-        if (error) {
-            // OAuth error
-            containerEl.innerHTML = `
-                <div class="error" style="font-size: 60px;">❌</div>
-                <h1>Authentication Failed</h1>
-                <p class="error"><strong>Error:</strong> ${error}</p>
-                ${errorDescription ? `<p>${errorDescription}</p>` : ''}
-                <p>Please close this window and try again.</p>
-            `;
-        } else if (!code) {
-            // Missing code parameter
-            containerEl.innerHTML = `
-                <div class="error" style="font-size: 60px;">⚠️</div>
-                <h1>Invalid Callback</h1>
-                <p class="error">Missing authorization code.</p>
-                <p>Please close this window and try logging in again.</p>
-            `;
-        } else {
-            // Success - build deep link
-            let deepLink = `carbonvoice://auth/callback?code=${encodeURIComponent(code)}`;
-            if (state) {
-                deepLink += `&state=${encodeURIComponent(state)}`;
-            }
+    const statusEl = document.getElementById('status');
+    const containerEl = document.getElementById('container');
+    const manualActionEl = document.getElementById('manual-action');
+    const manualLinkEl = document.getElementById('manual-link');
+    const deepLinkEl = document.getElementById('deep-link');
 
-            // Set manual link
-            manualLinkEl.href = deepLink;
-            deepLinkEl.textContent = deepLink;
+    if (error) {
+        // OAuth error
+        containerEl.innerHTML = `
+            <div class="error" style="font-size: 60px;">❌</div>
+            <h1>Authentication Failed</h1>
+            <p class="error"><strong>Error:</strong> ${error}</p>
+            ${errorDescription ? `<p>${errorDescription}</p>` : ''}
+            <p>Please close this window and try again.</p>
+        `;
+    } else if (!code) {
+        // Missing code parameter
+        containerEl.innerHTML = `
+            <div class="error" style="font-size: 60px;">⚠️</div>
+            <h1>Invalid Callback</h1>
+            <p class="error">Missing authorization code.</p>
+            <p>Please close this window and try logging in again.</p>
+        `;
+    } else {
+        // Success - build deep link
+        // Use different path for agent OAuth vs user login
+        // Default to agent auth if parameter is missing (for robustness)
+        const isAgentAuth = agentAuth === 'true' || agentAuth === null;
+        const basePath = isAgentAuth ? 'agent-auth/callback' : 'auth/callback';
 
-            // Try to automatically open the app
-            statusEl.textContent = 'Opening Carbon Voice Console...';
-
-            // Attempt to redirect
-            window.location.href = deepLink;
-
-            // Show manual action after 3 seconds if still on page
-            setTimeout(() => {
-                statusEl.textContent = 'If the app doesn\'t open automatically, use the button below:';
-                manualActionEl.style.display = 'block';
-                document.querySelector('.spinner').style.display = 'none';
-            }, 3000);
-
-            // Try to close window after redirect (may not work in all browsers)
-            setTimeout(() => {
-                try {
-                    window.close();
-                } catch (e) {
-                    console.log('Could not auto-close window:', e);
-                }
-            }, 5000);
+        console.log('Using basePath:', basePath, 'isAgentAuth:', isAgentAuth);
+        let deepLink = `carbonvoice://${basePath}?code=${encodeURIComponent(code)}`;
+        if (state) {
+            deepLink += `&state=${encodeURIComponent(state)}`;
         }
+
+        // Set manual link
+        manualLinkEl.href = deepLink;
+        deepLinkEl.textContent = deepLink;
+
+        // Update title based on auth type
+        if (isAgentAuth) {
+            containerEl.querySelector('h1').textContent = 'Completing Agent Authentication...';
+        }
+
+        // Try to automatically open the app
+        statusEl.textContent = 'Opening Carbon Voice Console...';
+        console.log('Redirecting to deep link. If the app opens, you can close this tab.');
+
+        // Attempt to redirect - try multiple methods for better compatibility
+        console.log('Attempting to open deep link:', deepLink);
+
+        // Method 1: Direct location change (works in most browsers)
+        try {
+            window.location.href = deepLink;
+        } catch (e) {
+            console.error('Direct location change failed:', e);
+        }
+
+        // Method 2: Create a temporary link and click it (fallback for some browsers)
+        setTimeout(() => {
+            if (document.hasFocus && document.hasFocus()) {
+                // Still on this page, try alternative method
+                console.log('Trying alternative deep link method');
+                const link = document.createElement('a');
+                link.href = deepLink;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }, 1000);
+
+        // Show manual action after 3 seconds if still on page
+        setTimeout(() => {
+            statusEl.textContent = 'If the app doesn\'t open automatically, click the button below or copy the link:';
+            manualActionEl.style.display = 'block';
+            document.querySelector('.spinner').style.display = 'none';
+        }, 3000);
+    }
     </script>
 </body>
 </html>

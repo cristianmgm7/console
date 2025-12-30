@@ -43,6 +43,9 @@ class BlocProviders {
         BlocProvider<AudioPlayerBloc>(
           create: (_) => getIt<AudioPlayerBloc>(),
         ),
+        BlocProvider<McpAuthBloc>(
+          create: (_) => getIt<McpAuthBloc>(),
+        ),
       ],
       child: child,
     );
@@ -130,9 +133,6 @@ class BlocProviders {
         ),
         BlocProvider<ChatBloc>(
           create: (_) => getIt<ChatBloc>(),
-        ),
-        BlocProvider<McpAuthBloc>(
-          create: (_) => getIt<McpAuthBloc>(),
         ),
       ],
       child: const McpAuthListener(
