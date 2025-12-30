@@ -46,8 +46,6 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
           .map((json) => SessionDto.fromJson(json as Map<String, dynamic>).toDomain())
           .toList();
 
-      // Sort by last update time
-      sessions.sort((a, b) => b.lastUpdateTime.compareTo(a.lastUpdateTime));
 
       return success(sessions);
     } on StorageException catch (e) {
