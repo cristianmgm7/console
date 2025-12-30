@@ -70,6 +70,24 @@ class AuthCancelled extends McpAuthEvent {
   List<Object?> get props => [request, sessionId];
 }
 
+/// Event fired when an authorization code is provided via deep link callback.
+///
+/// This is different from AuthCodeProvided which is for manual code entry.
+/// This event includes the state parameter for validation and needs to
+/// match it with the pending auth request.
+class AuthCodeProvidedFromDeepLink extends McpAuthEvent {
+  const AuthCodeProvidedFromDeepLink({
+    required this.authorizationCode,
+    required this.state,
+  });
+
+  final String authorizationCode;
+  final String state;
+
+  @override
+  List<Object?> get props => [authorizationCode, state];
+}
+
 /// Stop listening for authentication requests
 class StopAuthListening extends McpAuthEvent {
   const StopAuthListening();

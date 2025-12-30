@@ -2,10 +2,10 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_button.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_outlined_button.dart';
-import 'package:carbon_voice_console/core/widgets/interactive/app_text_field.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Dialog to handle MCP tool authentication requests
 class McpAuthenticationDialog extends StatefulWidget {
@@ -25,22 +25,23 @@ class McpAuthenticationDialog extends StatefulWidget {
 }
 
 class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
-  final _authCodeController = TextEditingController();
   bool _isAuthenticating = false;
   String? _errorMessage;
 
   @override
   void dispose() {
-    _authCodeController.dispose();
     super.dispose();
   }
 
-  void _handleAuthenticate() {
-    final code = _authCodeController.text.trim();
+  // Add method to open OAuth URL
+  Future<void> _openAuthUrl() async {
+    final url = widget.request.authUri.isNotEmpty
+        ? widget.request.correctedAuthUri
+        : widget.request.authorizationUrl ?? '';
 
-    if (code.isEmpty) {
+    if (url.isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter the authorization code';
+        _errorMessage = 'No authorization URL provided';
       });
       return;
     }
@@ -50,7 +51,28 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
       _errorMessage = null;
     });
 
-    widget.onAuthenticate(code);
+    try {
+      // Open URL in system browser
+      final uri = Uri.parse(url);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        setState(() {
+          _isAuthenticating = false;
+          _errorMessage = 'Failed to open browser. Please try again.';
+        });
+      }
+      // Note: Keep _isAuthenticating = true
+      // Dialog will auto-close when McpAuthBloc emits success/error
+    } catch (e) {
+      setState(() {
+        _isAuthenticating = false;
+        _errorMessage = 'Error opening browser: $e';
+      });
+    }
   }
 
   void _copyUrlToClipboard() {
@@ -72,7 +94,7 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
       backgroundColor: AppColors.surface,
       title: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.security,
             color: AppColors.primary,
             size: 24,
@@ -130,70 +152,130 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
               const SizedBox(height: 24),
             ],
 
-            // Authorization URL
+            // Primary action button
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.divider,
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: AppColors.primary),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Step 1: Open this URL in your browser',
-                          style: AppTextStyle.labelMedium.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.copy, size: 18),
-                        onPressed: _copyUrlToClipboard,
-                        tooltip: 'Copy URL',
-                        color: AppColors.primary,
-                      ),
-                    ],
+                  Text(
+                    'Click the button below to authenticate',
+                    style: AppTextStyle.labelMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  SelectableText(
-                    widget.request.authUri.isNotEmpty 
-                        ? widget.request.correctedAuthUri 
-                        : widget.request.authorizationUrl ?? 'No URL provided',
-                    style: AppTextStyle.bodySmall.copyWith(
-                      color: AppColors.primary,
-                      fontFamily: 'monospace',
+                  const SizedBox(height: 12),
+                  AppButton(
+                    onPressed: _isAuthenticating ? null : _openAuthUrl,
+                    isLoading: _isAuthenticating,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (!_isAuthenticating) ...[
+                          const Icon(Icons.open_in_browser, size: 20),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(_isAuthenticating ? 'Waiting for authentication...' : 'Open Browser to Authenticate'),
+                      ],
                     ),
                   ),
+                  if (_isAuthenticating) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Complete the authentication in your browser.\nThis dialog will close automatically when done.',
+                      style: AppTextStyle.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ],
               ),
             ),
+
             const SizedBox(height: 16),
 
-            // Auth code input
-            Text(
-              'Step 2: Paste the authorization code here',
-              style: AppTextStyle.labelMedium.copyWith(
-                color: AppColors.textPrimary,
+            // Fallback: Manual URL copy (collapsed by default)
+            ExpansionTile(
+              title: Text(
+                'Advanced: Manual authentication',
+                style: AppTextStyle.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            AppTextField(
-              controller: _authCodeController,
-              hint: 'Enter authorization code...',
-              enabled: !_isAuthenticating,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Authorization URL',
+                              style: AppTextStyle.labelSmall.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, size: 18),
+                            onPressed: _copyUrlToClipboard,
+                            tooltip: 'Copy URL',
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        widget.request.authUri.isNotEmpty
+                            ? widget.request.correctedAuthUri
+                            : widget.request.authorizationUrl ?? 'No URL provided',
+                        style: AppTextStyle.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
 
             if (_errorMessage != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                style: AppTextStyle.bodySmall.copyWith(
-                  color: AppColors.error,
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.error),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: AppTextStyle.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -205,11 +287,6 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
           onPressed: _isAuthenticating ? null : widget.onCancel,
           isLoading: false,
           child: const Text('Cancel'),
-        ),
-        AppButton(
-          onPressed: _isAuthenticating ? null : _handleAuthenticate,
-          isLoading: _isAuthenticating,
-          child: Text(_isAuthenticating ? 'Authenticating...' : 'Authenticate'),
         ),
       ],
     );

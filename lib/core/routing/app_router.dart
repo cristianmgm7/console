@@ -3,6 +3,7 @@ import 'package:carbon_voice_console/core/routing/app_routes.dart';
 import 'package:carbon_voice_console/core/routing/app_shell.dart';
 import 'package:carbon_voice_console/core/routing/route_guard.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/login_screen.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/pages/agent_oauth_callback_screen.dart';
 import 'package:carbon_voice_console/features/auth/presentation/pages/oauth_callback_screen.dart';
 import 'package:carbon_voice_console/features/preview/presentation/screens/preview_composer_screen.dart';
 import 'package:carbon_voice_console/features/preview/presentation/screens/preview_confirmation_screen.dart';
@@ -53,6 +54,20 @@ class AppRouter {
             return MaterialPage(
               key: state.pageKey,
               child: OAuthCallbackScreen(
+                callbackUri: fullUri,
+              ),
+            );
+          },
+        ),
+        // Agent OAuth callback route (for MCP tool authentication)
+        GoRoute(
+          path: AppRoutes.agentOAuthCallback,
+          name: 'agentOAuthCallback',
+          pageBuilder: (context, state) {
+            final fullUri = state.uri;
+            return MaterialPage(
+              key: state.pageKey,
+              child: AgentOAuthCallbackScreen(
                 callbackUri: fullUri,
               ),
             );
