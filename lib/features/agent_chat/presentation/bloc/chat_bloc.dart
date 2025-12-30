@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart';
@@ -25,20 +26,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final GetChatMessagesFromEventsUseCase _getChatMessagesUseCase;
   final Logger _logger;
   final Uuid _uuid = const Uuid();
+  
+  /// Callback to notify when authentication is required
+  /// Set this from the UI layer to forward auth requests to McpAuthBloc
+  void Function(String sessionId, List<AuthenticationRequest> requests)? onAuthenticationRequired;
 
 
 
-  Future<void> _onLoadMessages(
-    LoadMessages event,
-    Emitter<ChatState> emit,
-  ) async {
-    emit(const ChatLoading());
-    // TODO: Load message history from backend/local storage
-    emit(ChatLoaded(
-      messages: const [],
-      currentSessionId: event.sessionId,
-    ));
-  }
+ 
 
   Future<void> _onSendMessageStreaming(
     SendMessageStreaming event,
@@ -75,7 +70,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     try {
-      // Get all events at once
+      // Get all events at once (categorized + raw)
       final eventsResult = await _getChatMessagesUseCase(
         sessionId: event.sessionId,
         message: event.content,
@@ -85,6 +80,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await eventsResult.fold(
         onSuccess: (categorizedEvents) async {
           _logger.i('📥 Processing ${categorizedEvents.length} categorized events');
+          
+          // Check for authentication requests in the raw events
+          final authRequests = <AuthenticationRequest>[];
+          for (final categorizedEvent in categorizedEvents) {
+            if (categorizedEvent is AuthenticationRequestEvent) {
+              authRequests.add(categorizedEvent.request);
+              _logger.i('🔐 ChatBloc detected auth request for: ${categorizedEvent.request.provider}');
+            }
+          }
+          
+          // Forward auth requests to McpAuthBloc via callback
+          if (authRequests.isNotEmpty && onAuthenticationRequired != null) {
+            _logger.i('🔐 ChatBloc forwarding ${authRequests.length} auth requests');
+            onAuthenticationRequired!(event.sessionId, authRequests);
+          }
 
           var latestState = state as ChatLoaded;
 
@@ -138,7 +148,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           ));
         },
       );
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       _logger.e('❌ Error sending message', error: e, stackTrace: stackTrace);
 
       // Mark user message as error
@@ -152,6 +162,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         isSending: false,
       ));
     }
+  }
+
+   Future<void> _onLoadMessages(
+    LoadMessages event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(const ChatLoading());
+    // TODO: Load message history from backend/local storage
+    emit(ChatLoaded(
+      messages: const [],
+      currentSessionId: event.sessionId,
+    ));
   }
 
   /// Handle chat message events (returns new state)

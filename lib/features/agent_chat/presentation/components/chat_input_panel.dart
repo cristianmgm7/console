@@ -24,6 +24,23 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
   final _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    // Set up callback to forward auth requests from ChatBloc to McpAuthBloc
+    _setupAuthCallback();
+  }
+
+  void _setupAuthCallback() {
+    // This will be called when ChatBloc detects auth requests
+    context.read<ChatBloc>().onAuthenticationRequired = (sessionId, requests) {
+      context.read<McpAuthBloc>().add(AuthRequestDetected(
+        sessionId: sessionId,
+        requests: requests,
+      ));
+    };
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
@@ -55,17 +72,10 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
       context.read<ChatBloc>().add(LoadMessages(sessionId));
     }
 
+    // Send message - ChatBloc will detect auth requests and forward them automatically
     context.read<ChatBloc>().add(SendMessageStreaming(
       sessionId: sessionId,
       content: text,
-      context: null, // TODO: Add context support later
-    ));
-
-    // Start auth listening for this session
-    context.read<McpAuthBloc>().add(StartAuthListening(
-      sessionId: sessionId,
-      message: text,
-      context: null, // TODO: Add context support later
     ));
 
     _controller.clear();
@@ -105,7 +115,7 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
               AppButton(
                 onPressed: isSending ? null : _sendMessage,
                 isLoading: isSending,
-                child: Icon(AppIcons.share, size: 20), // TODO: Use paper plane icon if available
+                child: Icon(AppIcons.share, size: 20), 
               ),
             ],
           ),

@@ -9,6 +9,8 @@ sealed class McpAuthEvent extends Equatable {
 }
 
 /// Start listening for authentication requests for a session
+/// @deprecated Use AuthRequestDetected instead (avoids duplicate API calls)
+@Deprecated('Use AuthRequestDetected instead')
 class StartAuthListening extends McpAuthEvent {
   const StartAuthListening({
     required this.sessionId,
@@ -22,6 +24,20 @@ class StartAuthListening extends McpAuthEvent {
 
   @override
   List<Object?> get props => [sessionId, message, context];
+}
+
+/// Authentication request detected (forwarded from ChatBloc)
+class AuthRequestDetected extends McpAuthEvent {
+  const AuthRequestDetected({
+    required this.sessionId,
+    required this.requests,
+  });
+
+  final String sessionId;
+  final List<AuthenticationRequest> requests;
+
+  @override
+  List<Object?> get props => [sessionId, requests];
 }
 
 /// User provided authorization code from OAuth flow
