@@ -50,10 +50,15 @@ class GetChatMessagesFromEventsUseCase {
           for (final event in events) {
             _logger.d('Processing event from ${event.author}');
 
-            // Skip authentication requests (handled by auth use case)
+            // Include authentication requests (will be forwarded by ChatBloc)
             if (event.isAuthenticationRequest) {
-              _logger.d('Skipping auth request in chat events');
-              continue;
+              _logger.d('Including auth request in categorized events');
+              final authRequest = event.authenticationRequest!;
+              categorizedEvents.add(AuthenticationRequestEvent(
+                sourceEvent: event,
+                request: authRequest,
+              ));
+              // Continue to check for other content in the same event
             }
 
             // 1. Function calls (for "thinking..." status)

@@ -16,6 +16,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     this._logger,
   ) : super(const McpAuthInitial()) {
     on<StartAuthListening>(_onStartAuthListening);
+    on<AuthRequestDetected>(_onAuthRequestDetected);
     on<AuthCodeProvided>(_onAuthCodeProvided);
     on<AuthCancelled>(_onAuthCancelled);
     on<StopAuthListening>(_onStopAuthListening);
@@ -25,6 +26,8 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
   final SendAuthenticationCredentialsUseCase _sendCredentialsUseCase;
   final Logger _logger;
 
+  /// @deprecated Use AuthRequestDetected instead (avoids duplicate API calls)
+  @Deprecated('Use AuthRequestDetected instead')
   Future<void> _onStartAuthListening(
     StartAuthListening event,
     Emitter<McpAuthState> emit,
@@ -73,6 +76,30 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
         sessionId: event.sessionId,
       ));
     }
+  }
+
+  /// Handle auth requests forwarded from ChatBloc (no duplicate API call!)
+  Future<void> _onAuthRequestDetected(
+    AuthRequestDetected event,
+    Emitter<McpAuthState> emit,
+  ) async {
+    _logger.i('🔐 Received ${event.requests.length} auth requests from ChatBloc');
+
+    emit(McpAuthListening(sessionId: event.sessionId));
+
+    // Process each auth request
+    for (final request in event.requests) {
+      _logger.i('🔐 AUTH REQUEST DETECTED for provider: ${request.provider}');
+      _logger.i('🔐 Authorization URL: ${request.correctedAuthUri}');
+      
+      emit(McpAuthRequired(
+        request: request,
+        sessionId: event.sessionId,
+      ));
+    }
+
+    // Return to listening state after processing all requests
+    emit(McpAuthListening(sessionId: event.sessionId));
   }
 
   Future<void> _onAuthCodeProvided(

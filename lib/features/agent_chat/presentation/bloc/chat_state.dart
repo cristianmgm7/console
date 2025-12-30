@@ -1,5 +1,5 @@
-import 'package:equatable/equatable.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:equatable/equatable.dart';
 
 sealed class ChatState extends Equatable {
   const ChatState();
