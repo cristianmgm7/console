@@ -30,7 +30,14 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
 
     result.fold(
       onSuccess: (sessions) {
-        emit(SessionLoaded(sessions: sessions));
+        // Sort by last update time (most recent first) and select the first one
+        final sortedSessions = sessions.toList()
+          ..sort((a, b) => b.lastUpdateTime.compareTo(a.lastUpdateTime));
+
+        emit(SessionLoaded(
+          sessions: sortedSessions,
+          selectedSessionId: sortedSessions.isNotEmpty ? sortedSessions.first.id : null,
+        ));
       },
       onFailure: (failure) {
         _logger.e('Failed to load sessions', error: failure);

@@ -4,13 +4,20 @@ import 'package:carbon_voice_console/features/agent_chat/domain/repositories/age
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 
-/// Use case to filter ADK events for chat messages and function call indicators
+/// Use case to filter ADK events for chat messages and function call indicators.
 ///
-/// This use case processes the raw event stream and yields:
+/// This use case processes the raw ADK event stream and categorizes events
+/// relevant to the chat UI. It yields:
 /// - ChatMessageEvent for text content (complete and partial)
-/// - FunctionCallEvent for "thinking..." indicators
-/// - FunctionResponseEvent for function completion
-/// - AgentErrorEvent for errors
+/// - [FunctionCallEvent] for "thinking..." status indicators
+/// - FunctionResponseEvent for function completion (clears "thinking...")
+/// - [AgentErrorEvent] for errors that should be displayed in chat
+///
+/// Authentication requests are explicitly filtered out and handled by
+/// GetAuthenticationRequestsUseCase instead.
+///
+/// Used by ChatBloc to maintain chat UI state and show appropriate
+/// status indicators during agent execution.
 @injectable
 class GetChatMessagesFromEventsUseCase {
   const GetChatMessagesFromEventsUseCase(

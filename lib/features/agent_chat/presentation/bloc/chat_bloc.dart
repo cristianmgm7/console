@@ -54,6 +54,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     SendMessageStreaming event,
     Emitter<ChatState> emit,
   ) async {
+    // If we're in initial state, transition to loaded state first
+    if (state is ChatInitial) {
+      emit(ChatLoaded(
+        messages: const [],
+        currentSessionId: event.sessionId,
+      ));
+    }
+
     final currentState = state;
     if (currentState is! ChatLoaded) return;
 
