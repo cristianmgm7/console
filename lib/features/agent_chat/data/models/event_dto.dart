@@ -15,6 +15,9 @@ class EventDto {
     this.longRunningToolIds,
     this.branch,
     this.partial,
+    this.modelVersion,
+    this.finishReason,
+    this.usageMetadata,
   });
 
   factory EventDto.fromJson(Map<String, dynamic> json) =>
@@ -29,6 +32,9 @@ class EventDto {
   final List<String>? longRunningToolIds;
   final String? branch;
   final bool? partial;
+  final String? modelVersion;
+  final String? finishReason;
+  final Map<String, dynamic>? usageMetadata;
 
   Map<String, dynamic> toJson() => _$EventDtoToJson(this);
 }
@@ -90,14 +96,18 @@ class InlineDataDto {
 class FunctionCallDto {
 
   FunctionCallDto({
+    required this.id,
     required this.name,
     required this.args,
+    this.thoughtSignature,
   });
 
   factory FunctionCallDto.fromJson(Map<String, dynamic> json) =>
       _$FunctionCallDtoFromJson(json);
+  final String id;
   final String name;
   final Map<String, dynamic> args;
+  final String? thoughtSignature;
 
   Map<String, dynamic> toJson() => _$FunctionCallDtoToJson(this);
 }
@@ -106,12 +116,14 @@ class FunctionCallDto {
 class FunctionResponseDto {
 
   FunctionResponseDto({
+    required this.id,
     required this.name,
     required this.response,
   });
 
   factory FunctionResponseDto.fromJson(Map<String, dynamic> json) =>
       _$FunctionResponseDtoFromJson(json);
+  final String id;
   final String name;
   final Map<String, dynamic> response;
 
@@ -132,9 +144,9 @@ class ActionsDto {
   factory ActionsDto.fromJson(Map<String, dynamic> json) =>
       _$ActionsDtoFromJson(json);
 
+  final String? transferToAgent;
   final Map<String, dynamic>? stateDelta;
   final Map<String, dynamic>? artifactDelta;
-  final String? transferToAgent;
   final Map<String, RequestedAuthConfigDto>? requestedAuthConfigs;
   final Map<String, dynamic>? requestedToolConfirmations;
 
@@ -238,6 +250,7 @@ class OAuth2DataDto {
     this.clientSecret,
     this.authUri,
     this.state,
+    this.redirectUri,
   });
 
   factory OAuth2DataDto.fromJson(Map<String, dynamic> json) =>
@@ -247,6 +260,7 @@ class OAuth2DataDto {
   final String? clientSecret;
   final String? authUri;
   final String? state;
+  final String? redirectUri;
 
   Map<String, dynamic> toJson() => _$OAuth2DataDtoToJson(this);
 }
