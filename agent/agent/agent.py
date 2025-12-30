@@ -93,8 +93,8 @@ carbon_voice_agent = Agent(
             auth_scheme=OAuth2(
                 flows=OAuthFlows(
                     authorizationCode=OAuthFlowAuthorizationCode(
-                        authorizationUrl="https://api.carbon.ai/oauth/authorize",
-                        tokenUrl="https://api.carbon.ai/oauth/token",
+                        authorizationUrl="https://api.carbonvoice.app/oauth/authorize",
+                        tokenUrl="https://api.carbonvoice.app/oauth/token",
                         scopes={
                             "files:read": "Read files",
                             "files:write": "Write files"

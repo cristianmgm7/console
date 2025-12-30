@@ -54,7 +54,10 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
   }
 
   void _copyUrlToClipboard() {
-    Clipboard.setData(ClipboardData(text: widget.request.authorizationUrl));
+    final url = widget.request.authUri.isNotEmpty 
+        ? widget.request.authUri 
+        : widget.request.authorizationUrl ?? '';
+    Clipboard.setData(ClipboardData(text: url));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Authorization URL copied to clipboard'),
@@ -90,20 +93,20 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'The agent needs to access ${widget.request.provider}. '
+              'The agent needs to access ${widget.request.provider ?? 'an external service'}. '
               'Please complete the authentication process.',
               style: AppTextStyle.bodyMedium.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
 
             // Scopes
-            if (widget.request.scopes.isNotEmpty) ...[
+            if (widget.request.scopes?.isNotEmpty ?? false) ...[
               Text(
                 'Required Permissions:',
                 style: AppTextStyle.labelMedium.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 8),
-              ...widget.request.scopes.map((scope) => Padding(
+              ...widget.request.scopes!.map((scope) => Padding(
                 padding: const EdgeInsets.only(left: 16, bottom: 4),
                 child: Row(
                   children: [
@@ -158,7 +161,9 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
                   ),
                   const SizedBox(height: 8),
                   SelectableText(
-                    widget.request.authorizationUrl,
+                    widget.request.authUri.isNotEmpty 
+                        ? widget.request.authUri 
+                        : widget.request.authorizationUrl ?? 'No URL provided',
                     style: AppTextStyle.bodySmall.copyWith(
                       color: AppColors.primary,
                       fontFamily: 'monospace',

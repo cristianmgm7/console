@@ -47,21 +47,24 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
       for (var i = 0; i < eventDtos.length; i++) {
         final eventDto = eventDtos[i];
         
-        // Check if this MIGHT be an auth event by looking at function names
-        final hasAuthLikeFunction = eventDto.content.parts.any((p) => 
-          p.functionCall?.name.contains('credential') == true ||
-          p.functionCall?.name.contains('auth') == true
-        ) || (eventDto.actions?.functionCalls?.any((c) =>
-          c.name.contains('credential') || c.name.contains('auth')
-        ) ?? false);
+        // Check if this has auth configs
+        final hasAuthConfigs = eventDto.actions?.requestedAuthConfigs != null &&
+            eventDto.actions!.requestedAuthConfigs!.isNotEmpty;
         
-        if (hasAuthLikeFunction) {
-          _logger.i('🔐 [Event #$i] ⚠️ EVENT HAS AUTH-LIKE FUNCTION - dumping full DTO JSON');
-          try {
-            _logger.i('🔐 [Event #$i] Raw DTO JSON: ${eventDto.toJson()}');
-          } catch (e) {
-            _logger.e('Failed to serialize DTO', error: e);
-          }
+        if (hasAuthConfigs) {
+          _logger.i('🔐 [Event #$i] ⚠️ EVENT HAS REQUESTED AUTH CONFIGS!');
+          _logger.i('🔐 [Event #$i] Number of auth configs: ${eventDto.actions!.requestedAuthConfigs!.length}');
+          
+          // Log each auth config
+          eventDto.actions!.requestedAuthConfigs!.forEach((key, config) {
+            _logger.i('🔐 [Event #$i] Auth Config Key: $key');
+            _logger.i('🔐 [Event #$i]   Provider: ${config.authScheme?.type}');
+            _logger.i('🔐 [Event #$i]   Auth URL: ${config.authScheme?.flows?.authorizationCode?.authorizationUrl}');
+            _logger.i('🔐 [Event #$i]   Token URL: ${config.authScheme?.flows?.authorizationCode?.tokenUrl}');
+            _logger.i('🔐 [Event #$i]   Scopes: ${config.authScheme?.flows?.authorizationCode?.scopes?.keys.join(", ")}');
+            _logger.i('🔐 [Event #$i]   Complete Auth URI: ${config.exchangedAuthCredential?.oauth2?.authUri}');
+            _logger.i('🔐 [Event #$i]   State: ${config.exchangedAuthCredential?.oauth2?.state}');
+          });
         }
 
         // Map DTO to domain event
@@ -73,14 +76,15 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
             'functionCalls=${adkEvent.functionCalls.map((c) => c.name).join(", ")}, '
             'isAuthRequest=${adkEvent.isAuthenticationRequest}');
         
-        // Extra logging for function calls
-        if (adkEvent.functionCalls.isNotEmpty) {
-          for (final call in adkEvent.functionCalls) {
-            _logger.d('📋 [Event #$i]   Function call: ${call.name}, args: ${call.args}');
-            if (call.name == 'adk_request_credential') {
-              _logger.i('🔐 [Event #$i] FOUND adk_request_credential in repository!');
-              _logger.i('🔐 [Event #$i] Auth request args: ${call.args}');
-            }
+        // Extra logging for auth requests
+        if (adkEvent.isAuthenticationRequest) {
+          final authRequest = adkEvent.authenticationRequest;
+          if (authRequest != null) {
+            _logger.i('🔐 [Event #$i] ✅ AUTHENTICATION REQUIRED');
+            _logger.i('🔐 [Event #$i]   Provider: ${authRequest.provider}');
+            _logger.i('🔐 [Event #$i]   Auth URI: ${authRequest.authUri}');
+            _logger.i('🔐 [Event #$i]   State: ${authRequest.state}');
+            _logger.i('🔐 [Event #$i]   Scopes: ${authRequest.scopes?.join(", ") ?? "none"}');
           }
         }
 

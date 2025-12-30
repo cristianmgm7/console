@@ -72,9 +72,71 @@ extension InlineDataDtoToDomain on InlineDataDto {
 extension ActionsDtoToDomain on ActionsDto {
   AdkActions toAdkActions() {
     return AdkActions(
-      functionCalls: functionCalls?.map((c) => c.toAdkFunctionCall()).toList(),
-      functionResponses: functionResponses?.map((r) => r.toAdkFunctionResponse()).toList(),
-      skipSummarization: skipSummarization ?? false,
+      stateDelta: stateDelta,
+      artifactDelta: artifactDelta,
+      transferToAgent: transferToAgent,
+      requestedAuthConfigs: requestedAuthConfigs?.map(
+        (key, value) => MapEntry(key, value.toRequestedAuthConfig()),
+      ),
+      requestedToolConfirmations: requestedToolConfirmations,
+    );
+  }
+}
+
+extension RequestedAuthConfigDtoToDomain on RequestedAuthConfigDto {
+  RequestedAuthConfig toRequestedAuthConfig() {
+    return RequestedAuthConfig(
+      authScheme: authScheme?.toAuthScheme(),
+      rawAuthCredential: rawAuthCredential?.toAuthCredential(),
+      exchangedAuthCredential: exchangedAuthCredential?.toAuthCredential(),
+      credentialKey: credentialKey,
+    );
+  }
+}
+
+extension AuthSchemeDtoToDomain on AuthSchemeDto {
+  AuthScheme toAuthScheme() {
+    return AuthScheme(
+      type: type,
+      flows: flows?.toAuthFlows(),
+    );
+  }
+}
+
+extension AuthFlowsDtoToDomain on AuthFlowsDto {
+  AuthFlows toAuthFlows() {
+    return AuthFlows(
+      authorizationCode: authorizationCode?.toAuthorizationCodeFlow(),
+    );
+  }
+}
+
+extension AuthorizationCodeFlowDtoToDomain on AuthorizationCodeFlowDto {
+  AuthorizationCodeFlow toAuthorizationCodeFlow() {
+    return AuthorizationCodeFlow(
+      authorizationUrl: authorizationUrl,
+      tokenUrl: tokenUrl,
+      scopes: scopes,
+    );
+  }
+}
+
+extension AuthCredentialDtoToDomain on AuthCredentialDto {
+  AuthCredential toAuthCredential() {
+    return AuthCredential(
+      authType: authType,
+      oauth2: oauth2?.toOAuth2Data(),
+    );
+  }
+}
+
+extension OAuth2DataDtoToDomain on OAuth2DataDto {
+  OAuth2Data toOAuth2Data() {
+    return OAuth2Data(
+      clientId: clientId,
+      clientSecret: clientSecret,
+      authUri: authUri,
+      state: state,
     );
   }
 }

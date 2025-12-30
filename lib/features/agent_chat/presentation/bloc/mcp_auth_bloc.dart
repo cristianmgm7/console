@@ -79,8 +79,10 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     AuthCodeProvided event,
     Emitter<McpAuthState> emit,
   ) async {
+    final provider = event.request.provider ?? 'oauth2';
+    
     emit(McpAuthProcessing(
-      provider: event.request.provider,
+      provider: provider,
       sessionId: event.sessionId,
     ));
 
@@ -98,14 +100,14 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       // Send credentials back to agent
       final sendResult = await _sendCredentialsUseCase(
         sessionId: event.sessionId,
-        provider: event.request.provider,
+        provider: provider,
         credentials: credentials,
       );
 
       sendResult.fold(
         onSuccess: (_) {
           emit(McpAuthSuccess(
-            provider: event.request.provider,
+            provider: provider,
             sessionId: event.sessionId,
           ));
         },
@@ -126,7 +128,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       // Send error to agent
       final errorResult = await _sendCredentialsUseCase.sendError(
         sessionId: event.sessionId,
-        provider: event.request.provider,
+        provider: provider,
         errorMessage: e.toString(),
       );
 
@@ -152,10 +154,12 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
   ) async {
     _logger.i('Authentication cancelled by user');
 
+    final provider = event.request.provider ?? 'oauth2';
+
     // Send cancellation error to agent
     final cancelResult = await _sendCredentialsUseCase.sendError(
       sessionId: event.sessionId,
-      provider: event.request.provider,
+      provider: provider,
       errorMessage: 'User cancelled authentication',
     );
 
@@ -185,11 +189,11 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     required AuthenticationRequest request,
   }) async {
     try {
-      final authorizationEndpoint = Uri.parse(request.authorizationUrl);
-      final tokenEndpoint = Uri.parse(request.tokenUrl);
+      final authorizationEndpoint = Uri.parse(request.authorizationUrl ?? '');
+      final tokenEndpoint = Uri.parse(request.tokenUrl ?? '');
 
       final grant = oauth2.AuthorizationCodeGrant(
-        'agent-client-id', // TODO: Make configurable per provider
+        request.clientId ?? 'agent-client-id', // Use client ID from request if available
         authorizationEndpoint,
         tokenEndpoint,
         secret: null, // Public client

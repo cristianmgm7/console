@@ -64,24 +64,12 @@ class AdkEvent extends Equatable {
 
   /// Check if this event contains an authentication request.
   ///
-  /// Returns true if this event contains an `adk_request_credential` function call
-  /// that requires the user to authenticate with an external service (GitHub, etc.)
+  /// Returns true if this event contains requested auth configs in the actions,
+  /// which requires the user to authenticate with an external service (GitHub, etc.)
   /// to enable MCP tools.
   bool get isAuthenticationRequest {
-    // Check function calls in parts
-    for (final part in content.parts) {
-      if (part.functionCall?.name == 'adk_request_credential') {
-        return true;
-      }
-    }
-
-    // Check actions
-    if (actions?.functionCalls != null) {
-      return actions!.functionCalls!
-          .any((call) => call.name == 'adk_request_credential');
-    }
-
-    return false;
+    return actions?.requestedAuthConfigs != null &&
+        actions!.requestedAuthConfigs!.isNotEmpty;
   }
 
   /// Extract authentication request details if present.
@@ -92,23 +80,14 @@ class AdkEvent extends Equatable {
   ///
   /// Use this in conjunction with isAuthenticationRequest to handle auth flows.
   AuthenticationRequest? get authenticationRequest {
-    // Check parts first
-    for (final part in content.parts) {
-      if (part.functionCall?.name == 'adk_request_credential') {
-        return AuthenticationRequest.fromFunctionCall(part.functionCall!);
-      }
+    if (actions?.requestedAuthConfigs == null ||
+        actions!.requestedAuthConfigs!.isEmpty) {
+      return null;
     }
 
-    // Check actions
-    if (actions?.functionCalls != null) {
-      for (final call in actions!.functionCalls!) {
-        if (call.name == 'adk_request_credential') {
-          return AuthenticationRequest.fromFunctionCall(call);
-        }
-      }
-    }
-
-    return null;
+    // Get the first auth config from the map
+    final authConfig = actions!.requestedAuthConfigs!.values.first;
+    return AuthenticationRequest.fromAuthConfig(authConfig);
   }
 
   /// Get all function calls in this event
@@ -120,11 +99,6 @@ class AdkEvent extends Equatable {
       if (part.functionCall != null) {
         calls.add(part.functionCall!);
       }
-    }
-
-    // From actions
-    if (actions?.functionCalls != null) {
-      calls.addAll(actions!.functionCalls!);
     }
 
     return calls;
@@ -219,63 +193,197 @@ class AdkInlineData extends Equatable {
 /// Actions that can be attached to events
 class AdkActions extends Equatable {
   const AdkActions({
-    this.functionCalls,
-    this.functionResponses,
-    this.skipSummarization = false,
+    this.stateDelta,
+    this.artifactDelta,
+    this.transferToAgent,
+    this.requestedAuthConfigs,
+    this.requestedToolConfirmations,
   });
 
-  final List<AdkFunctionCall>? functionCalls;
-  final List<AdkFunctionResponse>? functionResponses;
-  final bool skipSummarization;
+  final Map<String, dynamic>? stateDelta;
+  final Map<String, dynamic>? artifactDelta;
+  final String? transferToAgent;
+  final Map<String, RequestedAuthConfig>? requestedAuthConfigs;
+  final Map<String, dynamic>? requestedToolConfirmations;
 
   @override
-  List<Object?> get props => [functionCalls, functionResponses, skipSummarization];
+  List<Object?> get props => [
+        stateDelta,
+        artifactDelta,
+        transferToAgent,
+        requestedAuthConfigs,
+        requestedToolConfirmations,
+      ];
 }
 
-/// Authentication request extracted from adk_request_credential function call.
+/// Requested authentication configuration from the ADK agent.
+class RequestedAuthConfig extends Equatable {
+  const RequestedAuthConfig({
+    this.authScheme,
+    this.rawAuthCredential,
+    this.exchangedAuthCredential,
+    this.credentialKey,
+  });
+
+  final AuthScheme? authScheme;
+  final AuthCredential? rawAuthCredential;
+  final AuthCredential? exchangedAuthCredential;
+  final String? credentialKey;
+
+  @override
+  List<Object?> get props => [
+        authScheme,
+        rawAuthCredential,
+        exchangedAuthCredential,
+        credentialKey,
+      ];
+}
+
+class AuthScheme extends Equatable {
+  const AuthScheme({
+    this.type,
+    this.flows,
+  });
+
+  final String? type;
+  final AuthFlows? flows;
+
+  @override
+  List<Object?> get props => [type, flows];
+}
+
+class AuthFlows extends Equatable {
+  const AuthFlows({
+    this.authorizationCode,
+  });
+
+  final AuthorizationCodeFlow? authorizationCode;
+
+  @override
+  List<Object?> get props => [authorizationCode];
+}
+
+class AuthorizationCodeFlow extends Equatable {
+  const AuthorizationCodeFlow({
+    this.authorizationUrl,
+    this.tokenUrl,
+    this.scopes,
+  });
+
+  final String? authorizationUrl;
+  final String? tokenUrl;
+  final Map<String, String>? scopes;
+
+  @override
+  List<Object?> get props => [authorizationUrl, tokenUrl, scopes];
+}
+
+class AuthCredential extends Equatable {
+  const AuthCredential({
+    this.authType,
+    this.oauth2,
+  });
+
+  final String? authType;
+  final OAuth2Data? oauth2;
+
+  @override
+  List<Object?> get props => [authType, oauth2];
+}
+
+class OAuth2Data extends Equatable {
+  const OAuth2Data({
+    this.clientId,
+    this.clientSecret,
+    this.authUri,
+    this.state,
+  });
+
+  final String? clientId;
+  final String? clientSecret;
+  final String? authUri;
+  final String? state;
+
+  @override
+  List<Object?> get props => [clientId, clientSecret, authUri, state];
+}
+
+/// Authentication request extracted from requestedAuthConfigs in actions.
 ///
 /// Contains all the OAuth2 parameters needed to authenticate with an external
 /// service to enable MCP (Model Context Protocol) tools. This is sent by the
 /// agent when it needs to use tools that require authentication (GitHub, etc.).
 ///
 /// The authentication flow involves:
-/// 1. User opens the [authorizationUrl] in their browser
-/// 2. User completes OAuth flow and gets an authorization code
-/// 3. Code is exchanged for access/refresh tokens using [tokenUrl]
-/// 4. Tokens are sent back to the agent via SendAuthenticationCredentialsUseCase
+/// 1. User opens the [authUri] in their browser (this already contains all OAuth params)
+/// 2. User completes OAuth flow and gets redirected back with a code
+/// 3. The backend handles the token exchange
 class AuthenticationRequest extends Equatable {
   const AuthenticationRequest({
-    required this.provider,
-    required this.authorizationUrl,
-    required this.tokenUrl,
-    required this.scopes,
-    this.additionalParams,
+    required this.authUri,
+    required this.state,
+    this.provider,
+    this.authorizationUrl,
+    this.tokenUrl,
+    this.scopes,
+    this.clientId,
+    this.credentialKey,
   });
 
-  factory AuthenticationRequest.fromFunctionCall(AdkFunctionCall call) {
-    final args = call.args;
+  factory AuthenticationRequest.fromAuthConfig(RequestedAuthConfig config) {
+    // Extract the auth URI from exchangedAuthCredential (this is the complete OAuth URL)
+    final authUri = config.exchangedAuthCredential?.oauth2?.authUri ?? '';
+    final state = config.exchangedAuthCredential?.oauth2?.state ?? '';
+    
+    // Also extract from authScheme for additional info
+    final authScheme = config.authScheme;
+    final authCode = authScheme?.flows?.authorizationCode;
+    
     return AuthenticationRequest(
-      provider: args['provider'] as String? ?? 'unknown',
-      authorizationUrl: args['authorization_url'] as String? ?? args['authorizationUrl'] as String? ?? '',
-      tokenUrl: args['token_url'] as String? ?? args['tokenUrl'] as String? ?? '',
-      scopes: (args['scopes'] as List<dynamic>?)?.cast<String>() ?? [],
-      additionalParams: args['additional_params'] as Map<String, dynamic>? ??
-                       args['additionalParams'] as Map<String, dynamic>?,
+      authUri: authUri,
+      state: state,
+      provider: authScheme?.type,
+      authorizationUrl: authCode?.authorizationUrl,
+      tokenUrl: authCode?.tokenUrl,
+      scopes: authCode?.scopes?.keys.toList(),
+      clientId: config.exchangedAuthCredential?.oauth2?.clientId,
+      credentialKey: config.credentialKey,
     );
   }
 
-  final String provider;
-  final String authorizationUrl;
-  final String tokenUrl;
-  final List<String> scopes;
-  final Map<String, dynamic>? additionalParams;
+  /// The complete OAuth authorization URI with all parameters already included
+  final String authUri;
+  
+  /// The state parameter for OAuth flow
+  final String state;
+  
+  /// Provider type (e.g., "oauth2")
+  final String? provider;
+  
+  /// Base authorization URL
+  final String? authorizationUrl;
+  
+  /// Token exchange URL
+  final String? tokenUrl;
+  
+  /// Requested scopes
+  final List<String>? scopes;
+  
+  /// OAuth client ID
+  final String? clientId;
+  
+  /// Credential key for the agent
+  final String? credentialKey;
 
   @override
   List<Object?> get props => [
+        authUri,
+        state,
         provider,
         authorizationUrl,
         tokenUrl,
         scopes,
-        additionalParams,
+        clientId,
+        credentialKey,
       ];
 }

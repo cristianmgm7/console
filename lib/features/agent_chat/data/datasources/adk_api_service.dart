@@ -150,7 +150,7 @@ class AdkApiService {
           .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
 
       if (response.statusCode == 200) {
-        final List<dynamic> eventsJson = jsonDecode(response.body) as List;
+        final eventsJson = jsonDecode(response.body) as List;
         _logger.d('✅ Received ${eventsJson.length} events from agent');
         return eventsJson.map((e) => EventDto.fromJson(e as Map<String, dynamic>)).toList();
       } else {
