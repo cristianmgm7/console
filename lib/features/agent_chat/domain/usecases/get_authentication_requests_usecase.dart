@@ -28,7 +28,7 @@ class GetAuthenticationRequestsUseCase {
     Map<String, dynamic>? context,
   }) async* {
     try {
-      _logger.i('Starting auth request stream for session: $sessionId');
+      _logger.i('🔐 Starting auth request stream for session: $sessionId');
 
       final eventStream = _repository.sendMessageStreaming(
         sessionId: sessionId,
@@ -37,10 +37,12 @@ class GetAuthenticationRequestsUseCase {
       );
 
       await for (final event in eventStream) {
+        _logger.d('🔐 Auth usecase received event from ${event.author}, isAuth=${event.isAuthenticationRequest}');
+        
         // Only yield authentication request events
         if (event.isAuthenticationRequest) {
           final authRequest = event.authenticationRequest!;
-          _logger.i('Authentication request for provider: ${authRequest.provider}');
+          _logger.i('🔐 AUTHENTICATION REQUEST FOUND for provider: ${authRequest.provider}');
 
           yield AuthenticationRequestEvent(
             sourceEvent: event,
@@ -49,9 +51,9 @@ class GetAuthenticationRequestsUseCase {
         }
       }
 
-      _logger.i('Auth request stream completed for session: $sessionId');
+      _logger.i('🔐 Auth request stream completed for session: $sessionId');
     } catch (e, stackTrace) {
-      _logger.e('Error in auth request stream', error: e, stackTrace: stackTrace);
+      _logger.e('🔐 Error in auth request stream', error: e, stackTrace: stackTrace);
       // Don't yield errors here - let them propagate to chat use case
       rethrow;
     }

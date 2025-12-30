@@ -23,14 +23,18 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     return 'test_user'; // Placeholder - matches ADK test user
   }
 
+  // Track stream instances for debugging
+  static int _streamCounter = 0;
+
   @override
   Stream<AdkEvent> sendMessageStreaming({
     required String sessionId,
     required String content,
     Map<String, dynamic>? context,
   }) async* {
+    final streamId = ++_streamCounter;
     try {
-      _logger.d('Streaming message for session: $sessionId');
+      _logger.d('🌊 [Stream #$streamId] Starting message streaming for session: $sessionId');
 
       await for (final eventDto in _apiService.sendMessageStreaming(
         userId: _userId,
@@ -38,15 +42,66 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         message: content,
         context: context,
       )) {
-        _logger.d('Received EventDto from API: author=${eventDto.author}, partial=${eventDto.partial}');
+        _logger.d('🌊 [Stream #$streamId] Received EventDto from API: author=${eventDto.author}, partial=${eventDto.partial}');
+        
+        // Check if this MIGHT be an auth event by looking at function names
+        final hasAuthLikeFunction = eventDto.content.parts.any((p) => 
+          p.functionCall?.name.contains('credential') == true ||
+          p.functionCall?.name.contains('auth') == true
+        ) || (eventDto.actions?.functionCalls?.any((c) =>
+          c.name.contains('credential') || c.name.contains('auth')
+        ) ?? false);
+        
+        if (hasAuthLikeFunction) {
+          _logger.i('🔐 [Stream #$streamId] ⚠️ EVENT HAS AUTH-LIKE FUNCTION - dumping full DTO JSON');
+          try {
+            _logger.i('🔐 [Stream #$streamId] Raw DTO JSON: ${eventDto.toJson()}');
+          } catch (e) {
+            _logger.e('Failed to serialize DTO', error: e);
+          }
+        }
+        
+        // Log raw DTO structure for debugging
+        _logger.d('🌊 [Stream #$streamId]   DTO content.parts count: ${eventDto.content.parts.length}');
+        for (var i = 0; i < eventDto.content.parts.length; i++) {
+          final part = eventDto.content.parts[i];
+          _logger.d('🌊 [Stream #$streamId]   Part $i: text=${part.text?.substring(0, 20) ?? "null"}, '
+              'funcCall=${part.functionCall?.name ?? "null"}, '
+              'funcResp=${part.functionResponse?.name ?? "null"}');
+          
+          // Log function call args if present
+          if (part.functionCall != null) {
+            _logger.d('🌊 [Stream #$streamId]     FunctionCall args: ${part.functionCall!.args}');
+          }
+        }
+        if (eventDto.actions != null) {
+          _logger.d('🌊 [Stream #$streamId]   DTO actions.functionCalls count: ${eventDto.actions!.functionCalls?.length ?? 0}');
+          if (eventDto.actions!.functionCalls != null) {
+            for (var call in eventDto.actions!.functionCalls!) {
+              _logger.d('🌊 [Stream #$streamId]     Action function call: ${call.name}, args: ${call.args}');
+            }
+          }
+        }
 
         // Map DTO to domain event (no filtering!)
         final adkEvent = eventDto.toAdkEvent();
 
-        _logger.d('Mapped to AdkEvent: author=${adkEvent.author}, '
+        // Detailed logging for debugging
+        _logger.d('🌊 [Stream #$streamId] Mapped to AdkEvent: author=${adkEvent.author}, '
             'text=${adkEvent.textContent?.substring(0, 50) ?? "none"}, '
             'functionCalls=${adkEvent.functionCalls.map((c) => c.name).join(", ")}, '
             'isAuthRequest=${adkEvent.isAuthenticationRequest}');
+        
+        // Extra logging for function calls
+        if (adkEvent.functionCalls.isNotEmpty) {
+          for (final call in adkEvent.functionCalls) {
+            _logger.d('🌊 [Stream #$streamId]   Function call: ${call.name}, args: ${call.args}');
+            if (call.name == 'adk_request_credential') {
+              _logger.i('🔐 [Stream #$streamId] FOUND adk_request_credential in repository!');
+              _logger.i('🔐 [Stream #$streamId] Auth request args: ${call.args}');
+            }
+          }
+        }
 
         yield adkEvent;
       }
