@@ -124,10 +124,16 @@ class AdkApiService {
   }) async* {
     final url = Uri.parse('${AdkConfig.baseUrl}/run_sse');
 
+    // First fetch the current session to get lastUpdateTime for stale session validation
+    final sessionDto = await getSession(userId: userId, sessionId: sessionId);
+
     final requestBody = {
       'appName': AdkConfig.appName,
       'userId': userId,
       'sessionId': sessionId,
+      'session': {
+        'last_update_time': sessionDto.lastUpdateTime,
+      },
       'newMessage': {
         'role': 'user',
         'parts': [

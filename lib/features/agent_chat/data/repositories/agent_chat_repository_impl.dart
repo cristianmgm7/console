@@ -38,12 +38,15 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
         message: content,
         context: context,
       )) {
+        _logger.d('Received EventDto from API: author=${eventDto.author}, partial=${eventDto.partial}');
+
         // Map DTO to domain event (no filtering!)
         final adkEvent = eventDto.toAdkEvent();
 
-        _logger.d('Event from ${adkEvent.author}: '
+        _logger.d('Mapped to AdkEvent: author=${adkEvent.author}, '
             'text=${adkEvent.textContent?.substring(0, 50) ?? "none"}, '
-            'functionCalls=${adkEvent.functionCalls.map((c) => c.name).join(", ")}');
+            'functionCalls=${adkEvent.functionCalls.map((c) => c.name).join(", ")}, '
+            'isAuthRequest=${adkEvent.isAuthenticationRequest}');
 
         yield adkEvent;
       }

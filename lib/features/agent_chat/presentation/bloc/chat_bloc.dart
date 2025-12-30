@@ -93,20 +93,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await emit.forEach<CategorizedEvent>(
         eventStream,
         onData: (categorizedEvent) {
+          // Get the latest state (not the original currentState!)
+          final latestState = state;
+          if (latestState is! ChatLoaded) return latestState;
+          
           // Handle each categorized event
           if (categorizedEvent is ChatMessageEvent) {
-            return _handleChatMessage(categorizedEvent, currentState);
+            return _handleChatMessage(categorizedEvent, latestState);
           } else if (categorizedEvent is FunctionCallEvent) {
-            return _handleFunctionCall(categorizedEvent, currentState);
+            return _handleFunctionCall(categorizedEvent, latestState);
           } else if (categorizedEvent is FunctionResponseEvent) {
-            return _handleFunctionResponse(categorizedEvent, currentState);
+            return _handleFunctionResponse(categorizedEvent, latestState);
           } else if (categorizedEvent is AgentErrorEvent) {
-            return _handleError(categorizedEvent, currentState);
+            return _handleError(categorizedEvent, latestState);
           }
-          return currentState; // Unknown event type
+          return latestState; // Unknown event type
         },
         onError: (error, stackTrace) {
           _logger.e('Error in event stream', error: error, stackTrace: stackTrace);
+
+          // Get the latest state for error handling
+          final latestState = state;
+          final latestMessages = latestState is ChatLoaded 
+              ? latestState.messages 
+              : currentState.messages;
 
           // Create error message
           final errorMessage = AgentChatMessage(
@@ -119,26 +129,35 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           );
 
           return ChatLoaded(
-            messages: [...currentState.messages, errorMessage],
+            messages: [...latestMessages, errorMessage],
             currentSessionId: event.sessionId,
             isSending: false,
           );
         },
       );
 
-      // Stream completed - mark user message as sent
-      final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-      final updatedMessages = currentState.messages
-          .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
-          .toList();
+      // Stream completed - mark user message as sent using LATEST state
+      final finalState = state;
+      if (finalState is ChatLoaded) {
+        final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+        final updatedMessages = finalState.messages
+            .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
+            .toList();
 
-      emit(ChatLoaded(
-        messages: updatedMessages,
-        currentSessionId: event.sessionId,
-        isSending: false,
-      ));
+        emit(ChatLoaded(
+          messages: updatedMessages,
+          currentSessionId: event.sessionId,
+          isSending: false,
+        ));
+      }
     } catch (e) {
       _logger.e('Error starting session', error: e);
+
+      // Get the latest state for error handling
+      final finalState = state;
+      final latestMessages = finalState is ChatLoaded 
+          ? finalState.messages 
+          : currentState.messages;
 
       // Check if this is a stale session error that might resolve on retry
       final errorMessage = e.toString();
@@ -150,7 +169,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           status: MessageStatus.error,
           content: '${userMessage.content}\n\n⚠️ Session synchronization issue. Please try again.',
         );
-        final updatedMessages = currentState.messages
+        final updatedMessages = latestMessages
             .map((m) => m.id == userMessage.id ? retryMessage : m)
             .toList();
 
@@ -162,7 +181,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       } else {
         // For other errors, mark as permanent failure
         final errorMessageObj = userMessage.copyWith(status: MessageStatus.error);
-        final updatedMessages = currentState.messages
+        final updatedMessages = latestMessages
             .map((m) => m.id == userMessage.id ? errorMessageObj : m)
             .toList();
 
@@ -178,8 +197,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// Handle chat message events (returns new state)
   ChatState _handleChatMessage(ChatMessageEvent event, ChatLoaded currentState) {
 
-    // Only process if this is for the active session
-    if (currentState.activeSessionId != currentState.currentSessionId) return currentState;
+    // Process all chat messages for the current session
 
     if (event.isPartial) {
       // Accumulate partial text
