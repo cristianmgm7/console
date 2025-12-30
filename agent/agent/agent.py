@@ -3,6 +3,7 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, StdioServerParameters, StreamableHTTPServerParams
 from google.adk.auth import AuthCredential, AuthCredentialTypes, OAuth2Auth
 from fastapi.openapi.models import OAuth2, OAuthFlows, OAuthFlowAuthorizationCode
+# from github_tools import github_tools  # Temporarily commented out
 import json
 import os
 from pathlib import Path
@@ -37,38 +38,12 @@ def load_instruction(filename: str) -> str:
 github_agent = Agent(
     model='gemini-2.5-flash',
     name='github_agent',
-    description='A GitHub assistant powered by MCP tools for repository management, issues, and pull requests.',
+    description='A GitHub assistant that can manage repositories, issues, and pull requests with OAuth authentication.',
     instruction=load_instruction('github_agent.txt'),
     tools=[
-        McpToolset(
-            connection_params=StreamableHTTPServerParams(
-                url="https://api.githubcopilot.com/mcp/",
-                headers={
-                    "X-MCP-Toolsets": "repos,issues,pull_requests,code_security,dependabot,discussions,projects,labels,notifications,users,orgs,stargazers",
-                    "X-MCP-Readonly": "false"
-                },
-            ),
-            auth_scheme=OAuth2(
-                flows=OAuthFlows(
-                    authorizationCode=OAuthFlowAuthorizationCode(
-                        authorizationUrl="https://github.com/login/oauth/authorize",
-                        tokenUrl="https://github.com/login/oauth/access_token",
-                        scopes={
-                            "repo": "Full control of private repositories",
-                            "user": "Update your profile data",
-                            "read:org": "Read organization data"
-                        },
-                    )
-                )
-            ),
-            auth_credential=AuthCredential(
-                auth_type=AuthCredentialTypes.OAUTH2,
-                oauth2=OAuth2Auth(
-                    client_id=os.getenv("GITHUB_CLIENT_ID", "YOUR_GITHUB_CLIENT_ID"),
-                    client_secret=os.getenv("GITHUB_CLIENT_SECRET", "YOUR_GITHUB_CLIENT_SECRET")
-                ),
-            )
-        )
+        # Temporarily removed tools - will implement GitHub integration later
+        # github_tools.list_user_repositories,
+        # github_tools.get_repository_info,
     ],
 )
 
@@ -107,7 +82,7 @@ carbon_voice_agent = Agent(
                 oauth2=OAuth2Auth(
                     client_id=os.getenv("CARBON_CLIENT_ID", "YOUR_CARBON_CLIENT_ID"),
                     client_secret=os.getenv("CARBON_CLIENT_SECRET", "YOUR_CARBON_CLIENT_SECRET"),
-                    redirect_uri=os.getenv("CARBON_REDIRECT_URI", "https://carbonconsole.ngrok.app/auth/callback"),
+                    redirect_uri=os.getenv("CARBON_REDIRECT_URI", "https://cristianmgm7.github.io/carbon-console-auth/"),
                 )
             )
         )
@@ -142,5 +117,5 @@ root_agent = Agent(
     name='root_orchestrator',
     description='Main orchestrator agent that coordinates GitHub and Carbon Voice operations.',
     instruction=load_instruction('root_agent.txt'),
-    sub_agents=[ github_agent, carbon_voice_agent, atlassian_agent],
+    sub_agents=[github_agent, carbon_voice_agent, atlassian_agent],
 )
