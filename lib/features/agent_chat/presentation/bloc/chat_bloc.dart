@@ -71,7 +71,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     try {
       // Get all events at once (categorized + raw)
-      final eventsResult = await _getChatMessagesUseCase(
+      final eventsResult = await _getChatMessagesUseCase.call(
         sessionId: event.sessionId,
         message: event.content,
         context: event.context,
