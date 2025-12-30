@@ -115,17 +115,15 @@ class AdkApiService {
     }
   }
 
-  /// Send message to agent (streaming with SSE)
-  Stream<EventDto> sendMessageStreaming({
+  /// Send message to agent (single response - simpler for debugging)
+  Future<List<EventDto>> sendMessage({
     required String userId,
     required String sessionId,
     required String message,
     Map<String, dynamic>? context,
-  }) async* {
-    final url = Uri.parse('${AdkConfig.baseUrl}/run_sse');
+  }) async {
+    final url = Uri.parse('${AdkConfig.baseUrl}/run');
 
-    // Don't fetch session before sending - let backend manage session state
-    // Fetching creates race conditions when messages are sent rapidly
     final requestBody = {
       'appName': AdkConfig.appName,
       'userId': userId,
@@ -137,45 +135,34 @@ class AdkApiService {
           if (context != null) {'metadata': context},
         ],
       },
-      'streaming': false, // Enable token-level streaming if needed
     };
 
-    _logger.d('Sending streaming message: $url');
+    _logger.d('Sending message to /run: $url');
     _logger.d('Request body: ${jsonEncode(requestBody)}');
 
     try {
-      final request = http.Request('POST', url)
-        ..headers['Content-Type'] = 'application/json'
-        ..body = jsonEncode(requestBody);
+      final response = await _client
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
 
-      final streamedResponse = await _client.send(request);
-
-      if (streamedResponse.statusCode != 200) {
+      if (response.statusCode == 200) {
+        final List<dynamic> eventsJson = jsonDecode(response.body) as List;
+        _logger.d('✅ Received ${eventsJson.length} events from agent');
+        return eventsJson.map((e) => EventDto.fromJson(e as Map<String, dynamic>)).toList();
+      } else {
         throw ServerException(
-          statusCode: streamedResponse.statusCode,
-          message: 'Failed to send streaming message',
+          statusCode: response.statusCode,
+          message: 'Failed to send message: ${response.body}',
         );
       }
-
-      await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
-        // SSE format: "data: {...}\n\n"
-        final lines = chunk.split('\n');
-        for (final line in lines) {
-          if (line.startsWith('data: ')) {
-            final jsonData = line.substring(6); // Remove "data: " prefix
-            try {
-              final jsonMap = jsonDecode(jsonData) as Map<String, dynamic>;
-              yield EventDto.fromJson(jsonMap);
-            } catch (e) {
-              _logger.w('Failed to parse SSE event: $line', error: e);
-            }
-          }
-        }
-      }
     } catch (e) {
-      _logger.e('Error in streaming message', error: e);
+      _logger.e('Error sending message', error: e);
       if (e is ServerException) rethrow;
-      throw NetworkException(message: 'Failed to stream message: $e');
+      throw NetworkException(message: 'Failed to send message: $e');
     }
   }
 

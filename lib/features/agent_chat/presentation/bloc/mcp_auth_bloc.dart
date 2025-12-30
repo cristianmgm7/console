@@ -1,5 +1,4 @@
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
@@ -30,42 +29,45 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     StartAuthListening event,
     Emitter<McpAuthState> emit,
   ) async {
-    _logger.i('🔐 Starting auth listening for session: ${event.sessionId}');
+    _logger.i('🔐 Checking for auth requests for session: ${event.sessionId}');
 
     emit(McpAuthListening(sessionId: event.sessionId));
 
     try {
-      final authStream = _getAuthRequestsUseCase(
+      final authRequestsResult = await _getAuthRequestsUseCase(
         sessionId: event.sessionId,
         message: event.message,
         context: event.context,
       );
 
-      // Use emit.forEach to automatically handle stream (no manual subscription!)
-      await emit.forEach<AuthenticationRequestEvent>(
-        authStream,
-        onData: (authEvent) {
-          _logger.i('🔐 AUTH REQUEST DETECTED for provider: ${authEvent.request.provider}');
-          _logger.i('🔐 Authorization URL: ${authEvent.request.authorizationUrl}');
-          return McpAuthRequired(
-            request: authEvent.request,
-            sessionId: event.sessionId,
-          );
+      await authRequestsResult.fold(
+        onSuccess: (authRequests) async {
+          _logger.i('🔐 Found ${authRequests.length} auth requests');
+
+          // Process each auth request
+          for (final authEvent in authRequests) {
+            _logger.i('🔐 AUTH REQUEST DETECTED for provider: ${authEvent.request.provider}');
+            _logger.i('🔐 Authorization URL: ${authEvent.request.authorizationUrl}');
+            
+            emit(McpAuthRequired(
+              request: authEvent.request,
+              sessionId: event.sessionId,
+            ));
+          }
+
+          // Return to listening state after processing all requests
+          emit(McpAuthListening(sessionId: event.sessionId));
         },
-        onError: (error, stackTrace) {
-          _logger.e('🔐 Error in auth stream', error: error, stackTrace: stackTrace);
-          return McpAuthError(
-            message: error.toString(),
+        onFailure: (failure) async {
+          _logger.e('🔐 Failed to get auth requests', error: failure);
+          emit(McpAuthError(
+            message: failure.failure.details ?? 'Failed to check for auth requests',
             sessionId: event.sessionId,
-          );
+          ));
         },
       );
-
-      _logger.i('🔐 Auth stream completed for session: ${event.sessionId}');
-      // Return to listening state after stream completes
-      emit(McpAuthListening(sessionId: event.sessionId));
     } catch (e, stackTrace) {
-      _logger.e('🔐 Failed to start auth listening', error: e, stackTrace: stackTrace);
+      _logger.e('🔐 Failed to check auth requests', error: e, stackTrace: stackTrace);
       emit(McpAuthError(
         message: e.toString(),
         sessionId: event.sessionId,
