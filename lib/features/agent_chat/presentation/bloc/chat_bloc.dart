@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
@@ -36,14 +35,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void Function(String event)? onDebugEvent;
 
 
-
- 
-
   Future<void> _onSendMessageStreaming(
     SendMessageStreaming event,
     Emitter<ChatState> emit,
   ) async {
-    _logger.i('📤 Sending message for session: ${event.sessionId}');
 
     // onEach will automatically handle stream lifecycle
 
@@ -73,156 +68,45 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       isSending: true,
     ));
 
-    try {
-      _logger.i('🌊 Starting SSE stream for session: ${event.sessionId}');
-      onDebugEvent?.call('🌊 Stream started');
+    _logger.i('🌊 Starting SSE stream for session: ${event.sessionId}');
+    onDebugEvent?.call('🌊 Stream started');
 
-      // Get categorized event stream from use case
-      final eventStream = _getChatMessagesUseCase.call(
-        sessionId: event.sessionId,
-        message: event.content,
-        context: event.context,
-        streaming: true, // Message-level streaming (not token-level)
-      );
+    // Get categorized event stream from use case
+    final eventStream = _getChatMessagesUseCase.call(
+      sessionId: event.sessionId,
+      message: event.content,
+      context: event.context,
+      streaming: true, // Message-level streaming (not token-level)
+    );
 
-      // Track auth requests and active status items
-      final authRequests = <AuthenticationRequest>[];
-      final activeStatusIds = <String, String>{}; // functionName -> itemId
+    // Track auth requests and active status items
+    final authRequests = <AuthenticationRequest>[];
+    final activeStatusIds = <String, String>{}; // functionName -> itemId
 
-      // Use emit.onEach to automatically handle stream subscription lifecycle
-      await emit.onEach<CategorizedEvent>(
-        eventStream,
-        onData: (CategorizedEvent categorizedEvent) {
-          _logger.d('📥 Processing categorized event: ${categorizedEvent.runtimeType}');
-          onDebugEvent?.call('📥 Event: ${categorizedEvent.runtimeType}');
-          _logger.d('📥 Event details: id=${categorizedEvent.sourceEvent.id}, author=${categorizedEvent.sourceEvent.author}');
+    // Use emit.onEach to automatically handle stream subscription lifecycle
+    await emit.onEach<CategorizedEvent>(
+      eventStream,
+      onData: (CategorizedEvent categorizedEvent) {
+        onDebugEvent?.call('📥 Event: ${categorizedEvent.runtimeType}');
 
-          if (categorizedEvent is ChatMessageEvent) {
-            _logger.d('📝 Chat message: "${categorizedEvent.text.substring(0, min(50, categorizedEvent.text.length))}" (partial: ${categorizedEvent.isPartial})');
-          }
+        final latestState = state;
+        if (latestState is! ChatLoaded) return;
 
-          final latestState = state;
-          if (latestState is! ChatLoaded) return;
-
-          // Handle different event types
-          if (categorizedEvent is AuthenticationRequestEvent) {
-            // Create auth request item
-            authRequests.add(categorizedEvent.request);
-            _logger.i('🔐 ChatBloc detected auth request for: ${categorizedEvent.request.provider}');
-            onDebugEvent?.call('🔐 Auth request: ${categorizedEvent.request.provider}');
-
-            final authItem = AuthRequestItem(
-              id: categorizedEvent.sourceEvent.id,
-              timestamp: categorizedEvent.sourceEvent.timestamp,
-              request: categorizedEvent.request,
-              subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
-              subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
-            );
-
-            emit(latestState.copyWith(
-              items: [...latestState.items, authItem],
-            ));
-          } else if (categorizedEvent is ChatMessageEvent) {
-            // Create or update text message item for streaming
-            final preview = categorizedEvent.text.length > 30
-                ? '${categorizedEvent.text.substring(0, 30)}...'
-                : categorizedEvent.text;
-            onDebugEvent?.call('💬 Chat message: $preview');
-
-            // Use invocationId as the message ID to group streaming chunks
-            final messageId = categorizedEvent.sourceEvent.invocationId;
-
-            // Check if there's already a partial message for this invocation
-            final existingMessageIndex = latestState.items.indexWhere(
-              (item) => item is TextMessageItem &&
-                       item.id == messageId &&
-                       item.isPartial &&
-                       item.role == MessageRole.agent,
-            );
-
-            if (existingMessageIndex != -1) {
-              // Update existing partial message with the new cumulative text
-              // (categorizedEvent.text already contains all text accumulated so far)
-              final existingMessage = latestState.items[existingMessageIndex] as TextMessageItem;
-              final updatedMessage = existingMessage.copyWith(
-                text: categorizedEvent.text,
-                isPartial: categorizedEvent.isPartial,
-                // Update timestamp to latest chunk
-                timestamp: categorizedEvent.sourceEvent.timestamp,
-              );
-
-              final updatedItems = List<ChatItem>.from(latestState.items);
-              updatedItems[existingMessageIndex] = updatedMessage;
-
-              emit(latestState.copyWith(items: updatedItems));
-            } else {
-              // Create new message item
-              final messageItem = TextMessageItem(
-                id: messageId,
-                timestamp: categorizedEvent.sourceEvent.timestamp,
-                text: categorizedEvent.text,
-                role: MessageRole.agent,
-                isPartial: categorizedEvent.isPartial,
-                subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
-                subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
-              );
-
-              emit(latestState.copyWith(
-                items: [...latestState.items, messageItem],
-              ));
-            }
-          } else if (categorizedEvent is FunctionCallEvent) {
-            // Create/update system status item for "thinking..."
-            onDebugEvent?.call('⚙️ Function call: ${categorizedEvent.functionName}');
-
-            final statusId = 'status_${categorizedEvent.functionName}';
-            activeStatusIds[categorizedEvent.functionName] = statusId;
-
-            final statusItem = SystemStatusItem(
-              id: statusId,
-              timestamp: categorizedEvent.sourceEvent.timestamp,
-              status: 'Calling ${categorizedEvent.functionName}...',
-              type: StatusType.toolCall,
-              subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
-              subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
-              metadata: {'functionName': categorizedEvent.functionName},
-            );
-
-            emit(latestState.copyWith(
-              items: [...latestState.items, statusItem],
-            ));
-          } else if (categorizedEvent is FunctionResponseEvent) {
-            // Remove the corresponding status item
-            onDebugEvent?.call('✅ Function completed: ${categorizedEvent.functionName}');
-
-            final statusId = activeStatusIds[categorizedEvent.functionName];
-            if (statusId != null) {
-              final updatedItems = latestState.items
-                  .where((item) => item.id != statusId)
-                  .toList();
-
-              emit(latestState.copyWith(items: updatedItems));
-              activeStatusIds.remove(categorizedEvent.functionName);
-            }
-          } else if (categorizedEvent is AgentErrorEvent) {
-            // Create error status item
-            onDebugEvent?.call('❌ Error: ${categorizedEvent.errorMessage}');
-
-            final errorItem = SystemStatusItem(
-              id: 'error_${DateTime.now().millisecondsSinceEpoch}',
-              timestamp: DateTime.now(),
-              status: categorizedEvent.errorMessage,
-              type: StatusType.error,
-            );
-
-            emit(latestState.copyWith(
-              items: [...latestState.items, errorItem],
-            ));
-          }
-        },
+        // Handle different event types using dedicated handlers
+        if (categorizedEvent is AuthenticationRequestEvent) {
+          _handleAuthenticationRequest(categorizedEvent, latestState, authRequests, emit);
+        } else if (categorizedEvent is ChatMessageEvent) {
+          _handleChatMessage(categorizedEvent, latestState, emit);
+        } else if (categorizedEvent is FunctionCallEvent) {
+          _handleFunctionCall(categorizedEvent, latestState, activeStatusIds, emit);
+        } else if (categorizedEvent is FunctionResponseEvent) {
+          _handleFunctionResponse(categorizedEvent, latestState, activeStatusIds, emit);
+        } else if (categorizedEvent is AgentErrorEvent) {
+          _handleAgentError(categorizedEvent, latestState, emit);
+        }
+      },
         onError: (Object error, StackTrace? stackTrace) {
           _logger.e('❌ Error in stream', error: error, stackTrace: stackTrace);
-
           // Add error status item
           final latestState = state;
           if (latestState is ChatLoaded) {
@@ -250,29 +134,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         onAuthenticationRequired!(event.sessionId, authRequests);
       }
 
-      // Mark sending as complete
-      final latestState = state;
-      if (latestState is ChatLoaded) {
-        emit(latestState.copyWith(isSending: false));
-      }
-    } on Exception catch (e, stackTrace) {
-      _logger.e('❌ Error sending message', error: e, stackTrace: stackTrace);
-
-      // Add error status item
-      final latestState = state;
-      if (latestState is ChatLoaded) {
-        final errorItem = SystemStatusItem(
-          id: 'error_${DateTime.now().millisecondsSinceEpoch}',
-          timestamp: DateTime.now(),
-          status: 'Failed to send message: $e',
-          type: StatusType.error,
-        );
-
-        emit(latestState.copyWith(
-          items: [...latestState.items, errorItem],
-          isSending: false,
-        ));
-      }
+    // Mark sending as complete
+    final latestState = state;
+    if (latestState is ChatLoaded) {
+      emit(latestState.copyWith(isSending: false));
     }
   }
 
@@ -308,6 +173,137 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> close() {
     // onEach automatically handles stream cleanup
     return super.close();
+  }
+
+  void _handleAuthenticationRequest(
+    AuthenticationRequestEvent event,
+    ChatLoaded state,
+    List<AuthenticationRequest> authRequests,
+    Emitter<ChatState> emit,
+  ) {
+    authRequests.add(event.request);
+    _logger.i('🔐 ChatBloc detected auth request for: ${event.request.provider}');
+    onDebugEvent?.call('🔐 Auth request: ${event.request.provider}');
+
+    final authItem = AuthRequestItem(
+      id: event.sourceEvent.id,
+      timestamp: event.sourceEvent.timestamp,
+      request: event.request,
+      subAgentName: _extractSubAgentName(event.sourceEvent.author),
+      subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
+    );
+
+    emit(state.copyWith(items: [...state.items, authItem]));
+  }
+
+  void _handleChatMessage(
+    ChatMessageEvent event,
+    ChatLoaded state,
+    Emitter<ChatState> emit,
+  ) {
+    final preview = event.text.length > 30
+        ? '${event.text.substring(0, 30)}...'
+        : event.text;
+    onDebugEvent?.call('💬 Chat message: $preview');
+
+    // Use invocationId as the message ID to group streaming chunks
+    final messageId = event.sourceEvent.invocationId;
+
+    // Check if there's already a partial message for this invocation
+    final existingMessageIndex = state.items.indexWhere(
+      (item) => item is TextMessageItem &&
+               item.id == messageId &&
+               item.isPartial &&
+               item.role == MessageRole.agent,
+    );
+
+    if (existingMessageIndex != -1) {
+      // Update existing partial message with the new cumulative text
+      final existingMessage = state.items[existingMessageIndex] as TextMessageItem;
+      final updatedMessage = existingMessage.copyWith(
+        text: event.text,
+        isPartial: event.isPartial,
+        timestamp: event.sourceEvent.timestamp,
+      );
+
+      final updatedItems = List<ChatItem>.from(state.items);
+      updatedItems[existingMessageIndex] = updatedMessage;
+
+      emit(state.copyWith(items: updatedItems));
+    } else {
+      // Create new message item
+      final messageItem = TextMessageItem(
+        id: messageId,
+        timestamp: event.sourceEvent.timestamp,
+        text: event.text,
+        role: MessageRole.agent,
+        isPartial: event.isPartial,
+        subAgentName: _extractSubAgentName(event.sourceEvent.author),
+        subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
+      );
+
+      emit(state.copyWith(items: [...state.items, messageItem]));
+    }
+  }
+
+  void _handleFunctionCall(
+    FunctionCallEvent event,
+    ChatLoaded state,
+    Map<String, String> activeStatusIds,
+    Emitter<ChatState> emit,
+  ) {
+    onDebugEvent?.call('⚙️ Function call: ${event.functionName}');
+
+    final statusId = 'status_${event.functionName}';
+    activeStatusIds[event.functionName] = statusId;
+
+    final statusItem = SystemStatusItem(
+      id: statusId,
+      timestamp: event.sourceEvent.timestamp,
+      status: 'Calling ${event.functionName}...',
+      type: StatusType.toolCall,
+      subAgentName: _extractSubAgentName(event.sourceEvent.author),
+      subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
+      metadata: {'functionName': event.functionName},
+    );
+
+    emit(state.copyWith(items: [...state.items, statusItem]));
+  }
+
+  void _handleFunctionResponse(
+    FunctionResponseEvent event,
+    ChatLoaded state,
+    Map<String, String> activeStatusIds,
+    Emitter<ChatState> emit,
+  ) {
+    onDebugEvent?.call('✅ Function completed: ${event.functionName}');
+
+    final statusId = activeStatusIds[event.functionName];
+    if (statusId != null) {
+      final updatedItems = state.items
+          .where((item) => item.id != statusId)
+          .toList();
+
+      emit(state.copyWith(items: updatedItems));
+      activeStatusIds.remove(event.functionName);
+    }
+  }
+
+  void _handleAgentError(
+    AgentErrorEvent event,
+    ChatLoaded state,
+    Emitter<ChatState> emit,
+  ) {
+    onDebugEvent?.call('❌ Error: ${event.errorMessage}');
+
+    final errorItem = SystemStatusItem(
+      id: 'error_${DateTime.now().millisecondsSinceEpoch}',
+      timestamp: DateTime.now(),
+      status: event.errorMessage,
+      type: StatusType.error,
+    );
+
+    emit(state.copyWith(items: [...state.items, errorItem]));
   }
 
   /// Extract sub-agent name from author field
