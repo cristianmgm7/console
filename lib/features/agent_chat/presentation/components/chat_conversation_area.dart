@@ -1,5 +1,6 @@
 import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/components/chat_input_panel.dart';
@@ -35,7 +36,7 @@ class ChatConversationArea extends StatelessWidget {
                 }
 
                 if (state is ChatLoaded) {
-                  if (state.messages.isEmpty) {
+                  if (state.items.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -60,24 +61,25 @@ class ChatConversationArea extends StatelessWidget {
 
                   return ListView.builder(
                     padding: const EdgeInsets.all(24),
-                    itemCount: state.messages.length + (state.statusMessage != null ? 1 : 0),
+                    itemCount: state.items.length,
                     itemBuilder: (context, index) {
-                      // Show status indicator as last item
-                      if (state.statusMessage != null && index == state.messages.length) {
-                        return AgentStatusIndicator(
-                          message: state.statusMessage!,
-                          subAgentName: state.statusSubAgent,
-                        );
-                      }
+                      final item = state.items[index];
 
-                      final message = state.messages[index];
-                      return ChatMessageBubble(
-                        content: message.content,
-                        role: message.role,
-                        timestamp: message.timestamp,
-                        subAgentName: message.subAgentName,
-                        subAgentIcon: message.subAgentIcon,
-                      );
+                      // Pattern matching on ChatItem type
+                      return switch (item) {
+                        TextMessageItem() => ChatMessageBubble(
+                            content: item.text,
+                            role: item.role,
+                            timestamp: item.timestamp,
+                            subAgentName: item.subAgentName,
+                            subAgentIcon: item.subAgentIcon,
+                          ),
+                        SystemStatusItem() => AgentStatusIndicator(
+                            message: item.status,
+                            subAgentName: item.subAgentName,
+                          ),
+                        AuthRequestItem() => _buildAuthRequestCard(context, item),
+                      };
                     },
                   );
                 }
@@ -111,6 +113,56 @@ class ChatConversationArea extends StatelessWidget {
         // Input panel at bottom
         const ChatInputPanel(),
       ],
+    );
+  }
+
+  /// Build authentication request card
+  Widget _buildAuthRequestCard(BuildContext context, AuthRequestItem item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Card(
+        color: Colors.amber[50],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.lock, color: Colors.amber[700]),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Authentication Required',
+                    style: AppTextStyle.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'The agent needs authentication to continue.',
+                style: AppTextStyle.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // TODO: Implement authentication flow
+                  // Could launch URL: launchUrl(Uri.parse(item.request.correctedAuthUri))
+                },
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('Authenticate'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[700],
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

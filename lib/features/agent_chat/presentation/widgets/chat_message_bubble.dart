@@ -2,7 +2,7 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_icons.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:flutter/material.dart';
 
 class ChatMessageBubble extends StatelessWidget { // For agent messages (icon name)
