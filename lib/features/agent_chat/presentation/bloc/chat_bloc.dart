@@ -70,97 +70,87 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     try {
-      // Get all events at once (categorized + raw)
-      final eventsResult = await _getChatMessagesUseCase.call(
+      // Get categorized event stream from use case
+      final eventStream = _getChatMessagesUseCase.call(
         sessionId: event.sessionId,
         message: event.content,
         context: event.context,
+        streaming: false, // Message-level streaming (not token-level)
       );
 
-      await eventsResult.fold(
-        onSuccess: (categorizedEvents) async {
-          _logger.i('📥 Processing ${categorizedEvents.length} categorized events');
-          
-          // Check for authentication requests in the raw events
-          final authRequests = <AuthenticationRequest>[];
-          for (final categorizedEvent in categorizedEvents) {
-            if (categorizedEvent is AuthenticationRequestEvent) {
-              authRequests.add(categorizedEvent.request);
-              _logger.i('🔐 ChatBloc detected auth request for: ${categorizedEvent.request.provider}');
-            }
-          }
-          
-          // Forward auth requests to McpAuthBloc via callback
-          if (authRequests.isNotEmpty && onAuthenticationRequired != null) {
-            _logger.i('🔐 ChatBloc forwarding ${authRequests.length} auth requests');
-            onAuthenticationRequired!(event.sessionId, authRequests);
-          }
+      // Track auth requests
+      final authRequests = <AuthenticationRequest>[];
+      
+      // Process events as they arrive
+      await for (final categorizedEvent in eventStream) {
+        _logger.d('📥 Processing categorized event: ${categorizedEvent.runtimeType}');
+        
+        var latestState = state;
+        if (latestState is! ChatLoaded) break;
 
-          var latestState = state as ChatLoaded;
+        // Handle authentication requests
+        if (categorizedEvent is AuthenticationRequestEvent) {
+          authRequests.add(categorizedEvent.request);
+          _logger.i('🔐 ChatBloc detected auth request for: ${categorizedEvent.request.provider}');
+          // Don't forward yet - wait until stream completes to batch them
+          continue;
+        }
 
-          // Process each event
-          for (final categorizedEvent in categorizedEvents) {
-            ChatState newState;
-            if (categorizedEvent is ChatMessageEvent) {
-              newState = _handleChatMessage(categorizedEvent, latestState);
-            } else if (categorizedEvent is FunctionCallEvent) {
-              newState = _handleFunctionCall(categorizedEvent, latestState);
-            } else if (categorizedEvent is FunctionResponseEvent) {
-              newState = _handleFunctionResponse(categorizedEvent, latestState);
-            } else if (categorizedEvent is AgentErrorEvent) {
-              newState = _handleError(categorizedEvent, latestState);
-            } else {
-              continue; // Skip unknown event types
-            }
-            
-            // Update latestState and emit
-            if (newState is ChatLoaded) {
-              latestState = newState;
-              emit(latestState);
-            }
-          }
+        // Process event and get new state
+        ChatState newState;
+        if (categorizedEvent is ChatMessageEvent) {
+          newState = _handleChatMessage(categorizedEvent, latestState);
+        } else if (categorizedEvent is FunctionCallEvent) {
+          newState = _handleFunctionCall(categorizedEvent, latestState);
+        } else if (categorizedEvent is FunctionResponseEvent) {
+          newState = _handleFunctionResponse(categorizedEvent, latestState);
+        } else if (categorizedEvent is AgentErrorEvent) {
+          newState = _handleError(categorizedEvent, latestState);
+        } else {
+          continue; // Skip unknown event types
+        }
 
-          // Mark user message as sent
-          final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-          final updatedMessages = latestState.messages
-              .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
-              .toList();
+        // Emit new state
+        emit(newState);
+      }
 
-          emit(latestState.copyWith(
-            messages: updatedMessages,
-            isSending: false,
-          ));
+      // Stream completed - forward any auth requests
+      if (authRequests.isNotEmpty && onAuthenticationRequired != null) {
+        _logger.i('🔐 ChatBloc forwarding ${authRequests.length} auth requests');
+        onAuthenticationRequired!(event.sessionId, authRequests);
+      }
 
-          _logger.i('✅ Message processing completed successfully');
-        },
-        onFailure: (failure) async {
-          _logger.e('❌ Failed to send message', error: failure);
+      // Mark user message as sent
+      final latestState = state;
+      if (latestState is ChatLoaded) {
+        final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
+        final updatedMessages = latestState.messages
+            .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
+            .toList();
 
-          // Mark user message as error
-          final errorUserMessage = userMessage.copyWith(status: MessageStatus.error);
-          final updatedMessages = (state as ChatLoaded).messages
-              .map((m) => m.id == userMessage.id ? errorUserMessage : m)
-              .toList();
+        emit(latestState.copyWith(
+          messages: updatedMessages,
+          isSending: false,
+        ));
+      }
 
-          emit((state as ChatLoaded).copyWith(
-            messages: updatedMessages,
-            isSending: false,
-          ));
-        },
-      );
+      _logger.i('✅ Message processing completed successfully');
     } on Exception catch (e, stackTrace) {
       _logger.e('❌ Error sending message', error: e, stackTrace: stackTrace);
 
       // Mark user message as error
-      final errorUserMessage = userMessage.copyWith(status: MessageStatus.error);
-      final updatedMessages = (state as ChatLoaded).messages
-          .map((m) => m.id == userMessage.id ? errorUserMessage : m)
-          .toList();
+      final latestState = state;
+      if (latestState is ChatLoaded) {
+        final errorUserMessage = userMessage.copyWith(status: MessageStatus.error);
+        final updatedMessages = latestState.messages
+            .map((m) => m.id == userMessage.id ? errorUserMessage : m)
+            .toList();
 
-      emit((state as ChatLoaded).copyWith(
-        messages: updatedMessages,
-        isSending: false,
-      ));
+        emit(latestState.copyWith(
+          messages: updatedMessages,
+          isSending: false,
+        ));
+      }
     }
   }
 

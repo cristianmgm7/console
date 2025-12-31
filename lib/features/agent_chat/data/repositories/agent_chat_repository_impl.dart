@@ -24,6 +24,69 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
   }
 
   @override
+  Stream<AdkEvent> sendMessageStream({
+    required String sessionId,
+    required String content,
+    Map<String, dynamic>? context,
+    bool streaming = false,
+  }) async* {
+    try {
+      _logger.d('📤 Starting message stream for session: $sessionId');
+
+      // Get event stream from API
+      final eventStream = _apiService.sendMessageStream(
+        userId: _userId,
+        sessionId: sessionId,
+        message: content,
+        context: context,
+        streaming: streaming,
+      );
+
+      // Transform DTOs to domain events as they arrive
+      await for (final eventDto in eventStream) {
+        try {
+          final adkEvent = eventDto.toAdkEvent();
+          _logger.d('📥 Yielding event from ${adkEvent.author}');
+          yield adkEvent;
+        } on Exception catch (e) {
+          _logger.e('Error mapping event DTO', error: e);
+          // Continue processing other events
+        }
+      }
+
+      _logger.i('✅ Stream completed successfully');
+    } on ServerException catch (e) {
+      _logger.e('Server error in message stream', error: e);
+      // Yield error event
+      yield _createErrorEvent('Server error: ${e.message}');
+    } on NetworkException catch (e) {
+      _logger.e('Network error in message stream', error: e);
+      // Yield error event
+      yield _createErrorEvent('Network error: ${e.message}');
+    } on Exception catch (e, stackTrace) {
+      _logger.e('Unexpected error in message stream', error: e, stackTrace: stackTrace);
+      // Yield error event
+      yield _createErrorEvent('Unexpected error: $e');
+    }
+  }
+
+  /// Helper to create an error event
+  AdkEvent _createErrorEvent(String message) {
+    return AdkEvent(
+      id: 'error_${DateTime.now().millisecondsSinceEpoch}',
+      invocationId: 'error',
+      author: 'system',
+      timestamp: DateTime.now(),
+      content: AdkContent(
+        role: 'model',
+        parts: [
+          AdkPart(text: '⚠️ $message'),
+        ],
+      ),
+    );
+  }
+
+  @override
   Future<Result<List<AdkEvent>>> sendMessage({
     required String sessionId,
     required String content,
@@ -107,7 +170,7 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
       await _apiService.sendMessage(
         userId: _userId,
         sessionId: sessionId,
-        message: '', // Empty text, function response in parts
+        message: credentialMessage.toString(), // Empty text, function response in parts
         context: credentialMessage,
       );
 
