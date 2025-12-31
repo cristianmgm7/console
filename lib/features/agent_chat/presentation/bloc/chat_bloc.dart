@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
@@ -30,6 +30,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   /// Callback to notify when authentication is required
   /// Set this from the UI layer to forward auth requests to McpAuthBloc
   void Function(String sessionId, List<AuthenticationRequest> requests)? onAuthenticationRequired;
+  
+  /// Callback for debug event logging (visualize streaming in real-time)
+  void Function(String event)? onDebugEvent;
 
 
 
@@ -44,7 +47,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // If we're in initial state, transition to loaded state first
     if (state is ChatInitial) {
       emit(ChatLoaded(
-        messages: const [],
+        items: const [],
         currentSessionId: event.sessionId,
       ));
     }
@@ -52,24 +55,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final currentState = state;
     if (currentState is! ChatLoaded) return;
 
-    // Create user message
-    final userMessage = AgentChatMessage(
-      id: _uuid.v4(),
-      sessionId: event.sessionId,
-      role: MessageRole.user,
-      content: event.content,
+    // Create user message item
+    final userId = _uuid.v4();
+    final userMessageItem = TextMessageItem(
+      id: userId,
       timestamp: DateTime.now(),
-      status: MessageStatus.sending,
+      text: event.content,
+      role: MessageRole.user,
     );
 
     // Add to UI immediately
     emit(currentState.copyWith(
-      messages: [...currentState.messages, userMessage],
+      items: [...currentState.items, userMessageItem],
       isSending: true,
-      activeSessionId: event.sessionId,
     ));
 
     try {
+      _logger.i('🌊 Starting SSE stream for session: ${event.sessionId}');
+      onDebugEvent?.call('🌊 Stream started');
+      
       // Get categorized event stream from use case
       final eventStream = _getChatMessagesUseCase.call(
         sessionId: event.sessionId,
@@ -78,41 +82,107 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         streaming: false, // Message-level streaming (not token-level)
       );
 
-      // Track auth requests
+      // Track auth requests and active status items
       final authRequests = <AuthenticationRequest>[];
+      final activeStatusIds = <String, String>{}; // functionName -> itemId
       
       // Process events as they arrive
       await for (final categorizedEvent in eventStream) {
         _logger.d('📥 Processing categorized event: ${categorizedEvent.runtimeType}');
+        onDebugEvent?.call('📥 Event: ${categorizedEvent.runtimeType}');
         
         var latestState = state;
         if (latestState is! ChatLoaded) break;
 
-        // Handle authentication requests
+        // Handle different event types
         if (categorizedEvent is AuthenticationRequestEvent) {
+          // Create auth request item
           authRequests.add(categorizedEvent.request);
           _logger.i('🔐 ChatBloc detected auth request for: ${categorizedEvent.request.provider}');
-          // Don't forward yet - wait until stream completes to batch them
-          continue;
-        }
-
-        // Process event and get new state
-        ChatState newState;
-        if (categorizedEvent is ChatMessageEvent) {
-          newState = _handleChatMessage(categorizedEvent, latestState);
+          onDebugEvent?.call('🔐 Auth request: ${categorizedEvent.request.provider}');
+          
+          final authItem = AuthRequestItem(
+            id: categorizedEvent.sourceEvent.id,
+            timestamp: categorizedEvent.sourceEvent.timestamp,
+            request: categorizedEvent.request,
+            subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
+            subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
+          );
+          
+          emit(latestState.copyWith(
+            items: [...latestState.items, authItem],
+          ));
+        } else if (categorizedEvent is ChatMessageEvent) {
+          // Create text message item
+          final preview = categorizedEvent.text.length > 30 
+              ? '${categorizedEvent.text.substring(0, 30)}...' 
+              : categorizedEvent.text;
+          onDebugEvent?.call('💬 Chat message: $preview');
+          
+          final messageItem = TextMessageItem(
+            id: categorizedEvent.sourceEvent.id,
+            timestamp: categorizedEvent.sourceEvent.timestamp,
+            text: categorizedEvent.text,
+            role: MessageRole.agent,
+            isPartial: categorizedEvent.isPartial,
+            subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
+            subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
+          );
+          
+          emit(latestState.copyWith(
+            items: [...latestState.items, messageItem],
+          ));
         } else if (categorizedEvent is FunctionCallEvent) {
-          newState = _handleFunctionCall(categorizedEvent, latestState);
+          // Create/update system status item for "thinking..."
+          onDebugEvent?.call('⚙️ Function call: ${categorizedEvent.functionName}');
+          
+          final statusId = 'status_${categorizedEvent.functionName}';
+          activeStatusIds[categorizedEvent.functionName] = statusId;
+          
+          final statusItem = SystemStatusItem(
+            id: statusId,
+            timestamp: categorizedEvent.sourceEvent.timestamp,
+            status: 'Calling ${categorizedEvent.functionName}...',
+            type: StatusType.toolCall,
+            subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
+            subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
+            metadata: {'functionName': categorizedEvent.functionName},
+          );
+          
+          emit(latestState.copyWith(
+            items: [...latestState.items, statusItem],
+          ));
         } else if (categorizedEvent is FunctionResponseEvent) {
-          newState = _handleFunctionResponse(categorizedEvent, latestState);
+          // Remove the corresponding status item
+          onDebugEvent?.call('✅ Function completed: ${categorizedEvent.functionName}');
+          
+          final statusId = activeStatusIds[categorizedEvent.functionName];
+          if (statusId != null) {
+            final updatedItems = latestState.items
+                .where((item) => item.id != statusId)
+                .toList();
+            
+            emit(latestState.copyWith(items: updatedItems));
+            activeStatusIds.remove(categorizedEvent.functionName);
+          }
         } else if (categorizedEvent is AgentErrorEvent) {
-          newState = _handleError(categorizedEvent, latestState);
-        } else {
-          continue; // Skip unknown event types
+          // Create error status item
+          onDebugEvent?.call('❌ Error: ${categorizedEvent.errorMessage}');
+          
+          final errorItem = SystemStatusItem(
+            id: 'error_${DateTime.now().millisecondsSinceEpoch}',
+            timestamp: DateTime.now(),
+            status: categorizedEvent.errorMessage,
+            type: StatusType.error,
+          );
+          
+          emit(latestState.copyWith(
+            items: [...latestState.items, errorItem],
+          ));
         }
-
-        // Emit new state
-        emit(newState);
       }
+      
+      onDebugEvent?.call('✅ Stream completed');
 
       // Stream completed - forward any auth requests
       if (authRequests.isNotEmpty && onAuthenticationRequired != null) {
@@ -120,34 +190,28 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         onAuthenticationRequired!(event.sessionId, authRequests);
       }
 
-      // Mark user message as sent
+      // Mark sending as complete
       final latestState = state;
       if (latestState is ChatLoaded) {
-        final updatedUserMessage = userMessage.copyWith(status: MessageStatus.sent);
-        final updatedMessages = latestState.messages
-            .map((m) => m.id == userMessage.id ? updatedUserMessage : m)
-            .toList();
-
-        emit(latestState.copyWith(
-          messages: updatedMessages,
-          isSending: false,
-        ));
+        emit(latestState.copyWith(isSending: false));
       }
 
       _logger.i('✅ Message processing completed successfully');
     } on Exception catch (e, stackTrace) {
       _logger.e('❌ Error sending message', error: e, stackTrace: stackTrace);
 
-      // Mark user message as error
+      // Add error status item
       final latestState = state;
       if (latestState is ChatLoaded) {
-        final errorUserMessage = userMessage.copyWith(status: MessageStatus.error);
-        final updatedMessages = latestState.messages
-            .map((m) => m.id == userMessage.id ? errorUserMessage : m)
-            .toList();
+        final errorItem = SystemStatusItem(
+          id: 'error_${DateTime.now().millisecondsSinceEpoch}',
+          timestamp: DateTime.now(),
+          status: 'Failed to send message: ${e.toString()}',
+          type: StatusType.error,
+        );
 
         emit(latestState.copyWith(
-          messages: updatedMessages,
+          items: [...latestState.items, errorItem],
           isSending: false,
         ));
       }
@@ -161,71 +225,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(const ChatLoading());
     // TODO: Load message history from backend/local storage
     emit(ChatLoaded(
-      messages: const [],
+      items: const [],
       currentSessionId: event.sessionId,
     ));
-  }
-
-  /// Handle chat message events (returns new state)
-  ChatState _handleChatMessage(ChatMessageEvent event, ChatLoaded currentState) {
-    // With /run endpoint, all messages are complete (no partial streaming)
-    final agentMessage = AgentChatMessage(
-      id: event.sourceEvent.id,
-      sessionId: currentState.currentSessionId,
-      role: MessageRole.agent,
-      content: event.text,
-      timestamp: event.sourceEvent.timestamp,
-      subAgentName: _extractSubAgentName(event.sourceEvent.author),
-      subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
-      metadata: {
-        'invocationId': event.sourceEvent.invocationId,
-        'author': event.sourceEvent.author,
-      },
-    );
-
-    return currentState.copyWith(
-      messages: [...currentState.messages, agentMessage],
-      clearStatus: true,
-    );
-  }
-
-  /// Handle function call events (for "thinking..." indicators)
-  ChatState _handleFunctionCall(FunctionCallEvent event, ChatLoaded currentState) {
-    // Show "thinking..." status indicator
-    final statusMessage = 'Calling ${event.functionName}...';
-    final subAgent = _extractSubAgentName(event.sourceEvent.author);
-
-    return currentState.copyWith(
-      statusMessage: statusMessage,
-      statusSubAgent: subAgent,
-    );
-  }
-
-  /// Handle function response events (to clear "thinking..." indicator)
-  ChatState _handleFunctionResponse(FunctionResponseEvent event, ChatLoaded currentState) {
-    // Clear status indicator when function completes
-    return currentState.copyWith(clearStatus: true);
-  }
-
-  /// Handle error events
-  ChatState _handleError(AgentErrorEvent event, ChatLoaded currentState) {
-    _logger.e('Agent error: ${event.errorMessage}');
-
-    // Show error message in chat
-    final errorMessage = AgentChatMessage(
-      id: _uuid.v4(),
-      sessionId: currentState.currentSessionId,
-      role: MessageRole.agent,
-      content: '⚠️ Error: ${event.errorMessage}',
-      timestamp: DateTime.now(),
-      status: MessageStatus.error,
-    );
-
-    return currentState.copyWith(
-      messages: [...currentState.messages, errorMessage],
-      isSending: false,
-      clearStatus: true,
-    );
   }
 
   Future<void> _onMessageReceived(

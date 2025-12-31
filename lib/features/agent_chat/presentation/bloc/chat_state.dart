@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_message.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class ChatState extends Equatable {
@@ -17,48 +17,45 @@ class ChatLoading extends ChatState {
 }
 
 class ChatLoaded extends ChatState {
-
   const ChatLoaded({
-    required this.messages,
+    required this.items,
     required this.currentSessionId,
     this.isSending = false,
-    this.statusMessage,
-    this.statusSubAgent,
-    this.activeSessionId, // NEW: Track which session is actively streaming
+    this.activeStatus,
   });
-  final List<AgentChatMessage> messages;
+
+  /// Polymorphic list of chat items (messages, auth requests, status indicators)
+  final List<ChatItem> items;
+  
+  /// The current session ID
   final String currentSessionId;
+  
+  /// Whether a message is currently being sent
   final bool isSending;
-  final String? statusMessage;
-  final String? statusSubAgent;
-  final String? activeSessionId; // NEW
+  
+  /// Optional global status bar message (e.g., "Connecting...", "Agent thinking...")
+  final String? activeStatus;
 
   @override
   List<Object?> get props => [
-        messages,
+        items,
         currentSessionId,
         isSending,
-        statusMessage,
-        statusSubAgent,
-        activeSessionId, // NEW
+        activeStatus,
       ];
 
   ChatLoaded copyWith({
-    List<AgentChatMessage>? messages,
+    List<ChatItem>? items,
     String? currentSessionId,
     bool? isSending,
-    String? statusMessage,
-    String? statusSubAgent,
-    String? activeSessionId,
-    bool clearStatus = false, // NEW: Allow clearing status
+    String? activeStatus,
+    bool clearStatus = false,
   }) {
     return ChatLoaded(
-      messages: messages ?? this.messages,
+      items: items ?? this.items,
       currentSessionId: currentSessionId ?? this.currentSessionId,
       isSending: isSending ?? this.isSending,
-      statusMessage: clearStatus ? null : (statusMessage ?? this.statusMessage),
-      statusSubAgent: clearStatus ? null : (statusSubAgent ?? this.statusSubAgent),
-      activeSessionId: activeSessionId ?? this.activeSessionId,
+      activeStatus: clearStatus ? null : (activeStatus ?? this.activeStatus),
     );
   }
 }
