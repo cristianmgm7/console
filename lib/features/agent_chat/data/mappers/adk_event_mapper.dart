@@ -125,37 +125,61 @@ class ExtendedEventActions extends EventActions {
         transferToAgent: mapValueOfType<String>(json, 'transferToAgent'),
         requestedAuthConfigs: json['requestedAuthConfigs'] != null
             ? (json['requestedAuthConfigs'] as Map<String, dynamic>).map(
-                (key, value) => MapEntry(key, RequestedAuthConfig(
-                  authScheme: value['authScheme'] != null ? AuthScheme(
-                    type: value['authScheme']['type'] as String?,
-                    flows: value['authScheme']['flows'] != null ? AuthFlows(
-                      authorizationCode: value['authScheme']['flows']['authorizationCode'] != null ? AuthorizationCodeFlow(
-                        authorizationUrl: value['authScheme']['flows']['authorizationCode']['authorizationUrl'] as String?,
-                        tokenUrl: value['authScheme']['flows']['authorizationCode']['tokenUrl'] as String?,
-                        scopes: (value['authScheme']['flows']['authorizationCode']['scopes'] as Map<String, dynamic>?)?.cast<String, String>(),
-                      ) : null,
-                    ) : null,
-                  ) : null,
-                  rawAuthCredential: value['rawAuthCredential'] != null ? AuthCredential(
-                    authType: value['rawAuthCredential']['authType'] as String?,
-                    oauth2: value['rawAuthCredential']['oauth2'] != null ? OAuth2Data(
-                      clientId: value['rawAuthCredential']['oauth2']['clientId'] as String?,
-                      clientSecret: value['rawAuthCredential']['oauth2']['clientSecret'] as String?,
-                      authUri: value['rawAuthCredential']['oauth2']['authUri'] as String?,
-                      state: value['rawAuthCredential']['oauth2']['state'] as String?,
-                    ) : null,
-                  ) : null,
-                  exchangedAuthCredential: value['exchangedAuthCredential'] != null ? AuthCredential(
-                    authType: value['exchangedAuthCredential']['authType'] as String?,
-                    oauth2: value['exchangedAuthCredential']['oauth2'] != null ? OAuth2Data(
-                      clientId: value['exchangedAuthCredential']['oauth2']['clientId'] as String?,
-                      clientSecret: value['exchangedAuthCredential']['oauth2']['clientSecret'] as String?,
-                      authUri: value['exchangedAuthCredential']['oauth2']['authUri'] as String?,
-                      state: value['exchangedAuthCredential']['oauth2']['state'] as String?,
-                    ) : null,
-                  ) : null,
-                  credentialKey: value['credentialKey'] as String?,
-                )),
+                (key, authConfigValue) {
+                  final configJson = authConfigValue as Map<String, dynamic>;
+                  return MapEntry(key, RequestedAuthConfig(
+                    authScheme: configJson['authScheme'] != null ? (() {
+                      final authSchemeJson = configJson['authScheme'] as Map<String, dynamic>;
+                      return AuthScheme(
+                        type: authSchemeJson['type'] as String?,
+                        flows: authSchemeJson['flows'] != null ? (() {
+                          final flowsJson = authSchemeJson['flows'] as Map<String, dynamic>;
+                          return AuthFlows(
+                            authorizationCode: flowsJson['authorizationCode'] != null ? (() {
+                              final authCodeJson = flowsJson['authorizationCode'] as Map<String, dynamic>;
+                              return AuthorizationCodeFlow(
+                                authorizationUrl: authCodeJson['authorizationUrl'] as String?,
+                                tokenUrl: authCodeJson['tokenUrl'] as String?,
+                                scopes: (authCodeJson['scopes'] as Map<String, dynamic>?)?.cast<String, String>(),
+                              );
+                            })() : null,
+                          );
+                        })() : null,
+                      );
+                    })() : null,
+                    rawAuthCredential: configJson['rawAuthCredential'] != null ? (() {
+                      final rawCredentialJson = configJson['rawAuthCredential'] as Map<String, dynamic>;
+                      return AuthCredential(
+                        authType: rawCredentialJson['authType'] as String?,
+                        oauth2: rawCredentialJson['oauth2'] != null ? (() {
+                          final oauth2Json = rawCredentialJson['oauth2'] as Map<String, dynamic>;
+                          return OAuth2Data(
+                            clientId: oauth2Json['clientId'] as String?,
+                            clientSecret: oauth2Json['clientSecret'] as String?,
+                            authUri: oauth2Json['authUri'] as String?,
+                            state: oauth2Json['state'] as String?,
+                          );
+                        })() : null,
+                      );
+                    })() : null,
+                    exchangedAuthCredential: configJson['exchangedAuthCredential'] != null ? (() {
+                      final exchangedCredentialJson = configJson['exchangedAuthCredential'] as Map<String, dynamic>;
+                      return AuthCredential(
+                        authType: exchangedCredentialJson['authType'] as String?,
+                        oauth2: exchangedCredentialJson['oauth2'] != null ? (() {
+                          final oauth2Json = exchangedCredentialJson['oauth2'] as Map<String, dynamic>;
+                          return OAuth2Data(
+                            clientId: oauth2Json['clientId'] as String?,
+                            clientSecret: oauth2Json['clientSecret'] as String?,
+                            authUri: oauth2Json['authUri'] as String?,
+                            state: oauth2Json['state'] as String?,
+                          );
+                        })() : null,
+                      );
+                    })() : null,
+                    credentialKey: configJson['credentialKey'] as String?,
+                  ));
+                },
               )
             : null,
         requestedToolConfirmations: mapValueOfType<Map<String, dynamic>>(json, 'requestedToolConfirmations'),

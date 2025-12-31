@@ -28,7 +28,7 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     required String sessionId,
     required String content,
     Map<String, dynamic>? context,
-    bool streaming = false,
+    bool streaming = true,
   }) async* {
     try {
       _logger.d('📤 Starting message stream for session: $sessionId');
@@ -53,6 +53,7 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
           // Continue processing other events
         }
       }
+      
 
       _logger.i('✅ Stream completed successfully');
     } on ServerException catch (e) {
