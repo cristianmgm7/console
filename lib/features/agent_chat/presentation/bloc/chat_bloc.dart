@@ -1,6 +1,4 @@
 import 'dart:async';
-
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_chat_messages_from_events_usecase.dart';
@@ -19,17 +17,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) : super(const ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
     on<SendMessageStreaming>(_onSendMessageStreaming);
-    on<MessageReceived>(_onMessageReceived);
-    on<ClearMessages>(_onClearMessages);
   }
 
   final GetChatMessagesFromEventsUseCase _getChatMessagesUseCase;
   final Logger _logger;
   final Uuid _uuid = const Uuid();
-  
-  /// Callback to notify when authentication is required
-  /// Set this from the UI layer to forward auth requests to McpAuthBloc
-  void Function(String sessionId, List<AuthenticationRequest> requests)? onAuthenticationRequired;
   
   /// Callback for debug event logging (visualize streaming in real-time)
   void Function(String event)? onDebugEvent;
@@ -67,8 +59,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       items: [...currentState.items, userMessageItem],
       isSending: true,
     ));
-
-    _logger.i('🌊 Starting SSE stream for session: ${event.sessionId}');
     onDebugEvent?.call('🌊 Stream started');
 
     // Get categorized event stream from use case
@@ -79,8 +69,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       streaming: true, // Message-level streaming (not token-level)
     );
 
-    // Track auth requests and active status items
-    final authRequests = <AuthenticationRequest>[];
+    // Track active status items
     final activeStatusIds = <String, String>{}; // functionName -> itemId
 
     // Use emit.onEach to automatically handle stream subscription lifecycle
@@ -94,7 +83,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
         // Handle different event types using dedicated handlers
         if (categorizedEvent is AuthenticationRequestEvent) {
-          _handleAuthenticationRequest(categorizedEvent, latestState, authRequests, emit);
+          _handleAuthenticationRequest(categorizedEvent, latestState, emit);
         } else if (categorizedEvent is ChatMessageEvent) {
           _handleChatMessage(categorizedEvent, latestState, emit);
         } else if (categorizedEvent is FunctionCallEvent) {
@@ -125,14 +114,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         },
       );
 
-      // Stream completed - forward any auth requests
+      // Stream completed
       onDebugEvent?.call('✅ Stream completed');
-      _logger.i('✅ Message processing completed successfully');
-
-      if (authRequests.isNotEmpty && onAuthenticationRequired != null) {
-        _logger.i('🔐 ChatBloc forwarding ${authRequests.length} auth requests');
-        onAuthenticationRequired!(event.sessionId, authRequests);
-      }
 
     // Mark sending as complete
     final latestState = state;
@@ -153,22 +136,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
   }
 
-  Future<void> _onMessageReceived(
-    MessageReceived event,
-    Emitter<ChatState> emit,
-  ) async {
-    // This event is now deprecated - messages come through coordinator
-    _logger.w('MessageReceived event is deprecated, use coordinator instead');
-  }
-
-  Future<void> _onClearMessages(
-    ClearMessages event,
-    Emitter<ChatState> emit,
-  ) async {
-    // onEach automatically handles stream cleanup
-    emit(const ChatInitial());
-  }
-
   @override
   Future<void> close() {
     // onEach automatically handles stream cleanup
@@ -178,10 +145,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void _handleAuthenticationRequest(
     AuthenticationRequestEvent event,
     ChatLoaded state,
-    List<AuthenticationRequest> authRequests,
     Emitter<ChatState> emit,
   ) {
-    authRequests.add(event.request);
     _logger.i('🔐 ChatBloc detected auth request for: ${event.request.provider}');
     onDebugEvent?.call('🔐 Auth request: ${event.request.provider}');
 

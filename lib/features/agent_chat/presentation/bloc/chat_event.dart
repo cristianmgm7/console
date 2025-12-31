@@ -47,7 +47,3 @@ class MessageReceived extends ChatEvent {
   @override
   List<Object?> get props => [messageId, content, subAgentName, subAgentIcon];
 }
-
-class ClearMessages extends ChatEvent {
-  const ClearMessages();
-}

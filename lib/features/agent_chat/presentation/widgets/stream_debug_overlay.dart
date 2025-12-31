@@ -169,7 +169,7 @@ class _StreamDebugOverlayState extends State<StreamDebugOverlay> {
                     const Divider(height: 1, color: Colors.white24),
                     // Clear button
                     InkWell(
-                      onTap: () => setState(() => _events.clear()),
+                      onTap: () => setState(_events.clear),
                       child: Container(
                         height: 32,
                         alignment: Alignment.center,
