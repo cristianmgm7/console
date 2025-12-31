@@ -44,7 +44,6 @@ class GetChatMessagesFromEventsUseCase {
     bool streaming = false,
   }) {
     try {
-      _logger.d('📤 Starting event categorization stream');
 
       // Get raw event stream from repository
       final eventStream = _repository.sendMessageStream(

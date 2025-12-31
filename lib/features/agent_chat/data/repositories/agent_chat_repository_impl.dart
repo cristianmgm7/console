@@ -31,8 +31,6 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
     bool streaming = true,
   }) async* {
     try {
-      _logger.d('📤 Starting message stream for session: $sessionId');
-
       // Get event stream from API
       final eventStream = _apiService.sendMessageStream(
         userId: _userId,

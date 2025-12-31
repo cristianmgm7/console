@@ -24,7 +24,6 @@ class AdkApiService {
     required String sessionId,
     Map<String, dynamic>? initialState,
   }) async {
-    _logger.d('Creating session for user: $userId, session: $sessionId');
 
     try {
       final request = CreateSessionRequest(
@@ -126,9 +125,6 @@ class AdkApiService {
       },
       'streaming': streaming, // false = message-level, true = token-level
     };
-
-    _logger.d('Sending message to /run_sse: $url');
-    _logger.d('Request body: ${jsonEncode(requestBody)}');
 
     try {
       final request = http.Request('POST', url)
