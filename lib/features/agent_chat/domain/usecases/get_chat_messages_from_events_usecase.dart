@@ -35,7 +35,6 @@ class GetChatMessagesFromEventsUseCase {
     Map<String, dynamic>? context,
   }) async {
     try {
-      _logger.i('Getting chat events for session: $sessionId');
 
       final eventsResult = await _repository.sendMessage(
         sessionId: sessionId,
@@ -116,7 +115,7 @@ class GetChatMessagesFromEventsUseCase {
           return success([errorEvent]);
         },
       );
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       _logger.e('Error processing chat events', error: e, stackTrace: stackTrace);
       // Return error as a categorized event
       final errorEvent = AgentErrorEvent(
