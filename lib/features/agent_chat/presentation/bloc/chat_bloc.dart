@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
@@ -94,8 +95,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         onData: (CategorizedEvent categorizedEvent) {
           _logger.d('📥 Processing categorized event: ${categorizedEvent.runtimeType}');
           onDebugEvent?.call('📥 Event: ${categorizedEvent.runtimeType}');
+          _logger.d('📥 Event details: id=${categorizedEvent.sourceEvent.id}, author=${categorizedEvent.sourceEvent.author}');
 
-          var latestState = state;
+          if (categorizedEvent is ChatMessageEvent) {
+            _logger.d('📝 Chat message: "${categorizedEvent.text.substring(0, min(50, categorizedEvent.text.length))}" (partial: ${categorizedEvent.isPartial})');
+          }
+
+          final latestState = state;
           if (latestState is! ChatLoaded) return;
 
           // Handle different event types

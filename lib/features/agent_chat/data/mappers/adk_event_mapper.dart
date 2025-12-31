@@ -34,19 +34,20 @@ extension ContentToDomain on Content {
 
 extension ContentPartsInnerToDomain on ContentPartsInner {
   AdkPart toAdkPart() {
-    // The generated ContentPartsInner uses oneOf pattern
-    if (this is ContentPartsInnerOneOf) {
-      // Text content
-      final textContent = this as ContentPartsInnerOneOf;
-      return AdkPart(text: textContent.text);
-    } else if (this is ContentPartsInnerOneOf1) {
-      // Only inline data in content parts (function calls are in EventActions)
-      final complexContent = this as ContentPartsInnerOneOf1;
-      if (complexContent.inlineData != null) {
-        return AdkPart(inlineData: complexContent.inlineData!.toAdkInlineData());
-      }
+    // The generated ContentPartsInner has text and inlineData properties directly
+    // We should check for text first, then inlineData
+    
+    // Check for text content
+    if (text != null && text!.isNotEmpty) {
+      return AdkPart(text: text);
+    }
+    
+    // Check for inline data (images, etc.)
+    if (inlineData != null) {
+      return AdkPart(inlineData: inlineData!.toAdkInlineData());
     }
 
+    // Empty part (should rarely happen)
     return const AdkPart();
   }
 }
