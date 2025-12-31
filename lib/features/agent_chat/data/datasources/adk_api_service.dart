@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:carbon_voice_console/core/api/generated/lib/api.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/config/adk_config.dart';
-import 'package:carbon_voice_console/features/agent_chat/data/models/event_dto.dart';
-import 'package:carbon_voice_console/features/agent_chat/data/models/session_dto.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/mappers/adk_event_mapper.dart';
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -12,39 +12,39 @@ import 'package:logger/logger.dart';
 @lazySingleton
 class AdkApiService {
 
-  AdkApiService(this._client, this._logger);
+  AdkApiService(this._client, this._logger) : _api = DefaultApi();
 
   final http.Client _client;
   final Logger _logger;
+  final DefaultApi _api;
 
   /// Create a new session
-  Future<SessionDto> createSession({
+  Future<Session> createSession({
     required String userId,
     required String sessionId,
     Map<String, dynamic>? initialState,
   }) async {
-    final url = Uri.parse(
-      '${AdkConfig.baseUrl}/apps/${AdkConfig.appName}/users/$userId/sessions/$sessionId',
-    );
-
-    _logger.d('Creating session: $url');
+    _logger.d('Creating session for user: $userId, session: $sessionId');
 
     try {
-      final response = await _client
-          .post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(initialState ?? {}),
-          )
-          .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
+      final request = CreateSessionRequest(
+        sessionId: sessionId,
+        state: (initialState ?? {}).cast<String, Object>(),
+        events: [],
+      );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        return SessionDto.fromJson(data);
+      final session = await _api.appsAppNameUsersUserIdSessionsPost(
+        AdkConfig.appName,
+        userId,
+        createSessionRequest: request,
+      );
+
+      if (session != null) {
+        return session;
       } else {
         throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to create session: ${response.body}',
+          statusCode: 500,
+          message: 'Failed to create session: API returned null',
         );
       }
     } catch (e) {
@@ -55,28 +55,25 @@ class AdkApiService {
   }
 
   /// Get session details
-  Future<SessionDto> getSession({
+  Future<Session> getSession({
     required String userId,
     required String sessionId,
   }) async {
-    final url = Uri.parse(
-      '${AdkConfig.baseUrl}/apps/${AdkConfig.appName}/users/$userId/sessions/$sessionId',
-    );
-
-    _logger.d('Getting session: $url');
+    _logger.d('Getting session for user: $userId, session: $sessionId');
 
     try {
-      final response = await _client
-          .get(url)
-          .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
+      final session = await _api.appsAppNameUsersUserIdSessionsSessionIdGet(
+        AdkConfig.appName,
+        userId,
+        sessionId,
+      );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        return SessionDto.fromJson(data);
+      if (session != null) {
+        return session;
       } else {
         throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to get session: ${response.body}',
+          statusCode: 404,
+          message: 'Session not found',
         );
       }
     } catch (e) {
@@ -91,23 +88,14 @@ class AdkApiService {
     required String userId,
     required String sessionId,
   }) async {
-    final url = Uri.parse(
-      '${AdkConfig.baseUrl}/apps/${AdkConfig.appName}/users/$userId/sessions/$sessionId',
-    );
-
-    _logger.d('Deleting session: $url');
+    _logger.d('Deleting session for user: $userId, session: $sessionId');
 
     try {
-      final response = await _client
-          .delete(url)
-          .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
-
-      if (response.statusCode != 204 && response.statusCode != 200) {
-        throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to delete session: ${response.body}',
-        );
-      }
+      await _api.appsAppNameUsersUserIdSessionsSessionIdDelete(
+        AdkConfig.appName,
+        userId,
+        sessionId,
+      );
     } catch (e) {
       _logger.e('Error deleting session', error: e);
       if (e is ServerException) rethrow;
@@ -116,7 +104,7 @@ class AdkApiService {
   }
 
   /// Send message to agent using SSE streaming endpoint
-  Stream<EventDto> sendMessageStream({
+  Stream<Event> sendMessageStream({
     required String userId,
     required String sessionId,
     required String message,
@@ -175,9 +163,12 @@ class AdkApiService {
           
           try {
             final eventJson = jsonDecode(jsonString) as Map<String, dynamic>;
-            final eventDto = EventDto.fromJson(eventJson);
-            _logger.d('📥 Received event from ${eventDto.author}');
-            yield eventDto;
+            // Use extended actions parsing to support authentication fields
+            final event = parseEventWithExtendedActions(eventJson);
+            if (event != null) {
+              _logger.d('📥 Received event from ${event.author}');
+              yield event;
+            }
           } on Exception catch (e) {
             _logger.w('Failed to parse event: $jsonString', error: e);
           }
@@ -193,47 +184,38 @@ class AdkApiService {
   }
 
   /// Send message to agent (single response - kept for backward compatibility)
-  Future<List<EventDto>> sendMessage({
+  Future<List<Event>> sendMessage({
     required String userId,
     required String sessionId,
     required String message,
     Map<String, dynamic>? context,
   }) async {
-    final url = Uri.parse('${AdkConfig.baseUrl}/run');
-
-    final requestBody = {
-      'appName': AdkConfig.appName,
-      'userId': userId,
-      'sessionId': sessionId,
-      'newMessage': {
-        'role': 'user',
-        'parts': [
-          {'text': message},
-          if (context != null) {'metadata': context},
-        ],
-      },
-    };
-
-    _logger.d('Sending message to /run: $url');
-    _logger.d('Request body: ${jsonEncode(requestBody)}');
+    _logger.d('Sending message to agent for user: $userId, session: $sessionId');
 
     try {
-      final response = await _client
-          .post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(requestBody),
-          )
-          .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
+      // Create content with text message
+      final contentPart = ContentPartsInner(text: message);
+      final content = Content(
+        role: ContentRoleEnum.user,
+        parts: [contentPart],
+      );
 
-      if (response.statusCode == 200) {
-        final eventsJson = jsonDecode(response.body) as List;
-        _logger.d('✅ Received ${eventsJson.length} events from agent');
-        return eventsJson.map((e) => EventDto.fromJson(e as Map<String, dynamic>)).toList();
+      final request = RunAgentRequest(
+        appName: AdkConfig.appName,
+        userId: userId,
+        sessionId: sessionId,
+        newMessage: content,
+      );
+
+      final events = await _api.runPost(request);
+
+      if (events != null) {
+        _logger.d('✅ Received ${events.length} events from agent');
+        return events;
       } else {
         throw ServerException(
-          statusCode: response.statusCode,
-          message: 'Failed to send message: ${response.body}',
+          statusCode: 500,
+          message: 'Failed to send message: API returned null',
         );
       }
     } catch (e) {
