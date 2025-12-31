@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ChatMessageBubble extends StatelessWidget { // For agent messages (icon name)
 
@@ -69,11 +70,60 @@ class ChatMessageBubble extends StatelessWidget { // For agent messages (icon na
                       const SizedBox(height: 8),
                     ],
 
-                    // Message text (TODO: Add markdown support in Phase 5)
-                    Text(
-                      content,
-                      style: AppTextStyle.bodyMedium.copyWith(
-                        color: AppColors.textPrimary,
+                    // Message text with markdown support
+                    MarkdownBody(
+                      data: content,
+                      styleSheet: MarkdownStyleSheet(
+                        p: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                        h1: AppTextStyle.headlineLarge.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        h2: AppTextStyle.headlineMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        h3: AppTextStyle.headlineSmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        h4: AppTextStyle.titleLarge.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        h5: AppTextStyle.titleMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        h6: AppTextStyle.titleSmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        strong: const TextStyle(fontWeight: FontWeight.bold),
+                        em: const TextStyle(fontStyle: FontStyle.italic),
+                        codeblockPadding: const EdgeInsets.all(12),
+                        code: AppTextStyle.bodySmall.copyWith(
+                          fontFamily: 'monospace',
+                          backgroundColor: AppColors.surface,
+                          color: AppColors.textPrimary,
+                        ),
+                        codeblockDecoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        blockquoteDecoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: AppColors.primary,
+                              width: 4,
+                            ),
+                          ),
+                        ),
+                        listBullet: AppTextStyle.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
 

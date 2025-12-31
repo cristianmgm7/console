@@ -79,7 +79,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         sessionId: event.sessionId,
         message: event.content,
         context: event.context,
-        streaming: false, // Message-level streaming (not token-level)
+        streaming: true, // Message-level streaming (not token-level)
       );
 
       // Track auth requests and active status items
@@ -113,25 +113,54 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             items: [...latestState.items, authItem],
           ));
         } else if (categorizedEvent is ChatMessageEvent) {
-          // Create text message item
-          final preview = categorizedEvent.text.length > 30 
-              ? '${categorizedEvent.text.substring(0, 30)}...' 
+          // Create or update text message item for streaming
+          final preview = categorizedEvent.text.length > 30
+              ? '${categorizedEvent.text.substring(0, 30)}...'
               : categorizedEvent.text;
           onDebugEvent?.call('💬 Chat message: $preview');
-          
-          final messageItem = TextMessageItem(
-            id: categorizedEvent.sourceEvent.id,
-            timestamp: categorizedEvent.sourceEvent.timestamp,
-            text: categorizedEvent.text,
-            role: MessageRole.agent,
-            isPartial: categorizedEvent.isPartial,
-            subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
-            subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
+
+          // Use invocationId as the message ID to group streaming chunks
+          final messageId = categorizedEvent.sourceEvent.invocationId;
+
+          // Check if there's already a partial message for this invocation
+          final existingMessageIndex = latestState.items.indexWhere(
+            (item) => item is TextMessageItem &&
+                     item.id == messageId &&
+                     item.isPartial &&
+                     item.role == MessageRole.agent,
           );
-          
-          emit(latestState.copyWith(
-            items: [...latestState.items, messageItem],
-          ));
+
+          if (existingMessageIndex != -1) {
+            // Update existing partial message with the new cumulative text
+            // (categorizedEvent.text already contains all text accumulated so far)
+            final existingMessage = latestState.items[existingMessageIndex] as TextMessageItem;
+            final updatedMessage = existingMessage.copyWith(
+              text: categorizedEvent.text,
+              isPartial: categorizedEvent.isPartial,
+              // Update timestamp to latest chunk
+              timestamp: categorizedEvent.sourceEvent.timestamp,
+            );
+
+            final updatedItems = List<ChatItem>.from(latestState.items);
+            updatedItems[existingMessageIndex] = updatedMessage;
+
+            emit(latestState.copyWith(items: updatedItems));
+          } else {
+            // Create new message item
+            final messageItem = TextMessageItem(
+              id: messageId,
+              timestamp: categorizedEvent.sourceEvent.timestamp,
+              text: categorizedEvent.text,
+              role: MessageRole.agent,
+              isPartial: categorizedEvent.isPartial,
+              subAgentName: _extractSubAgentName(categorizedEvent.sourceEvent.author),
+              subAgentIcon: _extractSubAgentIcon(categorizedEvent.sourceEvent.author),
+            );
+
+            emit(latestState.copyWith(
+              items: [...latestState.items, messageItem],
+            ));
+          }
         } else if (categorizedEvent is FunctionCallEvent) {
           // Create/update system status item for "thinking..."
           onDebugEvent?.call('⚙️ Function call: ${categorizedEvent.functionName}');
