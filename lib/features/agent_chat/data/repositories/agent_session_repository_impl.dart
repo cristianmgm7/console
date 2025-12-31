@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:carbon_voice_console/core/api/generated/lib/api.dart';
 import 'package:carbon_voice_console/core/errors/exceptions.dart';
 import 'package:carbon_voice_console/core/errors/failures.dart';
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/datasources/adk_api_service.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/mappers/session_mapper.dart';
-import 'package:carbon_voice_console/features/agent_chat/data/models/session_dto.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_session.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_session_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -43,7 +43,8 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
 
       final sessionsList = jsonDecode(sessionsJson) as List;
       final sessions = sessionsList
-          .map((json) => SessionDto.fromJson(json as Map<String, dynamic>).toDomain())
+          .map((json) => Session.fromJson(json as Map<String, dynamic>)?.toDomain())
+          .whereType<AgentChatSession>()
           .toList();
 
 
@@ -57,17 +58,17 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
   @override
   Future<Result<AgentChatSession>> createSession(String sessionId) async {
     try {
-      final sessionDto = await _apiService.createSession(
+      final session = await _apiService.createSession(
         userId: _userId,
         sessionId: sessionId,
       );
 
-      final session = sessionDto.toDomain();
+      final domainSession = session.toDomain();
 
       // Save to local storage
-      await saveSessionLocally(session);
+      await saveSessionLocally(domainSession);
 
-      return success(session);
+      return success(domainSession);
     } on ServerException catch (e) {
       _logger.e('Server error creating session', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));
@@ -83,14 +84,14 @@ class AgentSessionRepositoryImpl implements AgentSessionRepository {
   @override
   Future<Result<AgentChatSession>> getSession(String sessionId) async {
     try {
-      final sessionDto = await _apiService.getSession(
+      final session = await _apiService.getSession(
         userId: _userId,
         sessionId: sessionId,
       );
 
-      final session = sessionDto.toDomain();
+      final domainSession = session.toDomain();
 
-      return success(session);
+      return success(domainSession);
     } on ServerException catch (e) {
       _logger.e('Server error getting session', error: e);
       return failure(ServerFailure(statusCode: e.statusCode, details: e.message));

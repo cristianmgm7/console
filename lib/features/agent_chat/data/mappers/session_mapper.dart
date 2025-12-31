@@ -1,27 +1,26 @@
-import 'package:carbon_voice_console/features/agent_chat/data/models/session_dto.dart';
+import 'package:carbon_voice_console/core/api/generated/lib/api.dart';
+import 'package:carbon_voice_console/features/agent_chat/data/mappers/adk_event_mapper.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/agent_chat_session.dart';
 
-extension SessionDtoMapper on SessionDto {
+extension SessionMapper on Session {
   AgentChatSession toDomain() {
-    final lastUpdateDateTime = DateTime.fromMillisecondsSinceEpoch(
-      (lastUpdateTime * 1000).toInt(),
-    );
+    final lastUpdateDateTime = lastUpdateTime != null
+        ? DateTime.fromMillisecondsSinceEpoch((lastUpdateTime! * 1000).toInt())
+        : DateTime.now();
 
     // Extract last message preview from events if available
     String? preview;
     if (events.isNotEmpty) {
       try {
-        final lastEvent = events.last as Map<String, dynamic>;
-        final content = lastEvent['content'] as Map<String, dynamic>?;
-        final parts = content?['parts'] as List?;
-        if (parts != null && parts.isNotEmpty) {
-          final firstPart = parts.first as Map<String, dynamic>;
-          preview = firstPart['text'] as String?;
-          if (preview != null && preview.length > 50) {
-            preview = '${preview.substring(0, 50)}...';
-          }
+        final lastEvent = events.last;
+        final adkEvent = lastEvent.toAdkEvent();
+        final textContent = adkEvent.textContent;
+        if (textContent != null && textContent.isNotEmpty) {
+          preview = textContent.length > 50
+              ? '${textContent.substring(0, 50)}...'
+              : textContent;
         }
-      } catch (e) {
+      } on Exception {
         // Ignore parsing errors for preview
       }
     }
@@ -32,7 +31,7 @@ extension SessionDtoMapper on SessionDto {
       appName: appName,
       createdAt: lastUpdateDateTime, // ADK doesn't provide createdAt, use lastUpdate
       lastUpdateTime: lastUpdateDateTime,
-      state: state,
+      state: state.cast<String, dynamic>(),
       lastMessagePreview: preview,
     );
   }
