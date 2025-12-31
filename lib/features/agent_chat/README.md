@@ -38,8 +38,8 @@ This feature implements ADK (Agent Development Kit) chat functionality with supp
 - **SessionBloc**: Manages session list and selection
 
 #### Widgets
-- **McpAuthenticationDialog**: Modal for handling OAuth2 authentication requests
-- **McpAuthListener**: BlocListener that shows auth dialogs based on `McpAuthBloc` state
+- **McpAuthenticationDialog**: Modal for handling OAuth2 authentication requests (deprecated)
+- **McpAuthListener**: BlocListener that shows success/error feedback for auth operations
 
 ## Event Flow
 
@@ -80,14 +80,15 @@ To handle a new type of ADK event:
 When agent requests MCP tool authentication:
 
 1. ADK sends `adk_request_credential` function call
-2. Both `ChatBloc` and `McpAuthBloc` receive events from their respective use cases
-3. `GetAuthenticationRequestsUseCase` filters and yields auth request to `McpAuthBloc`
-4. `McpAuthBloc` emits `McpAuthRequired` state
-5. `McpAuthListener` widget shows authentication dialog
-6. User completes OAuth2 flow in browser, provides auth code
+2. `ChatBloc` receives `AuthenticationRequestEvent` and displays auth request card in chat
+3. User clicks "Authenticate" button on the card
+4. `AuthRequestDetected` event dispatched to `McpAuthBloc`
+5. `McpAuthBloc` launches OAuth2 flow in browser
+6. User completes OAuth2 flow, credentials returned via deep link or manual entry
 7. `McpAuthBloc` exchanges code for credentials via `SendAuthenticationCredentialsUseCase`
 8. Credentials sent back to ADK via repository
-9. Agent can now use authenticated MCP tools
+9. `McpAuthListener` shows success/error feedback
+10. Agent can now use authenticated MCP tools
 
 ## Testing
 

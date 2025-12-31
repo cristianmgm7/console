@@ -3,6 +3,8 @@ import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/chat_item.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/components/chat_input_panel.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/agent_status_indicator.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/chat_message_bubble.dart';
@@ -78,7 +80,7 @@ class ChatConversationArea extends StatelessWidget {
                             message: item.status,
                             subAgentName: item.subAgentName,
                           ),
-                        AuthRequestItem() => _buildAuthRequestCard(context, item),
+                        AuthRequestItem() => _buildAuthRequestCard(context, item, state.currentSessionId),
                       };
                     },
                   );
@@ -117,7 +119,7 @@ class ChatConversationArea extends StatelessWidget {
   }
 
   /// Build authentication request card
-  Widget _buildAuthRequestCard(BuildContext context, AuthRequestItem item) {
+  Widget _buildAuthRequestCard(BuildContext context, AuthRequestItem item, String? sessionId) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Card(
@@ -149,8 +151,15 @@ class ChatConversationArea extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Implement authentication flow
-                  // Could launch URL: launchUrl(Uri.parse(item.request.correctedAuthUri))
+                  if (sessionId != null) {
+                    // Dispatch auth request detected event to McpAuthBloc
+                    context.read<McpAuthBloc>().add(
+                      AuthRequestDetected(
+                        sessionId: sessionId,
+                        requests: [item.request],
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.open_in_browser),
                 label: const Text('Authenticate'),
