@@ -115,7 +115,84 @@ class AdkApiService {
     }
   }
 
-  /// Send message to agent (single response - simpler for debugging)
+  /// Send message to agent using SSE streaming endpoint
+  Stream<EventDto> sendMessageStream({
+    required String userId,
+    required String sessionId,
+    required String message,
+    Map<String, dynamic>? context,
+    bool streaming = false,
+  }) async* {
+    final url = Uri.parse('${AdkConfig.baseUrl}/run_sse');
+
+    final requestBody = {
+      'appName': AdkConfig.appName,
+      'userId': userId,
+      'sessionId': sessionId,
+      'newMessage': {
+        'role': 'user',
+        'parts': [
+          {'text': message},
+          if (context != null) {'metadata': context},
+        ],
+      },
+      'streaming': streaming, // false = message-level, true = token-level
+    };
+
+    _logger.d('Sending message to /run_sse: $url');
+    _logger.d('Request body: ${jsonEncode(requestBody)}');
+
+    try {
+      final request = http.Request('POST', url)
+        ..headers.addAll({
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        })
+        ..body = jsonEncode(requestBody);
+
+      final streamedResponse = await _client
+          .send(request)
+          .timeout(const Duration(seconds: AdkConfig.timeoutSeconds));
+
+      if (streamedResponse.statusCode != 200) {
+        final body = await streamedResponse.stream.bytesToString();
+        throw ServerException(
+          statusCode: streamedResponse.statusCode,
+          message: 'Failed to send message: $body',
+        );
+      }
+
+      // Parse SSE stream
+      await for (final chunk in streamedResponse.stream
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())) {
+        
+        // SSE format: "data: {json}"
+        if (chunk.startsWith('data: ')) {
+          final jsonString = chunk.substring(6); // Remove "data: " prefix
+          
+          if (jsonString.trim().isEmpty) continue;
+          
+          try {
+            final eventJson = jsonDecode(jsonString) as Map<String, dynamic>;
+            final eventDto = EventDto.fromJson(eventJson);
+            _logger.d('📥 Received event from ${eventDto.author}');
+            yield eventDto;
+          } on Exception catch (e) {
+            _logger.w('Failed to parse event: $jsonString', error: e);
+          }
+        }
+      }
+
+      _logger.d('✅ Stream completed');
+    } catch (e) {
+      _logger.e('Error in message stream', error: e);
+      if (e is ServerException) rethrow;
+      throw NetworkException(message: 'Failed to stream message: $e');
+    }
+  }
+
+  /// Send message to agent (single response - kept for backward compatibility)
   Future<List<EventDto>> sendMessage({
     required String userId,
     required String sessionId,
@@ -175,7 +252,7 @@ class AdkApiService {
           .timeout(const Duration(seconds: 5));
 
       return response.statusCode == 200;
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.w('Health check failed', error: e);
       return false;
     }
