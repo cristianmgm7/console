@@ -4,8 +4,6 @@ import 'package:carbon_voice_console/core/widgets/widgets.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_state.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_state.dart';
@@ -23,21 +21,10 @@ class _ChatInputPanelState extends State<ChatInputPanel> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
 
+
   @override
   void initState() {
     super.initState();
-    // Set up callback to forward auth requests from ChatBloc to McpAuthBloc
-    _setupAuthCallback();
-  }
-
-  void _setupAuthCallback() {
-    // This will be called when ChatBloc detects auth requests
-    context.read<ChatBloc>().onAuthenticationRequired = (sessionId, requests) {
-      context.read<McpAuthBloc>().add(AuthRequestDetected(
-        sessionId: sessionId,
-        requests: requests,
-      ));
-    };
   }
 
   @override
