@@ -10,62 +10,54 @@
 
 part of openapi.api;
 
-class EventActions {
-  /// Returns a new [EventActions] instance.
-  EventActions({
-    this.functionCalls = const [],
-    this.functionResponses = const [],
-    this.skipSummarization,
+class ContentPartsInnerOneOf3FunctionResponse {
+  /// Returns a new [ContentPartsInnerOneOf3FunctionResponse] instance.
+  ContentPartsInnerOneOf3FunctionResponse({
+    this.name,
+    this.response = const {},
   });
 
-  List<ContentPartsInnerOneOf2FunctionCall> functionCalls;
-
-  List<ContentPartsInnerOneOf3FunctionResponse> functionResponses;
-
-  /// Whether to skip summarization
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
   /// does not include a default value (using the "default:" property), however, the generated
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
-  bool? skipSummarization;
+  String? name;
+
+  Map<String, Object> response;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is EventActions &&
-          _deepEquality.equals(other.functionCalls, functionCalls) &&
-          _deepEquality.equals(other.functionResponses, functionResponses) &&
-          other.skipSummarization == skipSummarization;
+      other is ContentPartsInnerOneOf3FunctionResponse &&
+          other.name == name &&
+          _deepEquality.equals(other.response, response);
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (functionCalls.hashCode) +
-      (functionResponses.hashCode) +
-      (skipSummarization == null ? 0 : skipSummarization!.hashCode);
+      (name == null ? 0 : name!.hashCode) + (response.hashCode);
 
   @override
   String toString() =>
-      'EventActions[functionCalls=$functionCalls, functionResponses=$functionResponses, skipSummarization=$skipSummarization]';
+      'ContentPartsInnerOneOf3FunctionResponse[name=$name, response=$response]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-    json[r'functionCalls'] = this.functionCalls;
-    json[r'functionResponses'] = this.functionResponses;
-    if (this.skipSummarization != null) {
-      json[r'skipSummarization'] = this.skipSummarization;
+    if (this.name != null) {
+      json[r'name'] = this.name;
     } else {
-      json[r'skipSummarization'] = null;
+      json[r'name'] = null;
     }
+    json[r'response'] = this.response;
     return json;
   }
 
-  /// Returns a new [EventActions] instance and imports its values from
+  /// Returns a new [ContentPartsInnerOneOf3FunctionResponse] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static EventActions? fromJson(dynamic value) {
+  static ContentPartsInnerOneOf3FunctionResponse? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
 
@@ -75,32 +67,29 @@ class EventActions {
       assert(() {
         requiredKeys.forEach((key) {
           assert(json.containsKey(key),
-              'Required key "EventActions[$key]" is missing from JSON.');
+              'Required key "ContentPartsInnerOneOf3FunctionResponse[$key]" is missing from JSON.');
           assert(json[key] != null,
-              'Required key "EventActions[$key]" has a null value in JSON.');
+              'Required key "ContentPartsInnerOneOf3FunctionResponse[$key]" has a null value in JSON.');
         });
         return true;
       }());
 
-      return EventActions(
-        functionCalls: ContentPartsInnerOneOf2FunctionCall.listFromJson(
-            json[r'functionCalls']),
-        functionResponses: ContentPartsInnerOneOf3FunctionResponse.listFromJson(
-            json[r'functionResponses']),
-        skipSummarization: mapValueOfType<bool>(json, r'skipSummarization'),
+      return ContentPartsInnerOneOf3FunctionResponse(
+        name: mapValueOfType<String>(json, r'name'),
+        response: mapCastOfType<String, Object>(json, r'response') ?? const {},
       );
     }
     return null;
   }
 
-  static List<EventActions> listFromJson(
+  static List<ContentPartsInnerOneOf3FunctionResponse> listFromJson(
     dynamic json, {
     bool growable = false,
   }) {
-    final result = <EventActions>[];
+    final result = <ContentPartsInnerOneOf3FunctionResponse>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
-        final value = EventActions.fromJson(row);
+        final value = ContentPartsInnerOneOf3FunctionResponse.fromJson(row);
         if (value != null) {
           result.add(value);
         }
@@ -109,12 +98,14 @@ class EventActions {
     return result.toList(growable: growable);
   }
 
-  static Map<String, EventActions> mapFromJson(dynamic json) {
-    final map = <String, EventActions>{};
+  static Map<String, ContentPartsInnerOneOf3FunctionResponse> mapFromJson(
+      dynamic json) {
+    final map = <String, ContentPartsInnerOneOf3FunctionResponse>{};
     if (json is Map && json.isNotEmpty) {
       json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        final value = EventActions.fromJson(entry.value);
+        final value =
+            ContentPartsInnerOneOf3FunctionResponse.fromJson(entry.value);
         if (value != null) {
           map[entry.key] = value;
         }
@@ -123,17 +114,18 @@ class EventActions {
     return map;
   }
 
-  // maps a json object with a list of EventActions-objects as value to a dart map
-  static Map<String, List<EventActions>> mapListFromJson(
+  // maps a json object with a list of ContentPartsInnerOneOf3FunctionResponse-objects as value to a dart map
+  static Map<String, List<ContentPartsInnerOneOf3FunctionResponse>>
+      mapListFromJson(
     dynamic json, {
     bool growable = false,
   }) {
-    final map = <String, List<EventActions>>{};
+    final map = <String, List<ContentPartsInnerOneOf3FunctionResponse>>{};
     if (json is Map && json.isNotEmpty) {
       // ignore: parameter_assignments
       json = json.cast<String, dynamic>();
       for (final entry in json.entries) {
-        map[entry.key] = EventActions.listFromJson(
+        map[entry.key] = ContentPartsInnerOneOf3FunctionResponse.listFromJson(
           entry.value,
           growable: growable,
         );

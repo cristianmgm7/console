@@ -241,16 +241,20 @@ class ApiClient {
           return ContentPartsInnerOneOf1.fromJson(value);
         case 'ContentPartsInnerOneOf1InlineData':
           return ContentPartsInnerOneOf1InlineData.fromJson(value);
+        case 'ContentPartsInnerOneOf2':
+          return ContentPartsInnerOneOf2.fromJson(value);
+        case 'ContentPartsInnerOneOf2FunctionCall':
+          return ContentPartsInnerOneOf2FunctionCall.fromJson(value);
+        case 'ContentPartsInnerOneOf3':
+          return ContentPartsInnerOneOf3.fromJson(value);
+        case 'ContentPartsInnerOneOf3FunctionResponse':
+          return ContentPartsInnerOneOf3FunctionResponse.fromJson(value);
         case 'CreateSessionRequest':
           return CreateSessionRequest.fromJson(value);
         case 'Event':
           return Event.fromJson(value);
         case 'EventActions':
           return EventActions.fromJson(value);
-        case 'EventActionsFunctionCallsInner':
-          return EventActionsFunctionCallsInner.fromJson(value);
-        case 'EventActionsFunctionResponsesInner':
-          return EventActionsFunctionResponsesInner.fromJson(value);
         case 'Get200Response':
           return Get200Response.fromJson(value);
         case 'ListAppsGet200Response':
