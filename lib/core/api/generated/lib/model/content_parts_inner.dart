@@ -35,11 +35,21 @@ class ContentPartsInner {
   ///
   ContentPartsInnerOneOf1InlineData? inlineData;
 
-  /// Manual patch: Add functionCall field
-  EventActionsFunctionCallsInner? functionCall;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  ContentPartsInnerOneOf2FunctionCall? functionCall;
 
-  /// Manual patch: Add functionResponse field
-  EventActionsFunctionResponsesInner? functionResponse;
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  ContentPartsInnerOneOf3FunctionResponse? functionResponse;
 
   @override
   bool operator ==(Object other) =>
@@ -76,9 +86,13 @@ class ContentPartsInner {
     }
     if (this.functionCall != null) {
       json[r'functionCall'] = this.functionCall;
+    } else {
+      json[r'functionCall'] = null;
     }
     if (this.functionResponse != null) {
       json[r'functionResponse'] = this.functionResponse;
+    } else {
+      json[r'functionResponse'] = null;
     }
     return json;
   }
@@ -108,8 +122,8 @@ class ContentPartsInner {
         inlineData:
             ContentPartsInnerOneOf1InlineData.fromJson(json[r'inlineData']),
         functionCall:
-            EventActionsFunctionCallsInner.fromJson(json[r'functionCall']),
-        functionResponse: EventActionsFunctionResponsesInner.fromJson(
+            ContentPartsInnerOneOf2FunctionCall.fromJson(json[r'functionCall']),
+        functionResponse: ContentPartsInnerOneOf3FunctionResponse.fromJson(
             json[r'functionResponse']),
       );
     }
