@@ -1,11 +1,9 @@
 import 'package:carbon_voice_console/core/di/injection.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/screens/agent_chat_screen.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/chat_bloc.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_bloc.dart';
+import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/session_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/screens/agent_chat_screen_with_debug.dart';
-import 'package:carbon_voice_console/features/agent_chat/presentation/widgets/mcp_auth_listener.dart';
 import 'package:carbon_voice_console/features/audio_player/presentation/bloc/audio_player_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:carbon_voice_console/features/auth/presentation/bloc/auth_event.dart'
@@ -136,9 +134,7 @@ class BlocProviders {
           create: (_) => getIt<ChatBloc>(),
         ),
       ],
-      child: const McpAuthListener(
-        child: AgentChatScreenWithDebug(),
-      ),
+      child: const AgentChatScreenWithDebug(),
     );
   }
 }

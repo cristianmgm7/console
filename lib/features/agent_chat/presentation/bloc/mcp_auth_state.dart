@@ -12,15 +12,6 @@ class McpAuthInitial extends McpAuthState {
   const McpAuthInitial();
 }
 
-class McpAuthListening extends McpAuthState {
-  const McpAuthListening({required this.sessionId});
-
-  final String sessionId;
-
-  @override
-  List<Object?> get props => [sessionId];
-}
-
 /// Authentication is required - show dialog
 class McpAuthRequired extends McpAuthState {
   const McpAuthRequired({

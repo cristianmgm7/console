@@ -98,8 +98,6 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
   ) async {
     _logger.i('🔐 Received ${event.requests.length} auth requests from ChatBloc');
 
-    emit(McpAuthListening(sessionId: event.sessionId));
-
     // Process each auth request
     for (final request in event.requests) {
       _logger.i('🔐 AUTH REQUEST DETECTED for provider: ${request.provider}');
@@ -120,9 +118,6 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
         sessionId: event.sessionId,
       ));
     }
-
-    // Return to listening state after processing all requests
-    emit(McpAuthListening(sessionId: event.sessionId));
   }
 
   Future<void> _onAuthCodeProvided(
@@ -169,10 +164,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
           ));
         },
       );
-
-      // Return to listening state
-      emit(McpAuthListening(sessionId: event.sessionId));
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       _logger.e('Authentication failed', error: e, stackTrace: stackTrace);
 
       // Send error to agent
@@ -210,7 +202,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
 
     if (pendingRequest == null) {
       _logger.e('🔐 No pending auth request found for state: ${event.state}');
-      emit(McpAuthError(
+      emit(const McpAuthError(
         message: 'Invalid authentication state. Please try again.',
         sessionId: '', // We don't have session ID without pending request
       ));
@@ -260,10 +252,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
           ));
         },
       );
-
-      // Return to listening state
-      emit(McpAuthListening(sessionId: pendingRequest.sessionId));
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       _logger.e('Authentication failed', error: e, stackTrace: stackTrace);
 
       // Send error to agent
@@ -313,7 +302,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       },
     );
 
-    emit(McpAuthListening(sessionId: event.sessionId));
+    emit(const McpAuthInitial());
   }
 
   Future<void> _onStopAuthListening(
@@ -337,7 +326,6 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
         request.clientId ?? 'agent-client-id', // Use client ID from request if available
         authorizationEndpoint,
         tokenEndpoint,
-        secret: null, // Public client
       );
 
       // Exchange code for token
@@ -346,7 +334,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       });
 
       return client.credentials;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       _logger.e('OAuth2 flow failed', error: e, stackTrace: stackTrace);
       return null;
     }
