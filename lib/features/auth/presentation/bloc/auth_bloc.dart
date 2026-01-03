@@ -18,7 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     // Setup deep link handler for desktop OAuth callbacks
     if (!kIsWeb) {
-      _deepLinkingService.setDeepLinkHandler((url) {
+      _deepLinkingService.setDeepLinkHandlerForPath('/auth/callback', (url) {
         add(AuthorizationResponseReceived(url));
       });
     }
