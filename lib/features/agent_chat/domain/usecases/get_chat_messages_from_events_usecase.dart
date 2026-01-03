@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:carbon_voice_console/core/utils/result.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_content.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
 import 'package:injectable/injectable.dart';
@@ -89,8 +89,9 @@ class GetChatMessagesFromEventsUseCase {
               ));
             }
 
+            // To encapsulate this logic we need to check if the event is a tool confirmation request and add the needed classes as authrequest 
             // 4. Tool Confirmations
-            if (event.actions?.requestedToolConfirmations != null) {
+            if (event.isToolConfirmationRequest) {
                // Map tool confirmations map to events
                event.actions!.requestedToolConfirmations!.forEach((key, value) {
                   if (value is Map<String, dynamic>) {

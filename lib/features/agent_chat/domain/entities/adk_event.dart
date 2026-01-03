@@ -75,6 +75,10 @@ class AdkEvent extends Equatable {
     return actions?.requestedAuthConfigs != null &&
         actions!.requestedAuthConfigs!.isNotEmpty;
   }
+  bool get isToolConfirmationRequest {
+    return actions?.requestedToolConfirmations != null &&
+        actions!.requestedToolConfirmations!.isNotEmpty;
+  }
 
   /// Extract authentication request details if present.
   ///
