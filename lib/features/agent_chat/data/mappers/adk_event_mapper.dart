@@ -51,7 +51,7 @@ extension ContentPartsInnerToDomain on ContentPartsInner {
       );
     } else if (functionCall != null) {
       return AdkFunctionCallPart(
-        id: 'unknown', // ID is not in the DTO part structure
+        id: functionCall!.id,
         name: functionCall!.name ?? '',
         args: functionCall!.args,
       );
@@ -66,18 +66,18 @@ extension ContentPartsInnerToDomain on ContentPartsInner {
   }
 }
 
-extension EventActionsFunctionCallsInnerToDomain on EventActionsFunctionCallsInner {
+extension EventActionsFunctionCallsInnerToDomain on ContentPartsInnerOneOf2FunctionCall {
   AdkFunctionCallPart toAdkFunctionCallPart() {
     return AdkFunctionCallPart(
       name: name ?? '',
       args: args.cast<String, dynamic>(),
-      // The OpenAPI DTO might not have ID, but we map what we have
-      id: null, 
+      // Use ID from DTO, or null if missing (domain allows null)
+      id: id, 
     );
   }
 }
 
-extension EventActionsFunctionResponsesInnerToDomain on EventActionsFunctionResponsesInner {
+extension EventActionsFunctionResponsesInnerToDomain on ContentPartsInnerOneOf3FunctionResponse {
   AdkFunctionResponsePart toAdkFunctionResponsePart() {
     return AdkFunctionResponsePart(
       name: name ?? '',
@@ -129,8 +129,8 @@ class ExtendedEventActions extends EventActions {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
       return ExtendedEventActions(
-        functionCalls: EventActionsFunctionCallsInner.listFromJson(json['functionCalls']),
-        functionResponses: EventActionsFunctionResponsesInner.listFromJson(json['functionResponses']),
+        functionCalls: ContentPartsInnerOneOf2FunctionCall.listFromJson(json['functionCalls']),
+        functionResponses: ContentPartsInnerOneOf3FunctionResponse.listFromJson(json['functionResponses']),
         skipSummarization: mapValueOfType<bool>(json, 'skipSummarization'),
         stateDelta: mapValueOfType<Map<String, dynamic>>(json, 'stateDelta'),
         artifactDelta: mapValueOfType<Map<String, dynamic>>(json, 'artifactDelta'),

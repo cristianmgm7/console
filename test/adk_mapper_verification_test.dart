@@ -3,9 +3,10 @@ import 'package:carbon_voice_console/core/api/generated/lib/api.dart';
 
 void main() {
   group('ADK DTO Verification', () {
-    test('ContentPartsInner (REGENERATED) keeps functionCall', () {
+    test('ContentPartsInner (REGENERATED) keeps functionCall with ID', () {
       final rawPartJson = <String, dynamic>{
         'functionCall': {
+          'id': 'call_123',
           'name': 'testFunction',
           'args': {'key': 'value'}
         }
@@ -14,6 +15,7 @@ void main() {
       final partInfo = ContentPartsInner.fromJson(rawPartJson);
 
       expect(partInfo?.functionCall, isNotNull);
+      expect(partInfo?.functionCall?.id, equals('call_123'));
       expect(partInfo?.functionCall?.name, equals('testFunction'));
       print('Part Info: $partInfo'); 
     });

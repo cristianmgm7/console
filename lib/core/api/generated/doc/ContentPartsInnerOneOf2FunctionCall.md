@@ -8,6 +8,7 @@ import 'package:adk_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**id** | **String** |  | [optional] 
 **name** | **String** |  | [optional] 
 **args** | [**Map<String, Object>**](Object.md) |  | [optional] [default to const {}]
 
