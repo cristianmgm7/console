@@ -1,5 +1,7 @@
 import 'package:carbon_voice_console/core/api/generated/lib/api.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_content.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_actions.dart';
 
 extension EventToDomain on Event {
   /// Convert generated Event to domain AdkEvent
