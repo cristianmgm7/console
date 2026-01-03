@@ -24,7 +24,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
 
     // Setup deep link handler for agent OAuth callbacks
     if (!kIsWeb) {
-      _deepLinkingService.setDeepLinkHandler(_handleDeepLink);
+      _deepLinkingService.setDeepLinkHandlerForPath('/agent-auth/callback', _handleDeepLink);
     }
   }
 
@@ -58,36 +58,34 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
   }
 
   /// Handle deep link received from the platform
+  /// This method is only called for /agent-auth/callback URLs
   void _handleDeepLink(String url) {
-    _logger.i('🔗 Received deep link: $url');
+    _logger.i('🔗 Received agent auth deep link: $url');
 
     try {
       final uri = Uri.parse(url);
 
-      // Check if this is an agent auth callback
-      if (uri.scheme == 'carbonvoice' && uri.path == '/agent-auth/callback') {
-        final code = uri.queryParameters['code'];
-        final state = uri.queryParameters['state'];
-        final error = uri.queryParameters['error'];
+      final code = uri.queryParameters['code'];
+      final state = uri.queryParameters['state'];
+      final error = uri.queryParameters['error'];
 
-        if (error != null) {
-          _logger.e('🔗 OAuth error in deep link: $error');
-          // For now, just log the error. The user will see it when they return to the app
-          return;
-        }
+      if (error != null) {
+        _logger.e('🔗 OAuth error in deep link: $error');
+        // For now, just log the error. The user will see it when they return to the app
+        return;
+      }
 
-        if (code != null && state != null) {
-          _logger.i('🔗 Processing agent OAuth callback with state: $state');
-          add(AuthCodeProvidedFromDeepLink(
-            authorizationCode: code,
-            state: state,
-          ));
-        } else {
-          _logger.e('🔗 Invalid agent OAuth callback - missing code or state');
-        }
+      if (code != null && state != null) {
+        _logger.i('🔗 Processing agent OAuth callback with state: $state');
+        add(AuthCodeProvidedFromDeepLink(
+          authorizationCode: code,
+          state: state,
+        ));
+      } else {
+        _logger.e('🔗 Invalid agent OAuth callback - missing code or state');
       }
     } on Exception catch (e, stackTrace) {
-      _logger.e('🔗 Error processing deep link', error: e, stackTrace: stackTrace);
+      _logger.e('🔗 Error processing agent auth deep link', error: e, stackTrace: stackTrace);
     }
   }
 
