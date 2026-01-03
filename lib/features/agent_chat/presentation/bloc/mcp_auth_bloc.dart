@@ -1,5 +1,5 @@
 import 'package:carbon_voice_console/core/services/deep_linking_service.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_actions.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_auth.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/get_authentication_requests_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/usecases/send_authentication_credentials_usecase.dart';
 import 'package:carbon_voice_console/features/agent_chat/presentation/bloc/mcp_auth_event.dart';
