@@ -22,6 +22,8 @@ class ChatLoaded extends ChatState {
     required this.currentSessionId,
     this.isSending = false,
     this.activeStatus,
+    this.agentState = const {},
+    this.artifacts = const {},
   });
 
   /// Polymorphic list of chat items (messages, auth requests, status indicators)
@@ -36,12 +38,20 @@ class ChatLoaded extends ChatState {
   /// Optional global status bar message (e.g., "Connecting...", "Agent thinking...")
   final String? activeStatus;
 
+  /// Current agent state (key-value pairs)
+  final Map<String, dynamic> agentState;
+
+  /// Current artifacts (key-value pairs of file paths/content)
+  final Map<String, dynamic> artifacts;
+
   @override
   List<Object?> get props => [
         items,
         currentSessionId,
         isSending,
         activeStatus,
+        agentState,
+        artifacts,
       ];
 
   ChatLoaded copyWith({
@@ -50,12 +60,16 @@ class ChatLoaded extends ChatState {
     bool? isSending,
     String? activeStatus,
     bool clearStatus = false,
+    Map<String, dynamic>? agentState,
+    Map<String, dynamic>? artifacts,
   }) {
     return ChatLoaded(
       items: items ?? this.items,
       currentSessionId: currentSessionId ?? this.currentSessionId,
       isSending: isSending ?? this.isSending,
       activeStatus: clearStatus ? null : (activeStatus ?? this.activeStatus),
+      agentState: agentState ?? this.agentState,
+      artifacts: artifacts ?? this.artifacts,
     );
   }
 }

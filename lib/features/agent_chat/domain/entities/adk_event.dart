@@ -48,6 +48,7 @@ class AdkEvent extends Equatable {
         longRunningToolIds,
       ];
 
+
   /// Check if this is a final user-facing response (text message).
   ///
   /// Returns true if this event contains text content that should be displayed
@@ -58,8 +59,8 @@ class AdkEvent extends Equatable {
     if (content.parts.isEmpty) return false;
 
     // Has text and no function calls
-    final hasText = content.parts.any((p) => p.text != null);
-    final hasFunctionCalls = content.parts.any((p) => p.functionCall != null);
+    final hasText = content.parts.any((p) => p is AdkTextPart);
+    final hasFunctionCalls = content.parts.any((p) => p is AdkFunctionCallPart);
 
     return hasText && !hasFunctionCalls;
   }
@@ -93,13 +94,13 @@ class AdkEvent extends Equatable {
   }
 
   /// Get all function calls in this event
-  List<AdkFunctionCall> get functionCalls {
-    final calls = <AdkFunctionCall>[];
+  List<AdkFunctionCallPart> get functionCalls {
+    final calls = <AdkFunctionCallPart>[];
 
     // From parts
     for (final part in content.parts) {
-      if (part.functionCall != null) {
-        calls.add(part.functionCall!);
+      if (part is AdkFunctionCallPart) {
+        calls.add(part);
       }
     }
 
@@ -109,8 +110,8 @@ class AdkEvent extends Equatable {
   /// Get text content from this event
   String? get textContent {
     final textParts = content.parts
-        .where((p) => p.text != null)
-        .map((p) => p.text!)
+        .whereType<AdkTextPart>()
+        .map((p) => p.text)
         .toList();
 
     if (textParts.isEmpty) return null;

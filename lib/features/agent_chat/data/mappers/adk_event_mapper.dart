@@ -1,13 +1,32 @@
 import 'package:carbon_voice_console/core/api/generated/lib/api.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_content.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_actions.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_content.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
 
 extension EventToDomain on Event {
+
   /// Convert generated Event to domain AdkEvent
   ///
-  /// Unlike the old mapper, this preserves ALL event information
+  /// This preserves ALL event information and normalizes it into the domain model.
+  /// Function calls and responses from 'actions' are merged into content parts.
   AdkEvent toAdkEvent() {
+    // 1. Convert standard content parts
+    final parts = content.parts.map((p) => p.toAdkPart()).toList();
+
+    // 2. Merge function calls from actions into parts
+    if (actions?.functionCalls != null) {
+      parts.addAll(
+        actions!.functionCalls.map((c) => c.toAdkFunctionCallPart()),
+      );
+    }
+
+    // 3. Merge function responses from actions into parts
+    if (actions?.functionResponses != null) {
+      parts.addAll(
+        actions!.functionResponses.map((r) => r.toAdkFunctionResponsePart()),
+      );
+    }
+
     return AdkEvent(
       id: id ?? '',
       invocationId: invocationId ?? '',
@@ -15,57 +34,57 @@ extension EventToDomain on Event {
       timestamp: timestamp != null
           ? DateTime.fromMillisecondsSinceEpoch((timestamp! * 1000).toInt())
           : DateTime.now(),
-      content: content.toAdkContent(),
+      // Create simplified content with all parts merged
+      content: AdkContent(
+        role: content.role?.value ?? '',
+        parts: parts,
+      ),
       actions: actions?.toAdkActions(),
       partial: partial ?? false,
       branch: branch,
       longRunningToolIds: longRunningToolIds,
     );
   }
-
 }
 
 extension ContentToDomain on Content {
-  AdkContent toAdkContent() {
-    return AdkContent(
-      role: role?.value ?? '',
-      parts: parts.map((p) => p.toAdkPart()).toList(),
-    );
-  }
+  // No longer used directly, logic moved to toAdkEvent to allow merging
 }
 
 extension ContentPartsInnerToDomain on ContentPartsInner {
   AdkPart toAdkPart() {
-    // The generated ContentPartsInner has text and inlineData properties directly
-    // We should check for text first, then inlineData
-    
     // Check for text content
     if (text != null && text!.isNotEmpty) {
-      return AdkPart(text: text);
+      return AdkTextPart(text: text!);
     }
     
     // Check for inline data (images, etc.)
     if (inlineData != null) {
-      return AdkPart(inlineData: inlineData!.toAdkInlineData());
+      return AdkInlineDataPart(
+        mimeType: inlineData!.mimeType ?? '',
+        data: inlineData!.data ?? '',
+      );
     }
 
-    // Empty part (should rarely happen)
-    return const AdkPart();
+    // Empty part or unknown
+    return const AdkUnknownPart();
   }
 }
 
 extension EventActionsFunctionCallsInnerToDomain on EventActionsFunctionCallsInner {
-  AdkFunctionCall toAdkFunctionCall() {
-    return AdkFunctionCall(
+  AdkFunctionCallPart toAdkFunctionCallPart() {
+    return AdkFunctionCallPart(
       name: name ?? '',
       args: args.cast<String, dynamic>(),
+      // The OpenAPI DTO might not have ID, but we map what we have
+      id: null, 
     );
   }
 }
 
 extension EventActionsFunctionResponsesInnerToDomain on EventActionsFunctionResponsesInner {
-  AdkFunctionResponse toAdkFunctionResponse() {
-    return AdkFunctionResponse(
+  AdkFunctionResponsePart toAdkFunctionResponsePart() {
+    return AdkFunctionResponsePart(
       name: name ?? '',
       response: response.cast<String, dynamic>(),
     );
@@ -73,12 +92,7 @@ extension EventActionsFunctionResponsesInnerToDomain on EventActionsFunctionResp
 }
 
 extension ContentPartsInnerOneOf1InlineDataToDomain on ContentPartsInnerOneOf1InlineData {
-  AdkInlineData toAdkInlineData() {
-    return AdkInlineData(
-      mimeType: mimeType ?? '',
-      data: data ?? '',
-    );
-  }
+   // Logic inlined into ContentPartsInnerToDomain
 }
 
 /// Utility function to parse Event with extended actions from JSON

@@ -30,6 +30,7 @@ class ChatItemListExample extends StatelessWidget {
               TextMessageItem() => _buildTextMessage(context, item),
               AuthRequestItem() => _buildAuthRequest(context, item),
               SystemStatusItem() => _buildSystemStatus(context, item),
+              ToolConfirmationItem() => const SizedBox.shrink(), // Placeholder for example
             };
           },
         );

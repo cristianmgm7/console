@@ -69,46 +69,77 @@ class GetChatMessagesFromEventsUseCase {
                 sourceEvent: event,
                 request: event.authenticationRequest!,
               ));
-              // Continue to check for other content in the same event
             }
 
-            // 2. Function calls (for "thinking..." status indicators)
-            if (event.functionCalls.isNotEmpty) {
-              for (final call in event.functionCalls) {
-                _logger.d('Function call: ${call.name}');
+            // 2. Agent State Updates (Deltas)
+            if (event.actions?.stateDelta != null) {
+              _logger.d('State delta received');
+              sink.add(StateUpdateEvent(
+                sourceEvent: event,
+                stateDelta: event.actions!.stateDelta!,
+              ));
+            }
+
+            // 3. Artifact Updates (File changes)
+            if (event.actions?.artifactDelta != null) {
+              _logger.d('Artifact delta received');
+              sink.add(ArtifactUpdateEvent(
+                sourceEvent: event,
+                artifactDelta: event.actions!.artifactDelta!,
+              ));
+            }
+
+            // 4. Tool Confirmations
+            if (event.actions?.requestedToolConfirmations != null) {
+               // Map tool confirmations map to events
+               event.actions!.requestedToolConfirmations!.forEach((key, value) {
+                  if (value is Map<String, dynamic>) {
+                      sink.add(ToolConfirmationEvent(
+                        sourceEvent: event,
+                        toolCallId: key, // Assuming key is toolCallId
+                        functionName: value['name'] as String? ?? 'unknown',
+                        args: value['args'] as Map<String, dynamic>? ?? {},
+                      ));
+                  }
+               });
+            }
+
+            // 5. Processing Content Parts (Polymorphic)
+            for (final part in event.content.parts) {
+              // Function Calls (Thinking status)
+              if (part is AdkFunctionCallPart) {
+                _logger.d('Function call: ${part.name}');
                 sink.add(FunctionCallEvent(
                   sourceEvent: event,
-                  functionName: call.name,
-                  args: call.args,
+                  functionName: part.name,
+                  args: part.args,
                 ));
               }
-            }
-
-            // 3. Function responses (to clear "thinking..." status)
-            for (final part in event.content.parts) {
-              if (part.functionResponse != null) {
-                _logger.d('Function response: ${part.functionResponse!.name}');
+              // Function Responses (Clear thinking status)
+              else if (part is AdkFunctionResponsePart) {
+                _logger.d('Function response: ${part.name}');
                 sink.add(FunctionResponseEvent(
                   sourceEvent: event,
-                  functionName: part.functionResponse!.name,
-                  response: part.functionResponse!.response,
+                  functionName: part.name,
+                  response: part.response,
                 ));
               }
-            }
+              // Text Content
+              else if (part is AdkTextPart) {
+                 final text = part.text;
+                 if (text.isNotEmpty) {
+                    final preview = text.length > 50
+                      ? '${text.substring(0, 50)}...'
+                      : text;
+                    _logger.d('Chat message: $preview');
 
-            // 4. Text content (actual chat messages - can be partial)
-            final textContent = event.textContent;
-            if (textContent != null && textContent.isNotEmpty) {
-              final preview = textContent.length > 50
-                  ? '${textContent.substring(0, 50)}...'
-                  : textContent;
-              _logger.d('Chat message: $preview');
-
-              sink.add(ChatMessageEvent(
-                sourceEvent: event,
-                text: textContent,
-                isPartial: event.partial,
-              ));
+                    sink.add(ChatMessageEvent(
+                      sourceEvent: event,
+                      text: text,
+                      isPartial: event.partial,
+                    ));
+                 }
+              }
             }
 
             // Note: Internal events (state updates, etc.) are filtered out
@@ -173,47 +204,72 @@ class GetChatMessagesFromEventsUseCase {
             _logger.d('Processing event from ${event.author}');
 
             // Include authentication requests (will be forwarded by ChatBloc)
+            // Process events in batch (similar logic to streaming)
+
+            // 1. Authentication
             if (event.isAuthenticationRequest) {
-              _logger.d('Including auth request in categorized events');
-              final authRequest = event.authenticationRequest!;
               categorizedEvents.add(AuthenticationRequestEvent(
                 sourceEvent: event,
-                request: authRequest,
+                request: event.authenticationRequest!,
               ));
             }
 
-            // 1. Function calls (for "thinking..." status)
-            if (event.functionCalls.isNotEmpty) {
-              for (final call in event.functionCalls) {
-                _logger.d('Function call: ${call.name}');
+            // 2. State Deltas
+            if (event.actions?.stateDelta != null) {
+              categorizedEvents.add(StateUpdateEvent(
+                sourceEvent: event,
+                stateDelta: event.actions!.stateDelta!,
+              ));
+            }
+
+             // 3. Artifact Deltas
+            if (event.actions?.artifactDelta != null) {
+              categorizedEvents.add(ArtifactUpdateEvent(
+                sourceEvent: event,
+                artifactDelta: event.actions!.artifactDelta!,
+              ));
+            }
+
+             // 4. Tool Confirmations
+            if (event.actions?.requestedToolConfirmations != null) {
+               event.actions!.requestedToolConfirmations!.forEach((key, value) {
+                  if (value is Map<String, dynamic>) {
+                      categorizedEvents.add(ToolConfirmationEvent(
+                        sourceEvent: event,
+                        toolCallId: key,
+                        functionName: value['name'] as String? ?? 'unknown',
+                        args: value['args'] as Map<String, dynamic>? ?? {},
+                      ));
+                  }
+               });
+            }
+
+            // 5. Content Parts
+            for (final part in event.content.parts) {
+              if (part is AdkFunctionCallPart) {
+                _logger.d('Function call: ${part.name}');
                 categorizedEvents.add(FunctionCallEvent(
                   sourceEvent: event,
-                  functionName: call.name,
-                  args: call.args,
+                  functionName: part.name,
+                  args: part.args,
                 ));
-              }
-            }
-
-            // 2. Function responses (to clear "thinking..." status)
-            for (final part in event.content.parts) {
-              if (part.functionResponse != null) {
-                _logger.d('Function response: ${part.functionResponse!.name}');
+              } else if (part is AdkFunctionResponsePart) {
+                 _logger.d('Function response: ${part.name}');
                 categorizedEvents.add(FunctionResponseEvent(
                   sourceEvent: event,
-                  functionName: part.functionResponse!.name,
-                  response: part.functionResponse!.response,
+                  functionName: part.name,
+                  response: part.response,
                 ));
+              } else if (part is AdkTextPart) {
+                  final text = part.text;
+                  if (text.isNotEmpty) {
+                    categorizedEvents.add(ChatMessageEvent(
+                      sourceEvent: event,
+                      text: text,
+                      isPartial: false,
+                    ));
+                  }
               }
-            }
-
-            // 3. Text content (actual chat messages)
-            final textContent = event.textContent;
-            if (textContent != null && textContent.isNotEmpty) {
-              categorizedEvents.add(ChatMessageEvent(
-                sourceEvent: event,
-                text: textContent,
-                isPartial: false,
-              ));
             }
           }
 
