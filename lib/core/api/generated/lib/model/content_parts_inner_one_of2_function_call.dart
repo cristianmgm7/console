@@ -13,9 +13,18 @@ part of openapi.api;
 class ContentPartsInnerOneOf2FunctionCall {
   /// Returns a new [ContentPartsInnerOneOf2FunctionCall] instance.
   ContentPartsInnerOneOf2FunctionCall({
+    this.id,
     this.name,
     this.args = const {},
   });
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? id;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -31,20 +40,28 @@ class ContentPartsInnerOneOf2FunctionCall {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ContentPartsInnerOneOf2FunctionCall &&
+          other.id == id &&
           other.name == name &&
           _deepEquality.equals(other.args, args);
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (name == null ? 0 : name!.hashCode) + (args.hashCode);
+      (id == null ? 0 : id!.hashCode) +
+      (name == null ? 0 : name!.hashCode) +
+      (args.hashCode);
 
   @override
   String toString() =>
-      'ContentPartsInnerOneOf2FunctionCall[name=$name, args=$args]';
+      'ContentPartsInnerOneOf2FunctionCall[id=$id, name=$name, args=$args]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    if (this.id != null) {
+      json[r'id'] = this.id;
+    } else {
+      json[r'id'] = null;
+    }
     if (this.name != null) {
       json[r'name'] = this.name;
     } else {
@@ -75,6 +92,7 @@ class ContentPartsInnerOneOf2FunctionCall {
       }());
 
       return ContentPartsInnerOneOf2FunctionCall(
+        id: mapValueOfType<String>(json, r'id'),
         name: mapValueOfType<String>(json, r'name'),
         args: mapCastOfType<String, Object>(json, r'args') ?? const {},
       );

@@ -43,6 +43,8 @@ part 'model/content_parts_inner_one_of3_function_response.dart';
 part 'model/create_session_request.dart';
 part 'model/event.dart';
 part 'model/event_actions.dart';
+part 'model/event_actions_function_calls_inner.dart';
+part 'model/event_actions_function_responses_inner.dart';
 part 'model/get200_response.dart';
 part 'model/list_apps_get200_response.dart';
 part 'model/list_apps_response.dart';

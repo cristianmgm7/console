@@ -51,7 +51,3 @@ lib/model/list_apps_response.dart
 lib/model/run_agent_request.dart
 lib/model/session.dart
 pubspec.yaml
-test/content_parts_inner_one_of2_function_call_test.dart
-test/content_parts_inner_one_of2_test.dart
-test/content_parts_inner_one_of3_function_response_test.dart
-test/content_parts_inner_one_of3_test.dart
