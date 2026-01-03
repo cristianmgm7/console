@@ -7,25 +7,12 @@ extension EventToDomain on Event {
 
   /// Convert generated Event to domain AdkEvent
   ///
+  /// Convert generated Event to domain AdkEvent
+  ///
   /// This preserves ALL event information and normalizes it into the domain model.
-  /// Function calls and responses from 'actions' are merged into content parts.
   AdkEvent toAdkEvent() {
     // 1. Convert standard content parts
     final parts = content.parts.map((p) => p.toAdkPart()).toList();
-
-    // 2. Merge function calls from actions into parts
-    if (actions?.functionCalls != null) {
-      parts.addAll(
-        actions!.functionCalls.map((c) => c.toAdkFunctionCallPart()),
-      );
-    }
-
-    // 3. Merge function responses from actions into parts
-    if (actions?.functionResponses != null) {
-      parts.addAll(
-        actions!.functionResponses.map((r) => r.toAdkFunctionResponsePart()),
-      );
-    }
 
     return AdkEvent(
       id: id ?? '',
@@ -53,21 +40,29 @@ extension ContentToDomain on Content {
 
 extension ContentPartsInnerToDomain on ContentPartsInner {
   AdkPart toAdkPart() {
-    // Check for text content
-    if (text != null && text!.isNotEmpty) {
-      return AdkTextPart(text: text!);
-    }
-    
-    // Check for inline data (images, etc.)
-    if (inlineData != null) {
+    if (text != null) {
+      return AdkTextPart(
+        text: text!,
+      );
+    } else if (inlineData != null) {
       return AdkInlineDataPart(
         mimeType: inlineData!.mimeType ?? '',
         data: inlineData!.data ?? '',
       );
+    } else if (functionCall != null) {
+      return AdkFunctionCallPart(
+        id: 'unknown', // ID is not in the DTO part structure
+        name: functionCall!.name ?? '',
+        args: functionCall!.args,
+      );
+    } else if (functionResponse != null) {
+      return AdkFunctionResponsePart(
+        name: functionResponse!.name ?? '',
+        response: functionResponse!.response,
+      );
+    } else {
+      return const AdkUnknownPart();
     }
-
-    // Empty part or unknown
-    return const AdkUnknownPart();
   }
 }
 

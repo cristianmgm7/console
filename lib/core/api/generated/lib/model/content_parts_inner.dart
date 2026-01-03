@@ -15,6 +15,8 @@ class ContentPartsInner {
   ContentPartsInner({
     this.text,
     this.inlineData,
+    this.functionCall,
+    this.functionResponse,
   });
 
   ///
@@ -33,21 +35,32 @@ class ContentPartsInner {
   ///
   ContentPartsInnerOneOf1InlineData? inlineData;
 
+  /// Manual patch: Add functionCall field
+  EventActionsFunctionCallsInner? functionCall;
+
+  /// Manual patch: Add functionResponse field
+  EventActionsFunctionResponsesInner? functionResponse;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ContentPartsInner &&
           other.text == text &&
-          other.inlineData == inlineData;
+          other.inlineData == inlineData &&
+          other.functionCall == functionCall &&
+          other.functionResponse == functionResponse;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
       (text == null ? 0 : text!.hashCode) +
-      (inlineData == null ? 0 : inlineData!.hashCode);
+      (inlineData == null ? 0 : inlineData!.hashCode) +
+      (functionCall == null ? 0 : functionCall!.hashCode) +
+      (functionResponse == null ? 0 : functionResponse!.hashCode);
 
   @override
-  String toString() => 'ContentPartsInner[text=$text, inlineData=$inlineData]';
+  String toString() =>
+      'ContentPartsInner[text=$text, inlineData=$inlineData, functionCall=$functionCall, functionResponse=$functionResponse]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -60,6 +73,12 @@ class ContentPartsInner {
       json[r'inlineData'] = this.inlineData;
     } else {
       json[r'inlineData'] = null;
+    }
+    if (this.functionCall != null) {
+      json[r'functionCall'] = this.functionCall;
+    }
+    if (this.functionResponse != null) {
+      json[r'functionResponse'] = this.functionResponse;
     }
     return json;
   }
@@ -88,6 +107,10 @@ class ContentPartsInner {
         text: mapValueOfType<String>(json, r'text'),
         inlineData:
             ContentPartsInnerOneOf1InlineData.fromJson(json[r'inlineData']),
+        functionCall:
+            EventActionsFunctionCallsInner.fromJson(json[r'functionCall']),
+        functionResponse: EventActionsFunctionResponsesInner.fromJson(
+            json[r'functionResponse']),
       );
     }
     return null;
