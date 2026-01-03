@@ -78,7 +78,9 @@
                       "items": {
                         "type": "string"
                       },
-                      "example": ["root_agent"],
+                      "example": [
+                        "root_agent"
+                      ],
                       "description": "Simple list of agent names"
                     },
                     {
@@ -320,7 +322,10 @@
           },
           "language": {
             "type": "string",
-            "enum": ["yaml", "python"],
+            "enum": [
+              "yaml",
+              "python"
+            ],
             "description": "Agent language/format"
           }
         }
@@ -378,7 +383,11 @@
             "description": "Last update timestamp"
           }
         },
-        "required": ["id", "appName", "userId"]
+        "required": [
+          "id",
+          "appName",
+          "userId"
+        ]
       },
       "RunAgentRequest": {
         "type": "object",
@@ -413,7 +422,12 @@
             "description": "Invocation ID for resuming long-running functions"
           }
         },
-        "required": ["appName", "userId", "sessionId", "newMessage"]
+        "required": [
+          "appName",
+          "userId",
+          "sessionId",
+          "newMessage"
+        ]
       },
       "Event": {
         "type": "object",
@@ -457,7 +471,10 @@
             "description": "Whether this is a partial response"
           }
         },
-        "required": ["author", "content"]
+        "required": [
+          "author",
+          "content"
+        ]
       },
       "Content": {
         "type": "object",
@@ -465,7 +482,10 @@
         "properties": {
           "role": {
             "type": "string",
-            "enum": ["user", "model"],
+            "enum": [
+              "user",
+              "model"
+            ],
             "description": "Content role"
           },
           "parts": {
@@ -492,6 +512,40 @@
                         "data": {
                           "type": "string",
                           "description": "Base64 encoded data"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "functionCall": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "args": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "functionResponse": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "response": {
+                          "type": "object",
+                          "additionalProperties": true
                         }
                       }
                     }
@@ -545,6 +599,3 @@
     }
   }
 }
-
-
-
