@@ -88,6 +88,25 @@ class AuthCodeProvidedFromDeepLink extends McpAuthEvent {
   List<Object?> get props => [authorizationCode, state];
 }
 
+/// Event fired when an OAuth error is received via deep link callback.
+///
+/// This handles errors from the OAuth provider (e.g., user denied access,
+/// invalid request, etc.) and ensures the dialog closes properly.
+class AuthErrorFromDeepLink extends McpAuthEvent {
+  const AuthErrorFromDeepLink({
+    required this.error,
+    required this.errorDescription,
+    required this.sessionId,
+  });
+
+  final String error;
+  final String errorDescription;
+  final String sessionId;
+
+  @override
+  List<Object?> get props => [error, errorDescription, sessionId];
+}
+
 /// Stop listening for authentication requests
 class StopAuthListening extends McpAuthEvent {
   const StopAuthListening();

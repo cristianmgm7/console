@@ -22,6 +22,8 @@ else:
     OPENAPI_SPEC = {"error": "OpenAPI spec not found"}
     print("Warning: OpenAPI spec file not found")
 
+# Note: Using MCP toolset for Google Calendar instead of OpenAPI
+
 
 def load_instruction(filename: str) -> str:
     """Load agent instruction from a text file."""
@@ -82,7 +84,7 @@ carbon_voice_agent = Agent(
                 oauth2=OAuth2Auth(
                     client_id=os.getenv("CARBON_CLIENT_ID", "YOUR_CARBON_CLIENT_ID"),
                     client_secret=os.getenv("CARBON_CLIENT_SECRET", "YOUR_CARBON_CLIENT_SECRET"),
-                    redirect_uri=os.getenv("CARBON_REDIRECT_URI", "https://cristianmgm7.github.io/carbon-console-auth/?agent_auth=true"),
+                    redirect_uri=os.getenv("CARBON_REDIRECT_URI", "https://cristianmgm7.github.io/carbon-console-auth/"),
                 )
             )
         )
@@ -112,10 +114,52 @@ atlassian_agent = Agent(
     ],
 )
 
+# Create Google Calendar agent
+google_calendar_agent = Agent(
+    model='gemini-2.5-flash',
+    name='google_calendar_agent',
+    description='A Google Calendar assistant for managing events, schedules, and calendar operations with OAuth authentication.',
+    instruction=load_instruction('google_calendar_agent.txt'),
+    tools=[
+        McpToolset(
+            connection_params=StdioConnectionParams(
+                server_params=StdioServerParameters(
+                    command='npx',
+                    args=["-y", "@cocal/google-calendar-mcp"],
+                    env={
+                        "GOOGLE_CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID"),
+                        "GOOGLE_CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"),
+                        "LOG_LEVEL": "info"
+                    },
+                ),
+            ),
+            auth_scheme=OAuth2(
+                flows=OAuthFlows(
+                    authorizationCode=OAuthFlowAuthorizationCode(
+                        authorizationUrl="https://accounts.google.com/o/oauth2/auth",
+                        tokenUrl="https://oauth2.googleapis.com/token",
+                        scopes={
+                            "https://www.googleapis.com/auth/calendar": "See, edit, share, and permanently delete all the calendars you can access using Google Calendar",
+                            "https://www.googleapis.com/auth/calendar.events": "View and edit events on all your calendars",
+                        },
+                    )
+                )
+            ),
+            auth_credential=AuthCredential(
+                auth_type=AuthCredentialTypes.OAUTH2,
+                oauth2=OAuth2Auth(
+                    client_id=os.getenv("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID"),
+                    client_secret=os.getenv("GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"),
+                )
+            )
+        )
+    ],
+)
+
 root_agent = Agent(
     model='gemini-2.5-flash',
     name='root_orchestrator',
-    description='Main orchestrator agent that coordinates GitHub and Carbon Voice operations.',
+    description='Main orchestrator agent that coordinates GitHub, Carbon Voice, Atlassian, and Google Calendar operations.',
     instruction=load_instruction('root_agent.txt'),
-    sub_agents=[github_agent, carbon_voice_agent, atlassian_agent],
+    sub_agents=[github_agent, carbon_voice_agent, atlassian_agent, google_calendar_agent],
 )

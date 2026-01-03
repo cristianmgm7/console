@@ -70,7 +70,7 @@
     <div class="container" id="container">
         <div class="spinner"></div>
         <h1>Redirecting to Carbon Voice Console...</h1>
-        <p>Opening the app. This window will close automatically.</p>
+        <p>Opening the app. You can close this window after the app opens.</p>
         <p id="status"></p>
         <div id="manual-action" style="display: none;">
             <p class="error">The app didn't open automatically.</p>
@@ -124,12 +124,11 @@
         `;
     } else {
         // Success - build deep link
-        // Use different path for agent OAuth vs user login
-        // Default to agent auth if parameter is missing (for robustness)
-        const isAgentAuth = agentAuth === 'true' || agentAuth === null;
-        const basePath = isAgentAuth ? 'agent-auth/callback' : 'auth/callback';
+        // Use the same path as main login - both AuthBloc and McpAuthBloc listen to /auth/callback
+        // They will detect which one to handle based on the state parameter
+        const basePath = 'auth/callback';
 
-        console.log('Using basePath:', basePath, 'isAgentAuth:', isAgentAuth);
+        console.log('Using basePath:', basePath);
         let deepLink = `carbonvoice://${basePath}?code=${encodeURIComponent(code)}`;
         if (state) {
             deepLink += `&state=${encodeURIComponent(state)}`;
@@ -138,11 +137,6 @@
         // Set manual link
         manualLinkEl.href = deepLink;
         deepLinkEl.textContent = deepLink;
-
-        // Update title based on auth type
-        if (isAgentAuth) {
-            containerEl.querySelector('h1').textContent = 'Completing Agent Authentication...';
-        }
 
         // Try to automatically open the app
         statusEl.textContent = 'Opening Carbon Voice Console...';

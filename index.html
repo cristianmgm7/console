@@ -70,7 +70,7 @@
     <div class="container" id="container">
         <div class="spinner"></div>
         <h1>Redirecting to Carbon Voice Console...</h1>
-        <p>Opening the app. This window will close automatically.</p>
+        <p>Opening the app. You can close this window after the app opens.</p>
         <p id="status"></p>
         <div id="manual-action" style="display: none;">
             <p class="error">The app didn't open automatically.</p>
@@ -137,14 +137,9 @@
                 document.querySelector('.spinner').style.display = 'none';
             }, 3000);
 
-            // Try to close window after redirect (may not work in all browsers)
-            setTimeout(() => {
-                try {
-                    window.close();
-                } catch (e) {
-                    console.log('Could not auto-close window:', e);
-                }
-            }, 5000);
+            // Note: We don't try to close the window automatically due to Cross-Origin Opener Policy restrictions.
+            // The user can manually close the tab/window after the app opens, or it can stay open.
+            // The deep link redirect should work regardless.
         }
     </script>
 </body>

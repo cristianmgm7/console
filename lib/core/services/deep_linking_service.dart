@@ -12,20 +12,25 @@ class DeepLinkingService {
   final Logger _logger;
   static const _channel = MethodChannel('com.carbonvoice.console/deep_linking');
 
-  // Map of URL path prefixes to their handlers
-  final Map<String, void Function(String)> _pathHandlers = {};
+  // Map of URL path prefixes to their handlers (can have multiple handlers per path)
+  final Map<String, List<void Function(String)>> _pathHandlers = {};
 
   // Fallback handler for URLs that don't match any specific path
   void Function(String)? _fallbackHandler;
 
   void _setupMethodChannel() {
     _channel.setMethodCallHandler((call) async {
+      _logger.i('📱 MethodChannel call received - method: ${call.method}, arguments: ${call.arguments}');
       if (call.method == 'handleDeepLink') {
         final url = call.arguments as String?;
         if (url != null) {
           _logger.i('📱 Deep link received: $url');
           _handleDeepLink(url);
+        } else {
+          _logger.w('📱 Deep link call received but URL is null');
         }
+      } else {
+        _logger.w('📱 Unknown method channel call: ${call.method}');
       }
     });
   }
@@ -35,11 +40,18 @@ class DeepLinkingService {
     try {
       final uri = Uri.parse(url);
 
-      // Try to find a handler for this specific path
+      // Try to find handlers for this specific path
       for (final entry in _pathHandlers.entries) {
         if (uri.path.startsWith(entry.key)) {
-          _logger.i('📱 Routing deep link to handler for path: ${entry.key}');
-          entry.value(url);
+          _logger.i('📱 Routing deep link to ${entry.value.length} handler(s) for path: ${entry.key}');
+          // Call all handlers registered for this path - each handler decides if it should process
+          for (final handler in entry.value) {
+            try {
+              handler(url);
+            } catch (e, stackTrace) {
+              _logger.e('📱 Error in deep link handler', error: e, stackTrace: stackTrace);
+            }
+          }
           return;
         }
       }
@@ -58,15 +70,25 @@ class DeepLinkingService {
   }
 
   /// Register a handler for URLs with a specific path prefix
+  /// Multiple handlers can be registered for the same path - each will be called
   void setDeepLinkHandlerForPath(String pathPrefix, void Function(String) handler) {
     _logger.i('📱 Registering deep link handler for path: $pathPrefix');
-    _pathHandlers[pathPrefix] = handler;
+    _pathHandlers.putIfAbsent(pathPrefix, () => []).add(handler);
   }
 
   /// Remove a handler for a specific path prefix
-  void removeDeepLinkHandlerForPath(String pathPrefix) {
-    _logger.i('📱 Removing deep link handler for path: $pathPrefix');
-    _pathHandlers.remove(pathPrefix);
+  /// If handler is provided, removes only that handler; otherwise removes all handlers for the path
+  void removeDeepLinkHandlerForPath(String pathPrefix, [void Function(String)? handler]) {
+    if (handler != null) {
+      _logger.i('📱 Removing specific deep link handler for path: $pathPrefix');
+      _pathHandlers[pathPrefix]?.remove(handler);
+      if (_pathHandlers[pathPrefix]?.isEmpty ?? false) {
+        _pathHandlers.remove(pathPrefix);
+      }
+    } else {
+      _logger.i('📱 Removing all deep link handlers for path: $pathPrefix');
+      _pathHandlers.remove(pathPrefix);
+    }
   }
 
   /// Set a fallback handler for URLs that don't match any specific path

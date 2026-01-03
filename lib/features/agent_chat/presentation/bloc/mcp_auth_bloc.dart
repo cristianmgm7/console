@@ -20,11 +20,13 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     on<AuthCodeProvided>(_onAuthCodeProvided);
     on<AuthCancelled>(_onAuthCancelled);
     on<AuthCodeProvidedFromDeepLink>(_onAuthCodeProvidedFromDeepLink);
+    on<AuthErrorFromDeepLink>(_onAuthErrorFromDeepLink);
     on<StopAuthListening>(_onStopAuthListening);
 
     // Setup deep link handler for agent OAuth callbacks
+    // Use the same path as main login - we'll detect if it's agent auth by checking pending requests
     if (!kIsWeb) {
-      _deepLinkingService.setDeepLinkHandlerForPath('/agent-auth/callback', _handleDeepLink);
+      _deepLinkingService.setDeepLinkHandlerForPath('/auth/callback', _handleDeepLink);
     }
   }
 
@@ -37,11 +39,13 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
 
   /// Store a pending auth request when dialog is shown
   void _storePendingAuthRequest(String state, AuthenticationRequest request, String sessionId) {
+    _logger.i('🔐 Storing pending auth request - state: $state, sessionId: $sessionId, provider: ${request.provider}');
     _pendingAuthRequests[state] = PendingAuthRequest(
       request: request,
       sessionId: sessionId,
       timestamp: DateTime.now(),
     );
+    _logger.i('🔐 Total pending requests: ${_pendingAuthRequests.length}');
   }
 
   /// Retrieve and remove a pending auth request by state
@@ -58,9 +62,10 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
   }
 
   /// Handle deep link received from the platform
-  /// This method is only called for /agent-auth/callback URLs
+  /// This shares the same path (/auth/callback) as main login, so we need to check
+  /// if this is an agent auth request by checking if the state is in our pending requests
   void _handleDeepLink(String url) {
-    _logger.i('🔗 Received agent auth deep link: $url');
+    _logger.i('🔗 Received auth deep link (checking if agent auth): $url');
 
     try {
       final uri = Uri.parse(url);
@@ -68,10 +73,43 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       final code = uri.queryParameters['code'];
       final state = uri.queryParameters['state'];
       final error = uri.queryParameters['error'];
+      final errorDescription = uri.queryParameters['error_description'];
+
+      // Check if this is an agent auth request by looking for the state in pending requests
+      // If state is not found, this is likely a user login - let AuthBloc handle it
+      if (state != null && !_pendingAuthRequests.containsKey(state)) {
+        _logger.i('🔗 State $state not found in pending agent auth requests - likely user login, ignoring');
+        return; // Let AuthBloc handle it
+      }
+
+      _logger.i('🔗 This is an agent auth request - processing');
 
       if (error != null) {
-        _logger.e('🔗 OAuth error in deep link: $error');
-        // For now, just log the error. The user will see it when they return to the app
+        _logger.e('🔗 OAuth error in deep link: $error - $errorDescription');
+        
+        // Try to find the sessionId from pending requests
+        // If we have a state, use it; otherwise use the most recent pending request
+        String? sessionId;
+        if (state != null) {
+          final pendingRequest = _pendingAuthRequests[state];
+          sessionId = pendingRequest?.sessionId;
+          _pendingAuthRequests.remove(state);
+        } else if (_pendingAuthRequests.isNotEmpty) {
+          // Use the most recent pending request
+          final mostRecent = _pendingAuthRequests.values.reduce(
+            (a, b) => a.timestamp.isAfter(b.timestamp) ? a : b,
+          );
+          sessionId = mostRecent.sessionId;
+          // Clear all pending requests since we don't know which one failed
+          _pendingAuthRequests.clear();
+        }
+
+        // Emit error state so dialog can close
+        add(AuthErrorFromDeepLink(
+          error: error,
+          errorDescription: errorDescription ?? 'OAuth authentication failed',
+          sessionId: sessionId ?? '',
+        ));
         return;
       }
 
@@ -83,9 +121,44 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
         ));
       } else {
         _logger.e('🔗 Invalid agent OAuth callback - missing code or state');
+        
+        // Try to find sessionId from pending requests
+        String? sessionId;
+        if (state != null) {
+          final pendingRequest = _pendingAuthRequests[state];
+          sessionId = pendingRequest?.sessionId;
+        } else if (_pendingAuthRequests.isNotEmpty) {
+          final mostRecent = _pendingAuthRequests.values.reduce(
+            (a, b) => a.timestamp.isAfter(b.timestamp) ? a : b,
+          );
+          sessionId = mostRecent.sessionId;
+        }
+
+        // Emit error state so dialog can close
+        add(AuthErrorFromDeepLink(
+          error: 'INVALID_CALLBACK',
+          errorDescription: 'Invalid OAuth callback - missing code or state parameter',
+          sessionId: sessionId ?? '',
+        ));
       }
     } on Exception catch (e, stackTrace) {
       _logger.e('🔗 Error processing agent auth deep link', error: e, stackTrace: stackTrace);
+      
+      // Try to find sessionId from most recent pending request
+      String? sessionId;
+      if (_pendingAuthRequests.isNotEmpty) {
+        final mostRecent = _pendingAuthRequests.values.reduce(
+          (a, b) => a.timestamp.isAfter(b.timestamp) ? a : b,
+        );
+        sessionId = mostRecent.sessionId;
+      }
+
+      // Emit error state so dialog can close
+      add(AuthErrorFromDeepLink(
+        error: 'PROCESSING_ERROR',
+        errorDescription: 'Error processing deep link: ${e.toString()}',
+        sessionId: sessionId ?? '',
+      ));
     }
   }
 
@@ -196,12 +269,14 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
     Emitter<McpAuthState> emit,
   ) async {
     _logger.i('🔐 Received auth code from deep link with state: ${event.state}');
+    _logger.i('🔐 Pending auth requests: ${_pendingAuthRequests.keys.toList()}');
 
     // Retrieve the pending auth request
     final pendingRequest = _consumePendingAuthRequest(event.state);
 
     if (pendingRequest == null) {
       _logger.e('🔐 No pending auth request found for state: ${event.state}');
+      _logger.e('🔐 Available states: ${_pendingAuthRequests.keys.toList()}');
       emit(const McpAuthError(
         message: 'Invalid authentication state. Please try again.',
         sessionId: '', // We don't have session ID without pending request
@@ -209,7 +284,7 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
       return;
     }
 
-    _logger.i('🔐 Found pending auth request for provider: ${pendingRequest.request.provider}');
+    _logger.i('🔐 Found pending auth request for provider: ${pendingRequest.request.provider}, sessionId: ${pendingRequest.sessionId}');
 
     // Process the auth code using the same logic as manual code entry
     final provider = pendingRequest.request.provider ?? 'oauth2';
@@ -276,6 +351,40 @@ class McpAuthBloc extends Bloc<McpAuthEvent, McpAuthState> {
         sessionId: pendingRequest.sessionId,
       ));
     }
+  }
+
+  /// Handle OAuth error received via deep link callback
+  Future<void> _onAuthErrorFromDeepLink(
+    AuthErrorFromDeepLink event,
+    Emitter<McpAuthState> emit,
+  ) async {
+    _logger.e('🔗 OAuth error from deep link: ${event.error} - ${event.errorDescription}');
+
+    final provider = 'oauth2'; // Default provider
+
+    // Send error to agent if we have a sessionId
+    if (event.sessionId.isNotEmpty) {
+      final errorResult = await _sendCredentialsUseCase.sendError(
+        sessionId: event.sessionId,
+        provider: provider,
+        errorMessage: '${event.error}: ${event.errorDescription}',
+      );
+
+      errorResult.fold(
+        onSuccess: (_) {
+          _logger.i('Authentication error sent to agent successfully');
+        },
+        onFailure: (failure) {
+          _logger.e('Failed to send authentication error to agent', error: failure);
+        },
+      );
+    }
+
+    // Emit error state so dialog can close
+    emit(McpAuthError(
+      message: event.errorDescription,
+      sessionId: event.sessionId,
+    ));
   }
 
   Future<void> _onAuthCancelled(

@@ -35,7 +35,7 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
 
   // Add method to open OAuth URL
   Future<void> _openAuthUrl() async {
-    final url = widget.request.authUri.isNotEmpty
+    var url = widget.request.authUri.isNotEmpty
         ? widget.request.correctedAuthUri
         : widget.request.authorizationUrl ?? '';
 
@@ -45,6 +45,10 @@ class _McpAuthenticationDialogState extends State<McpAuthenticationDialog> {
       });
       return;
     }
+
+    // Note: We don't modify redirect_uri here because OAuth providers require exact matches.
+    // The redirect page (web_redirect_page.html) defaults to agent-auth/callback when
+    // agent_auth parameter is missing, so it will handle MCP flows correctly.
 
     setState(() {
       _isAuthenticating = true;

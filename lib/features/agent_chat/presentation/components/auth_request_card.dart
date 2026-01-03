@@ -109,7 +109,13 @@ class _AuthRequestCardState extends State<AuthRequestCard> {
       builder: (dialogContext) => BlocListener<McpAuthBloc, McpAuthState>(
         listener: (context, authState) {
           // Auto-close dialog on success or error
-          if (authState is McpAuthSuccess || authState is McpAuthError) {
+          // Close if it's for this session, or if sessionId is empty (error from deep link)
+          if (authState is McpAuthSuccess) {
+            if (authState.sessionId == state.sessionId || authState.sessionId.isEmpty) {
+              Navigator.of(dialogContext).pop();
+            }
+          } else if (authState is McpAuthError) {
+            // Always close on error - either it's for this session or a general error
             Navigator.of(dialogContext).pop();
           }
         },
