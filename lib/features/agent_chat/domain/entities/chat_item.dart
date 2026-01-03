@@ -52,14 +52,16 @@ class TextMessageItem extends ChatItem {
     super.subAgentName,
     super.subAgentIcon,
     this.isPartial = false,
+    this.hasA2Ui = false,
   });
 
   final String text;
   final MessageRole role;
   final bool isPartial;
+  final bool hasA2Ui;
 
   @override
-  List<Object?> get props => [...super.props, text, role, isPartial];
+  List<Object?> get props => [...super.props, text, role, isPartial, hasA2Ui];
 
   TextMessageItem copyWith({
     String? id,
@@ -69,6 +71,7 @@ class TextMessageItem extends ChatItem {
     String? subAgentName,
     String? subAgentIcon,
     bool? isPartial,
+    bool? hasA2Ui,
   }) {
     return TextMessageItem(
       id: id ?? this.id,
@@ -78,6 +81,7 @@ class TextMessageItem extends ChatItem {
       subAgentName: subAgentName ?? this.subAgentName,
       subAgentIcon: subAgentIcon ?? this.subAgentIcon,
       isPartial: isPartial ?? this.isPartial,
+      hasA2Ui: hasA2Ui ?? this.hasA2Ui,
     );
   }
 }
@@ -142,4 +146,31 @@ class SystemStatusItem extends ChatItem {
       metadata: metadata ?? this.metadata,
     );
   }
+}
+
+/// 4. Tool Confirmation Request
+///
+/// Represents a request for user confirmation before executing a sensitive tool.
+class ToolConfirmationItem extends ChatItem {
+  const ToolConfirmationItem({
+    required super.id,
+    required super.timestamp,
+    required this.toolCallId,
+    required this.functionName,
+    required this.args,
+    super.subAgentName,
+    super.subAgentIcon,
+  });
+
+  final String toolCallId;
+  final String functionName;
+  final Map<String, dynamic> args;
+
+  @override
+  List<Object?> get props => [
+        ...super.props,
+        toolCallId,
+        functionName,
+        args,
+      ];
 }

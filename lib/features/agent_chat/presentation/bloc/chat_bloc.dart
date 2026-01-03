@@ -82,6 +82,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if (latestState is! ChatLoaded) return;
 
         // Handle different event types using dedicated handlers
+        // Handle different event types using dedicated handlers
         if (categorizedEvent is AuthenticationRequestEvent) {
           _handleAuthenticationRequest(categorizedEvent, latestState, emit);
         } else if (categorizedEvent is ChatMessageEvent) {
@@ -92,6 +93,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           _handleFunctionResponse(categorizedEvent, latestState, activeStatusIds, emit);
         } else if (categorizedEvent is AgentErrorEvent) {
           _handleAgentError(categorizedEvent, latestState, emit);
+        } else if (categorizedEvent is StateUpdateEvent) {
+          _handleStateUpdate(categorizedEvent, latestState, emit);
+        } else if (categorizedEvent is ArtifactUpdateEvent) {
+          _handleArtifactUpdate(categorizedEvent, latestState, emit);
+        } else if (categorizedEvent is ToolConfirmationEvent) {
+          _handleToolConfirmation(categorizedEvent, latestState, emit);
         }
       },
         onError: (Object error, StackTrace? stackTrace) {
@@ -142,6 +149,50 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     return super.close();
   }
 
+  void _handleStateUpdate(
+    StateUpdateEvent event,
+    ChatLoaded state,
+    Emitter<ChatState> emit,
+  ) {
+    _logger.d('🧠 State update received');
+    // Merge new state with existing state
+    final newState = Map<String, dynamic>.from(state.agentState);
+    newState.addAll(event.stateDelta);
+    emit(state.copyWith(agentState: newState));
+  }
+
+  void _handleArtifactUpdate(
+    ArtifactUpdateEvent event,
+    ChatLoaded state,
+    Emitter<ChatState> emit,
+  ) {
+    _logger.d('📂 Artifact update received');
+    // Merge new artifacts with existing artifacts
+    final newArtifacts = Map<String, dynamic>.from(state.artifacts);
+    newArtifacts.addAll(event.artifactDelta);
+    emit(state.copyWith(artifacts: newArtifacts));
+  }
+
+  void _handleToolConfirmation(
+    ToolConfirmationEvent event,
+    ChatLoaded state,
+    Emitter<ChatState> emit,
+  ) {
+    _logger.d('✋ Tool confirmation requested: ${event.functionName}');
+    
+    final confirmationItem = ToolConfirmationItem(
+      id: event.sourceEvent.id,
+      timestamp: event.sourceEvent.timestamp,
+      toolCallId: event.toolCallId,
+      functionName: event.functionName,
+      args: event.args,
+      subAgentName: _extractSubAgentName(event.sourceEvent.author),
+      subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
+    );
+
+    emit(state.copyWith(items: [...state.items, confirmationItem]));
+  }
+
   void _handleAuthenticationRequest(
     AuthenticationRequestEvent event,
     ChatLoaded state,
@@ -188,6 +239,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final updatedMessage = existingMessage.copyWith(
         text: event.text,
         isPartial: event.isPartial,
+        hasA2Ui: event.hasA2Ui, // Update A2UI status if changed
         timestamp: event.sourceEvent.timestamp,
       );
 
@@ -203,6 +255,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         text: event.text,
         role: MessageRole.agent,
         isPartial: event.isPartial,
+        hasA2Ui: event.hasA2Ui,
         subAgentName: _extractSubAgentName(event.sourceEvent.author),
         subAgentIcon: _extractSubAgentIcon(event.sourceEvent.author),
       );

@@ -31,13 +31,15 @@ class ChatMessageEvent extends CategorizedEvent {
     required AdkEvent sourceEvent,
     required this.text,
     required this.isPartial,
+    this.hasA2Ui = false,
   }) : super(sourceEvent);
 
   final String text;
   final bool isPartial;
+  final bool hasA2Ui;
 
   @override
-  List<Object?> get props => [...super.props, text, isPartial];
+  List<Object?> get props => [...super.props, text, isPartial, hasA2Ui];
 }
 
 /// A function call being executed by the agent (for status indicators)
@@ -101,4 +103,47 @@ class AgentErrorEvent extends CategorizedEvent {
 
   @override
   List<Object?> get props => [...super.props, errorMessage];
+}
+
+/// Agent internal state update (delta)
+class StateUpdateEvent extends CategorizedEvent {
+  const StateUpdateEvent({
+    required AdkEvent sourceEvent,
+    required this.stateDelta,
+  }) : super(sourceEvent);
+
+  final Map<String, dynamic> stateDelta;
+
+  @override
+  List<Object?> get props => [...super.props, stateDelta];
+}
+
+/// Artifact update (file changes)
+class ArtifactUpdateEvent extends CategorizedEvent {
+  const ArtifactUpdateEvent({
+    required AdkEvent sourceEvent,
+    required this.artifactDelta,
+  }) : super(sourceEvent);
+
+  final Map<String, dynamic> artifactDelta;
+
+  @override
+  List<Object?> get props => [...super.props, artifactDelta];
+}
+
+/// Tool confirmation request (human-in-the-loop)
+class ToolConfirmationEvent extends CategorizedEvent {
+  const ToolConfirmationEvent({
+    required AdkEvent sourceEvent,
+    required this.toolCallId,
+    required this.functionName,
+    required this.args,
+  }) : super(sourceEvent);
+
+  final String toolCallId;
+  final String functionName;
+  final Map<String, dynamic> args;
+
+  @override
+  List<Object?> get props => [...super.props, toolCallId, functionName, args];
 }

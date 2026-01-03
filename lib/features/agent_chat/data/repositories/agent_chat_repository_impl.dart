@@ -80,7 +80,7 @@ class AgentChatRepositoryImpl implements AgentChatRepository {
       content: AdkContent(
         role: 'model',
         parts: [
-          AdkPart(text: '⚠️ $message'),
+          AdkTextPart(text: '⚠️ $message'),
         ],
       ),
     );
