@@ -1,4 +1,4 @@
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_actions.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_auth.dart';
 import 'package:equatable/equatable.dart';
 
 /// Base sealed class for all chat items that can appear in the chat UI.

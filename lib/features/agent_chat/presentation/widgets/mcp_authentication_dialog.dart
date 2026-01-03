@@ -2,7 +2,7 @@ import 'package:carbon_voice_console/core/theme/app_colors.dart';
 import 'package:carbon_voice_console/core/theme/app_text_style.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_button.dart';
 import 'package:carbon_voice_console/core/widgets/buttons/app_outlined_button.dart';
-import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_actions.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
