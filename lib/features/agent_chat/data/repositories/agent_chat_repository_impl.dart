@@ -4,6 +4,7 @@ import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/datasources/adk_api_service.dart';
 import 'package:carbon_voice_console/features/agent_chat/data/mappers/adk_event_mapper.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_content.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:carbon_voice_console/core/utils/result.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_event.dart';
+import 'package:carbon_voice_console/features/agent_chat/domain/entities/adk_content.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/entities/categorized_event.dart';
 import 'package:carbon_voice_console/features/agent_chat/domain/repositories/agent_chat_repository.dart';
 import 'package:injectable/injectable.dart';
