@@ -1,0 +1,209 @@
+openapi: 3.0.3
+info:
+  title: Google Calendar API
+  version: v3
+  description: Manipulates events and other calendar data.
+servers:
+  - url: https://www.googleapis.com/calendar/v3
+security:
+  - oauth2:
+      - https://www.googleapis.com/auth/calendar
+paths:
+  /calendars/{calendarId}/events:
+    get:
+      summary: Returns events on the specified calendar.
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: timeMin
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: timeMax
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: maxResults
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2500
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+    post:
+      summary: Creates an event.
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+  /calendars/{calendarId}/events/{eventId}:
+    get:
+      summary: Returns an event.
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    put:
+      summary: Updates an event.
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    delete:
+      summary: Deletes an event.
+      parameters:
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful response
+  /calendars:
+    get:
+      summary: Returns the calendars on the user's calendar list.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CalendarListEntry'
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts.google.com/o/oauth2/auth
+          tokenUrl: https://oauth2.googleapis.com/token
+          scopes:
+            https://www.googleapis.com/auth/calendar: See, edit, share, and permanently delete all the calendars you can access using Google Calendar
+            https://www.googleapis.com/auth/calendar.events: View and edit events on all your calendars
+            https://www.googleapis.com/auth/calendar.readonly: View your calendars
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        start:
+          $ref: '#/components/schemas/EventDateTime'
+        end:
+          $ref: '#/components/schemas/EventDateTime'
+        attendees:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventAttendee'
+        location:
+          type: string
+        status:
+          type: string
+          enum: [confirmed, tentative, cancelled]
+    EventDateTime:
+      type: object
+      properties:
+        dateTime:
+          type: string
+          format: date-time
+        timeZone:
+          type: string
+    EventAttendee:
+      type: object
+      properties:
+        email:
+          type: string
+        displayName:
+          type: string
+        responseStatus:
+          type: string
+          enum: [needsAction, declined, tentative, accepted]
+    CalendarListEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        primary:
+          type: boolean

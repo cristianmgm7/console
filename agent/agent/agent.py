@@ -3,6 +3,7 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, StdioServerParameters, StreamableHTTPServerParams
 from google.adk.auth import AuthCredential, AuthCredentialTypes, OAuth2Auth
 from fastapi.openapi.models import OAuth2, OAuthFlows, OAuthFlowAuthorizationCode
+from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
 # from github_tools import github_tools  # Temporarily commented out
 import json
 import os
@@ -22,7 +23,15 @@ else:
     OPENAPI_SPEC = {"error": "OpenAPI spec not found"}
     print("Warning: OpenAPI spec file not found")
 
-# Note: Using MCP toolset for Google Calendar instead of OpenAPI
+# Load Google Calendar OpenAPI specification
+google_calendar_spec_path = Path(__file__).parent.parent.parent / "google_calendar_openapi.yaml"
+if google_calendar_spec_path.exists():
+    with open(google_calendar_spec_path, 'r') as f:
+        GOOGLE_CALENDAR_SPEC = f.read()
+    print("Loaded Google Calendar OpenAPI specification")
+else:
+    GOOGLE_CALENDAR_SPEC = None
+    print("Warning: Google Calendar OpenAPI spec file not found")
 
 
 def load_instruction(filename: str) -> str:
@@ -115,24 +124,12 @@ atlassian_agent = Agent(
 )
 
 # Create Google Calendar agent
-google_calendar_agent = Agent(
-    model='gemini-2.5-flash',
-    name='google_calendar_agent',
-    description='A Google Calendar assistant for managing events, schedules, and calendar operations with OAuth authentication.',
-    instruction=load_instruction('google_calendar_agent.txt'),
-    tools=[
-        McpToolset(
-            connection_params=StdioConnectionParams(
-                server_params=StdioServerParameters(
-                    command='npx',
-                    args=["-y", "@cocal/google-calendar-mcp"],
-                    env={
-                        "GOOGLE_CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID"),
-                        "GOOGLE_CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"),
-                        "LOG_LEVEL": "info"
-                    },
-                ),
-            ),
+google_calendar_tools = []
+if GOOGLE_CALENDAR_SPEC:
+    google_calendar_tools.append(
+        OpenAPIToolset(
+            spec_str=GOOGLE_CALENDAR_SPEC,
+            spec_str_type='yaml',
             auth_scheme=OAuth2(
                 flows=OAuthFlows(
                     authorizationCode=OAuthFlowAuthorizationCode(
@@ -150,10 +147,18 @@ google_calendar_agent = Agent(
                 oauth2=OAuth2Auth(
                     client_id=os.getenv("GOOGLE_CLIENT_ID", "YOUR_GOOGLE_CLIENT_ID"),
                     client_secret=os.getenv("GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET"),
+                    redirect_uri=os.getenv("GOOGLE_REDIRECT_URI", "https://cristianmgm7.github.io/carbon-console-auth/"),
                 )
             )
         )
-    ],
+    )
+
+google_calendar_agent = Agent(
+    model='gemini-2.5-flash',
+    name='google_calendar_agent',
+    description='A Google Calendar assistant for managing events, schedules, and calendar operations with OAuth authentication.',
+    instruction=load_instruction('google_calendar_agent.txt'),
+    tools=google_calendar_tools,
 )
 
 root_agent = Agent(
